@@ -2,16 +2,13 @@
     box-sizing: border-box;
 }
 
-HTML {
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-}
-
 BODY {
     overflow-x: hidden;
     overflow-y: scroll;
+    overscroll-behavior: contain;
     font-family: sans-serif;
     margin: 0;
+    background-color: #66023c;  // prevent white gap in side nav
 }
 
 .contents {
@@ -35,8 +32,7 @@ A {
     width: 18em;
     left: 0;
     top: 0;
-    bottom: -10em;          // prevent visual glitch in Android
-    padding-bottom: 10em;
+    bottom: 0;
     background-color: #66023c;
     overflow: hidden;
 }
@@ -45,7 +41,7 @@ A {
     position: fixed;
     left: 18em;
     top: 0;
-    width: calc(100vw - 18em);
+    width: calc(100% - 18em);
     background-color: #990000;  // prevent visual glitch in Android
 
     .title-bar {
@@ -123,19 +119,21 @@ A {
 
         .input-container {
             position: relative;
+            box-sizing: content-box;
 
             INPUT {
                 max-width: 20em;
                 width: 100%;
-                padding-left: 1.6em;
+                padding-left: 1.8em;
                 border: 1px solid #660000;
+                border-radius: 0;
             }
 
             .fa-search {
                 position: absolute;
-                left: 4px;
-                top: 3px;
-                font-size: 0.9em;
+                left: 0.25em;
+                top: 0.4em;
+                font-size: 0.8em;
                 color: transparentize(#660000, 0.75);
                 pointer-events: none;
             }
@@ -153,7 +151,11 @@ A {
     padding-left: 1em;
     padding-right: 1em;
     margin-left: 18em;
-    max-width: 60em;
+    background-color: #ffffff;
+
+    .page {
+        max-width: 60em;
+    }
 }
 
 @media only screen and (max-width: 800px) {
@@ -170,7 +172,7 @@ A {
     .top-nav {
         transition: left 0.3s;
         left: 18em;
-        width: calc(100vw - 1em);
+        width: calc(100% - 1em);
 
         .title-bar {
             height: 3em;
@@ -211,7 +213,7 @@ A {
 
     .page-container {
         padding-top: 6em;
-        width: calc(100vw - 1em);
+        width: calc(100% - 1em);
         max-width: none;
 
         .side-collapsed & {
@@ -223,13 +225,15 @@ A {
 @media only screen and (max-width: 400px) {
     .top-nav {
         .search-bar {
+            padding-right: 0;
+
             .input-container {
                 width: 100%;
 
                 INPUT {
+                    border: 0;
                     width: 100%;
                     max-width: none;
-                    margin-left: -1px;
                 }
             }
         }

@@ -6,7 +6,7 @@ class WelcomePage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         return (
-            <div>
+            <div className="page">
                 <h1>Welcome</h1>
                 <p>Lorem ipsum dolor sit amet, utinam quodsi expetendis in has. Primis accumsan mnesarchum ne eam, simul ludus no est, duo ne ferri minim facilisis. Virtute detraxit intellegam quo ad, usu mundi minimum at, soleat insolens intellegam no est. Dicta viderer efficiantur id vix, simul zril legere te sea. Sed quaeque alienum principes ex, ne idque dicit duo, dolor voluptaria in vel.</p>
                 <p>Ne nisl essent cum, at quod antiopam has. Sanctus graecis ocurreret sed at, veniam urbanitas at cum. Epicurei ullamcorper est ut, no mei virtute lobortis indoctum. Putant inermis definiebas ne nec, habeo mazim offendit ei vim. Dicat tempor no duo, mea ex cibo autem. Eos probatus ocurreret rationibus no.</p>

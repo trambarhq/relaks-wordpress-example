@@ -87,7 +87,7 @@ class FrontEnd extends PureComponent {
      */
     handleScroll = (evt) => {
         let { topNavCollapsed } = this.state;
-        let container = document.body.parentElement;
+        let container = document.body;
         let previousPos = this.previousScrollPosition || 0;
         let currentPos = container.scrollTop;
         let delta = currentPos - previousPos;
@@ -99,9 +99,11 @@ class FrontEnd extends PureComponent {
                 let page = (pageContainer) ? pageContainer.firstChild : null;
                 if (page) {
                     let pageRect = page.getBoundingClientRect();
-                    if (pageRect.y <= 40) {
+                    if (pageRect.top <= 40) {
                         this.setState({ topNavCollapsed: true });
                     }
+                } else {
+                    this.setState({ topNavCollapsed: true });
                 }
             }
         } else {
