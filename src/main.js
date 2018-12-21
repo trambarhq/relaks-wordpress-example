@@ -1,6 +1,6 @@
 import { createElement } from 'react';
 import { hydrate, render } from 'react-dom';
-import { Application } from 'application';
+import { FrontEnd } from 'front-end';
 import { routes } from 'routing';
 import WordpressDataSource from 'wordpress-data-source';
 import RouteManager from 'relaks-route-manager';
@@ -31,12 +31,12 @@ if (typeof(window) === 'object') {
         if (!appContainer) {
             throw new Error('Unable to find app element in DOM');
         }
-        //let ssrElement = createElement(Application, { dataSource, routeManager, ssr: 'hydrate' });
+        //let ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: 'hydrate' });
         //let seeds = await harvest(ssrElement, { seeds: true });
         //Relaks.set('seeds', seeds);
         //hydrate(ssrElement, appContainer);
 
-        let appElement = createElement(Application, { dataSource, routeManager });
+        let appElement = createElement(FrontEnd, { dataSource, routeManager });
         render(appElement, appContainer);
     }
 
@@ -56,7 +56,7 @@ if (typeof(window) === 'object') {
         routeManager.activate();
         await routeManager.start(options.path);
 
-        let ssrElement = createElement(Application, { dataSource, routeManager, ssr: options.target });
+        let ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: options.target });
         return harvest(ssrElement);
     }
 

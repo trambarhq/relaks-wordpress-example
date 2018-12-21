@@ -5,12 +5,8 @@ class TopBarSync extends PureComponent {
     static displayName = 'TopNavSync';
 
     render() {
-        let className = 'top-nav';
-        if (this.props.collapsed) {
-            className += ' collapsed';
-        }
         return (
-            <div className={className}>
+            <div className="top-nav">
                 {this.renderTitleBar()}
                 {this.renderPageLinkBar()}
                 {this.renderSearchBar()}

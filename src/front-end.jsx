@@ -1,12 +1,13 @@
 import React, { PureComponent } from 'react';
+import Hammer from 'hammerjs';
 import Wordpress from 'wordpress';
 import { Route } from 'routing';
 import SideNav from 'widgets/side-nav';
 import TopNav from 'widgets/top-nav';
 import 'style.scss';
 
-class Application extends PureComponent {
-    static displayName = 'Application';
+class FrontEnd extends PureComponent {
+    static displayName = 'FrontEnd';
 
     constructor(props) {
         super(props);
@@ -14,6 +15,8 @@ class Application extends PureComponent {
         this.state = {
             route: new Route(routeManager),
             wp: new Wordpress(dataSource, props.ssr),
+            sideNavCollapsed: true,
+            topNavCollapsed: false,
         };
     }
 
@@ -25,11 +28,19 @@ class Application extends PureComponent {
     render() {
         let { route, wp } = this.state;
         let { topNavCollapsed } = this.state;
+        let { sideNavCollapsed } = this.state;
         let PageComponent = route.params.module.default;
+        let classNames = [];
+        if (topNavCollapsed) {
+            classNames.push('top-collapsed');
+        }
+        if (sideNavCollapsed) {
+            classNames.push('side-collapsed');
+        }
         return (
-            <div>
+            <div className={classNames.join(' ')}>
                 <SideNav route={route} wp={wp} />
-                <TopNav route={route} wp={wp} collapsed={topNavCollapsed} />
+                <TopNav route={route} wp={wp} />
                 <div className="page-container">
                     <PageComponent route={route} wp={wp} />
                 </div>
@@ -45,16 +56,10 @@ class Application extends PureComponent {
         routeManager.addEventListener('change', this.handleRouteChange);
         dataSource.addEventListener('change', this.handleDataSourceChange);
         document.addEventListener('scroll', this.handleScroll);
-    }
 
-    /**
-     * Remove change handlers when component mounts
-     */
-    componentWillUnmount() {
-        let { routeManager, dataSource } = this.props;
-        routeManager.removeEventListener('change', this.handleRouteChange);
-        dataSource.removeEventListener('change', this.handleDataSourceChange);
-        document.removeEventListener('scroll', this.handleScroll);
+        let hammer = new Hammer(document.body);
+        hammer.on('swipeleft', this.handleSwipeLeft);
+        hammer.on('swiperight', this.handleSwipeRight);
     }
 
     /**
@@ -87,8 +92,17 @@ class Application extends PureComponent {
         let currentPos = container.scrollTop;
         let delta = currentPos - previousPos;
         if (delta > 0) {
-            if (!topNavCollapsed && currentPos > 120) {
-                this.setState({ topNavCollapsed: true });
+            if (!topNavCollapsed) {
+                // check to see if we have scroll down efficiently, so that
+                // hidden the top nav won't reveal white space
+                let pageContainer = document.getElementsByClassName('page-container')[0];
+                let page = (pageContainer) ? pageContainer.firstChild : null;
+                if (page) {
+                    let pageRect = page.getBoundingClientRect();
+                    if (pageRect.y <= 40) {
+                        this.setState({ topNavCollapsed: true });
+                    }
+                }
             }
         } else {
             if (topNavCollapsed) {
@@ -97,9 +111,23 @@ class Application extends PureComponent {
         }
         this.previousScrollPosition = currentPos;
     }
+
+    handleSwipeLeft = (evt) => {
+        let { sideNavCollapsed } = this.state;
+        if (!sideNavCollapsed) {
+            this.setState({ sideNavCollapsed: true });
+        }
+    }
+
+    handleSwipeRight = (evt) => {
+        let { sideNavCollapsed } = this.state;
+        if (sideNavCollapsed) {
+            this.setState({ sideNavCollapsed: false });
+        }
+    }
 }
 
 export {
-    Application as default,
-    Application
+    FrontEnd as default,
+    FrontEnd
 };

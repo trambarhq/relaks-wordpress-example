@@ -2,11 +2,16 @@
     box-sizing: border-box;
 }
 
+HTML {
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+}
+
 BODY {
-    font-family: sans-serif;
-    margin: 0;
     overflow-x: hidden;
     overflow-y: scroll;
+    font-family: sans-serif;
+    margin: 0;
 }
 
 .contents {
@@ -27,18 +32,21 @@ A {
 
 .side-nav {
     position: fixed;
-    width: 20em;
+    width: 18em;
     left: 0;
     top: 0;
-    bottom: 0;
+    bottom: -10em;          // prevent visual glitch in Android
+    padding-bottom: 10em;
     background-color: #66023c;
+    overflow: hidden;
 }
 
 .top-nav {
     position: fixed;
-    left: 20em;
+    left: 18em;
     top: 0;
-    right: 0;
+    width: calc(100vw - 18em);
+    background-color: #990000;  // prevent visual glitch in Android
 
     .title-bar {
         display: flex;
@@ -55,6 +63,10 @@ A {
                 margin-left: 0.5em;
                 margin-right: 0.5em;
                 vertical-align: middle;
+
+                .top-collapsed & {
+                    font-size: 1em;
+                }
             }
 
             .site-name {
@@ -62,7 +74,15 @@ A {
                 transition: font-size 0.5s;
                 vertical-align: middle;
                 text-transform: uppercase;
+
+                .top-collapsed & {
+                    font-size: 1em;
+                }
             }
+        }
+
+        .top-collapsed & {
+            height: 1.75em;
         }
     }
 
@@ -84,6 +104,10 @@ A {
                 border-right: 0;
             }
         }
+
+        .top-collapsed & {
+            height: 0;
+        }
     }
 
     .search-bar {
@@ -95,15 +119,16 @@ A {
         justify-content: center;
         align-items: flex-end;
         transition: height 0.3s;
+        padding-right: 0.25em;
 
         .input-container {
             position: relative;
-            margin-right: 0.25em;
 
             INPUT {
                 max-width: 20em;
                 width: 100%;
                 padding-left: 1.6em;
+                border: 1px solid #660000;
             }
 
             .fa-search {
@@ -115,24 +140,8 @@ A {
                 pointer-events: none;
             }
         }
-    }
 
-    &.collapsed {
-        .title-bar {
-            height: 1.75em;
-
-            .title {
-                .fa {
-                    font-size: 1em;
-                }
-
-                .site-name {
-                    font-size: 1em;
-                }
-            }
-        }
-
-        .page-bar, .search-bar {
+        .top-collapsed & {
             height: 0;
         }
     }
@@ -143,6 +152,86 @@ A {
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
-    margin-left: 20em;
+    margin-left: 18em;
     max-width: 60em;
+}
+
+@media only screen and (max-width: 800px) {
+    .page-container {
+        transition: margin-left 0.3s;
+        margin-right: -17em;
+
+        .side-collapsed & {
+            margin-left: 1em;
+            margin-right: 0;
+        }
+    }
+
+    .top-nav {
+        transition: left 0.3s;
+        left: 18em;
+        width: calc(100vw - 1em);
+
+        .title-bar {
+            height: 3em;
+
+            .title {
+                .fa {
+                    font-size: 1.6em;
+
+                    .top-collapsed & {
+                        font-size: 0.9em;
+                    }
+                }
+
+                .site-name {
+                    font-size: 1.1em;
+
+                    .top-collapsed & {
+                        font-size: 0.9em;
+                    }
+                }
+            }
+        }
+
+        .side-collapsed & {
+            left: 1em;
+        }
+    }
+
+    .side-nav {
+        width: 18em;
+        transition: left 0.3s;
+        margin-right: -17em;
+
+        .side-collapsed & {
+            left: -17em;
+        }
+    }
+
+    .page-container {
+        padding-top: 6em;
+        width: calc(100vw - 1em);
+        max-width: none;
+
+        .side-collapsed & {
+            margin-right: 0;
+        }
+    }
+}
+
+@media only screen and (max-width: 400px) {
+    .top-nav {
+        .search-bar {
+            .input-container {
+                width: 100%;
+
+                INPUT {
+                    width: 100%;
+                    max-width: none;
+                    margin-left: -1px;
+                }
+            }
+        }
+    }
 }
