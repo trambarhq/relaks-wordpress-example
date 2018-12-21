@@ -1,0 +1,148 @@
+* {
+    box-sizing: border-box;
+}
+
+BODY {
+    font-family: sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.contents {
+    margin: 0.5em;
+}
+
+A {
+    &:link, &:visited {
+        text-decoration: none;
+        color: #000;
+    }
+
+    &:hover {
+        text-decoration: underline;
+        color: #f11;
+    }
+}
+
+.side-nav {
+    position: fixed;
+    width: 20em;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #66023c;
+}
+
+.top-nav {
+    position: fixed;
+    left: 20em;
+    top: 0;
+    right: 0;
+
+    .title-bar {
+        display: flex;
+        align-items: center;
+        color: #ffffff;
+        background-color: #990000;
+        height: 8em;
+        transition: height 0.5s;
+
+        .title {
+            .fa {
+                font-size: 4em;
+                transition: font-size 0.5s, margin-left 0.5s, margin-right 0.5s;
+                margin-left: 0.5em;
+                margin-right: 0.5em;
+                vertical-align: middle;
+            }
+
+            .site-name {
+                font-size: 2em;
+                transition: font-size 0.5s;
+                vertical-align: middle;
+                text-transform: uppercase;
+            }
+        }
+    }
+
+    .page-bar {
+        display: flex;
+        align-items: center;
+        background-color: #800000;
+        color: #cccccc;
+        height: 1.75em;
+        overflow: hidden;
+        transition: height 0.4s;
+
+        .button {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+            border-right: 1px solid transparentize(#cccccc, 0.75);
+
+            &:last-of-type {
+                border-right: 0;
+            }
+        }
+    }
+
+    .search-bar {
+        display: flex;
+        flex-direction: column;
+        background-color: #660000;
+        overflow: hidden;
+        height: 1.75em;
+        justify-content: center;
+        align-items: flex-end;
+        transition: height 0.3s;
+
+        .input-container {
+            position: relative;
+            margin-right: 0.25em;
+
+            INPUT {
+                max-width: 20em;
+                width: 100%;
+                padding-left: 1.6em;
+            }
+
+            .fa-search {
+                position: absolute;
+                left: 4px;
+                top: 3px;
+                font-size: 0.9em;
+                color: transparentize(#660000, 0.75);
+                pointer-events: none;
+            }
+        }
+    }
+
+    &.collapsed {
+        .title-bar {
+            height: 1.75em;
+
+            .title {
+                .fa {
+                    font-size: 1em;
+                }
+
+                .site-name {
+                    font-size: 1em;
+                }
+            }
+        }
+
+        .page-bar, .search-bar {
+            height: 0;
+        }
+    }
+}
+
+.page-container {
+    padding-top: 11em;
+    padding-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    margin-left: 20em;
+    max-width: 60em;
+}
