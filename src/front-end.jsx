@@ -90,6 +90,9 @@ class FrontEnd extends PureComponent {
         let container = document.body;
         let previousPos = this.previousScrollPosition || 0;
         let currentPos = container.scrollTop;
+        if (currentPos === 0 && container.parentNode.scrollTop > 0) {
+            currentPos = container.parentNode.scrollTop;
+        }
         let delta = currentPos - previousPos;
         if (delta > 0) {
             if (!topNavCollapsed) {
