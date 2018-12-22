@@ -1,12 +1,32 @@
+import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
+import { Route } from 'routing';
+import WordPress from 'wordpress';
 
-class TopBarSync extends PureComponent {
+class TopNav extends AsyncComponent {
+    static displayName = 'TopNav';
+
+    async renderAsync(meanwhile) {
+        let { wp, route } = this.props;
+        let props = {
+            route,
+        };
+        meanwhile.show(<TopNavSync {...props} />);
+        props.system = await wp.fetchOne('/');
+        meanwhile.show(<TopNavSync {...props} />);
+        props.pages = await wp.fetchList('/wp/v2/pages/');
+        return <TopNavSync {...props} />;
+    }
+}
+
+class TopNavSync extends PureComponent {
     static displayName = 'TopNavSync';
 
     render() {
+        let { onMouseOver, onMouseOut } = this.props;
         return (
-            <div className="top-nav">
+            <div className="top-nav" onMouseOver={onMouseOver} onMouseOut={onMouseOut}>
                 {this.renderTitleBar()}
                 {this.renderPageLinkBar()}
                 {this.renderSearchBar()}
@@ -15,34 +35,52 @@ class TopBarSync extends PureComponent {
     }
 
     renderTitleBar() {
+        let { system } = this.props;
+        let name = _.get(system, 'name', '');
+        let description = _.get(system, 'description', '');
         return (
             <div className="title-bar">
-                <div className="title">
+                <div className="title" title={description}>
                     <i className="fa fa-home" />
-                    <span className="site-name">Romanes eunt domus</span>
+                    <span className="site-name">{name}</span>
                 </div>
             </div>
         );
     }
 
     renderPageLinkBar() {
+        let { pages } = this.props;
+        pages = _.sortBy(pages, 'menu_order');
         return (
             <div className="page-bar">
-                <div className="button">
-                    Hello
-                </div>
-                <div className="button">
-                    World
-                </div>
+            {
+                pages.map((page, i) => {
+                    return this.renderPageLinkButton(page, i);
+                })
+            }
+            </div>
+        );
+    }
+
+    renderPageLinkButton(page, i) {
+        let { route } = this.props;
+        let title = _.get(page, 'title.rendered');
+        let slug = _.get(page, 'slug');
+        let url = '';
+        return (
+            <div className="button" key={i}>
+                <a href={url}>{title}</a>
             </div>
         );
     }
 
     renderSearchBar() {
+        let { route } = this.props;
+        let search = _.get(route.params, 'search', '');
         return (
             <div className="search-bar">
                 <span className="input-container">
-                    <input type="text" value="Hello" />
+                    <input type="text" value={search} />
                     <i className="fa fa-search" />
                 </span>
             </div>
@@ -50,7 +88,28 @@ class TopBarSync extends PureComponent {
     }
 }
 
+TopNavSync.defaultProps = {
+    system: {},
+    pages: [],
+    search: '',
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    TopNav.propTypes = {
+        wp: PropTypes.instanceOf(WordPress).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+    };
+    TopNavSync.propTypes = {
+        system: PropTypes.object,
+        pages: PropTypes.arrayOf(PropTypes.object),
+        route: PropTypes.instanceOf(Route).isRequired,
+    };
+}
+
 export {
-    TopBarSync as default,
-    TopBarSync,
+    TopNav as default,
+    TopNav,
+    TopNavSync,
 };

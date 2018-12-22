@@ -18,12 +18,6 @@ BODY {
 A {
     &:link, &:visited {
         text-decoration: none;
-        color: #000;
-    }
-
-    &:hover {
-        text-decoration: underline;
-        color: #f11;
     }
 }
 
@@ -35,6 +29,30 @@ A {
     bottom: 0;
     background-color: #66023c;
     overflow: hidden;
+    color: #cccccc;
+
+    A {
+        color: #cccccc;
+    }
+
+    .archive {
+        LI {
+            margin-top: 0.1em;
+            margin-bottom: 0.1em;
+        }
+
+        .year {
+            cursor: pointer;
+        }
+
+        .months {
+            overflow: hidden;
+
+            &.collapsed {
+                height: 0;
+            }
+        }
+    }
 }
 
 .top-nav {
@@ -43,6 +61,10 @@ A {
     top: 0;
     width: calc(100% - 18em);
     background-color: #990000;  // prevent visual glitch in Android
+
+    A {
+        color: #cccccc;
+    }
 
     .title-bar {
         display: flex;

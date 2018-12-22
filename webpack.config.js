@@ -57,26 +57,9 @@ var clientConfig = {
             analyzerMode: (event === 'build') ? 'static' : 'disabled',
             reportFilename: `report.html`,
         }),
-        new HtmlWebpackPlugin({
-            template: Path.resolve(`./src/index.html`),
-            filename: Path.resolve(`./server/www/index.html`),
-        }),
         new ExtractTextPlugin("styles.css"),
     ],
     devtool: (event === 'build') ? false : 'inline-source-map',
-    devServer: {
-        inline: true,
-        historyApiFallback: {
-            rewrites: [
-                {
-                    from: /.*/,
-                    to: function(context) {
-                        return context.parsedUrl.pathname.replace(/.*\/(.*)$/, '/$1');
-                    }
-                }
-            ]
-        }
-    }
 };
 
 var serverConfig = {
@@ -102,7 +85,39 @@ var serverConfig = {
     devtool: clientConfig.devtool,
 };
 
-var configs = module.exports = clientConfig; //[ clientConfig, serverConfig ];
+var configs = module.exports = [ clientConfig, serverConfig ];
+
+var isDevServer = process.argv.find((arg) => {
+    return arg.includes('webpack-dev-server') ;
+});
+if (isDevServer) {
+    // remove server config
+    configs.pop();
+    // need HTML page
+    clientConfig.plugins.push(new HtmlWebpackPlugin({
+        template: Path.resolve(`./src/index.html`),
+        filename: Path.resolve(`./server/www/index.html`),
+    }));
+    // set constant
+    var constants = {
+        'process.env.WEBPACK_DEV_SERVER': 'true',
+    };
+    clientConfig.plugins.unshift(new DefinePlugin(constants));
+    // config dev-server to support client-side routing
+    clientConfig.devServer = {
+        inline: true,
+        historyApiFallback: {
+            rewrites: [
+                {
+                    from: /.*/,
+                    to: function(context) {
+                        return context.parsedUrl.pathname.replace(/.*\/(.*)$/, '/$1');
+                    }
+                }
+            ]
+        }
+    };
+}
 
 var constants = {};
 if (event === 'build') {
@@ -110,14 +125,13 @@ if (event === 'build') {
 
     configs.forEach((config) => {
         // set NODE_ENV to production
-        var plugins = config.plugins;
         var constants = {
             'process.env.NODE_ENV': '"production"',
         };
-        plugins.unshift(new DefinePlugin(constants));
+        config.plugins.unshift(new DefinePlugin(constants));
 
         // use Uglify to remove dead-code
-        plugins.unshift(new UglifyJSPlugin({
+        config.plugins.unshift(new UglifyJSPlugin({
             uglifyOptions: {
                 compress: {
                   drop_console: true,

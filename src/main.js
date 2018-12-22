@@ -13,6 +13,10 @@ if (typeof(window) === 'object') {
     async function initialize(evt) {
         // create data source
         let host = `${location.protocol}//${location.host}`;
+        if (process.env.NODE_ENV !== 'production' && process.env.WEBPACK_DEV_SERVER) {
+            // use hardcoded URL when we're running in dev-server
+            host = 'http://localhost:8000';
+        }
         let dataSource = new WordpressDataSource({
             baseURL: `${host}/wp-json`,
         });
@@ -31,10 +35,13 @@ if (typeof(window) === 'object') {
         if (!appContainer) {
             throw new Error('Unable to find app element in DOM');
         }
-        //let ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: 'hydrate' });
-        //let seeds = await harvest(ssrElement, { seeds: true });
-        //Relaks.set('seeds', seeds);
-        //hydrate(ssrElement, appContainer);
+        // expect SSR unless we're running in dev-server
+        if (!(process.env.NODE_ENV !== 'production' && process.env.WEBPACK_DEV_SERVER)) {
+            let ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: 'hydrate' });
+            let seeds = await harvest(ssrElement, { seeds: true });
+            Relaks.set('seeds', seeds);
+            hydrate(ssrElement, appContainer);
+        }
 
         let appElement = createElement(FrontEnd, { dataSource, routeManager });
         render(appElement, appContainer);
