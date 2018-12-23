@@ -7,7 +7,7 @@ import RouteManager from 'relaks-route-manager';
 import { harvest } from 'relaks-harvest';
 import Relaks from 'relaks';
 
-const pageBasePath = '/';
+const pageBasePath = '';
 
 if (typeof(window) === 'object') {
     async function initialize(evt) {

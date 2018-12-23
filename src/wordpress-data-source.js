@@ -120,12 +120,26 @@ prototype.notifyChanges = function(changed) {
 /**
  * Fetch one object at the URL.
  *
- * @param  {String} url
+ * @param  {String|Object} url
  * @param  {Object|undefined} options
  *
  * @return {Promise<Object>}
  */
 prototype.fetchOne = function(url, options) {
+    if (url instanceof Object) {
+        var pageURL = attachSlug(url.url, url.slug);
+        var pageOptions = {
+            afterDelete: 'remove',
+            afterInsert: 'ignore',
+            afterUpdate: 'replace',
+        };
+        for (var key in options) {
+            pageOptions[key] = options[key];
+        }
+        return this.fetchPage(pageURL, 1, pageOptions).then(function(objects) {
+            return objects[0] || null;
+        });
+    }
     var _this = this;
     var absURL = this.resolveURL(url);
     var props = {
@@ -2136,6 +2150,21 @@ function attachPageNumber(url, page) {
     var qi = url.indexOf('?');
     var sep = (qi === -1) ? '?' : '&';
     return url + sep + 'page=' + page;
+}
+
+function attachSlug(url, slug) {
+    var qi = url.indexOf('?');
+    var sep = (qi === -1) ? '?' : '&';
+    return url + sep + 'slug=' + encodeURI(slug);
+}
+
+function attachSlugs(url, slugs) {
+    var qi = url.indexOf('?');
+    var sep = (qi === -1) ? '?' : '&';
+    var pairs = slugs.map(function(slug) {
+        return 'slug[]=' + encodeURI(slug);
+    });
+    return url + sep + pairs.join('&');
 }
 
 function omitSearchString(url) {

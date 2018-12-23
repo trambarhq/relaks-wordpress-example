@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 
-class CategoryStoryPage extends AsyncComponent {
-    static displayName = 'CategoryStoryPage';
+class CategoryPostPage extends AsyncComponent {
+    static displayName = 'CategoryPostPage';
 
     async renderAsync(meanwhile) {
         return <div>Category > Story</div>;
@@ -10,6 +10,6 @@ class CategoryStoryPage extends AsyncComponent {
 }
 
 export {
-    CategoryStoryPage as default,
-    CategoryStoryPage,
+    CategoryPostPage as default,
+    CategoryPostPage,
 };

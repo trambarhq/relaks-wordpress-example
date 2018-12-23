@@ -168,11 +168,12 @@ A {
 }
 
 .page-container {
-    padding-top: 11em;
+    padding-top: 11.5em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
     margin-left: 18em;
+    min-height: 100vh;
     background-color: #ffffff;
 
     .page {

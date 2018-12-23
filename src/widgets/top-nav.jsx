@@ -66,7 +66,7 @@ class TopNavSync extends PureComponent {
         let { route } = this.props;
         let title = _.get(page, 'title.rendered');
         let slug = _.get(page, 'slug');
-        let url = '';
+        let url = route.find('page', { page: slug });
         return (
             <div className="button" key={i}>
                 <a href={url}>{title}</a>
@@ -80,7 +80,7 @@ class TopNavSync extends PureComponent {
         return (
             <div className="search-bar">
                 <span className="input-container">
-                    <input type="text" value={search} />
+                    <input type="text" value={search} readOnly />
                     <i className="fa fa-search" />
                 </span>
             </div>

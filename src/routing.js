@@ -27,24 +27,52 @@ class Route {
 }
 
 let routes = {
-    'welcome-page': {
+    'welcome': {
         path: '/',
         load: async (match) => {
             match.params.module = await import('pages/welcome-page' /* webpackChunkName: "welcome" */);
         }
     },
-    'category-page': {
-        path: '/${category}/',
+    'welcome-post': {
+        path: '/posts/${post}',
+        params: { post: String },
+        load: async (match) => {
+            match.params.module = await import('pages/welcome-post-page' /* webpackChunkName: "welcome-post" */);
+        }
+    },
+    'page': {
+        path: '/pages/${page}',
+        params: { page: String },
+        load: async (match) => {
+            match.params.module = await import('pages/page-page' /* webpackChunkName: "page" */);
+        }
+    },
+    'category': {
+        path: '/categories/${category}',
         params: { category: String },
         load: async (match) => {
             match.params.module = await import('pages/category-page' /* webpackChunkName: "category" */);
         }
     },
-    'story-page': {
-        path: '/${category}/${slug}/',
-        params: { category: String, slug: String },
+    'category-post': {
+        path: '/categories/${category}/${post}',
+        params: { category: String, post: String },
         load: async (match) => {
-            match.params.module = await import('pages/category-story-page' /* webpackChunkName: "category-story" */);
+            match.params.module = await import('pages/category-post-page' /* webpackChunkName: "category-post" */);
+        }
+    },
+    'archive': {
+        path: '/archive/${month}',
+        params: { month: String },
+        load: async (match) => {
+            match.params.module = await import('pages/archive-page' /* webpackChunkName: "archive" */);
+        }
+    },
+    'archive-post': {
+        path: '/archive/${month}/${post}',
+        params: { month: String, post: String },
+        load: async (match) => {
+            match.params.module = await import('pages/archive-page' /* webpackChunkName: "archive-post" */);
         }
     },
 };

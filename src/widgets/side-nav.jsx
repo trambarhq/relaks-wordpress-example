@@ -134,10 +134,11 @@ class SideNavSync extends PureComponent {
     }
 
     renderCategory(category, i) {
+        let { route } = this.props;
         let name = _.get(category, 'name', '');
         let description = _.get(category, 'description', '');
         let slug = _.get(category, 'slug', '');
-        let url = '';
+        let url = route.find('category', { category: slug });
         return (
             <li key={i}>
                 <a href={url} title={description}>{name}</a>
@@ -187,9 +188,10 @@ class SideNavSync extends PureComponent {
     }
 
     renderMonth(monthEntry, i) {
+        let { route } = this.props;
         let url;
         if (!_.isEmpty(monthEntry.posts) || _.isUndefined(monthEntry.posts)) {
-            url = '#';
+            url = route.find('archive', { month: monthEntry.slug });
         }
         return (
             <li key={i}>

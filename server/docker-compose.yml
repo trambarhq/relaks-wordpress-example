@@ -2,10 +2,10 @@ version: "2"
 services:
   db:
     image: mysql:5.7
-    ports:
-      - 3306:3306
     volumes:
       - db_data:/var/lib/mysql
+    ports:
+      - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: somewordpress
       MYSQL_DATABASE: wordpress
@@ -16,8 +16,6 @@ services:
     depends_on:
       - db
     image: wordpress:latest
-    ports:
-      - 8888:80
     environment:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: wordpress
@@ -25,8 +23,6 @@ services:
     restart: always
   node:
     image: node:8
-    ports:
-      - 8080:80
     volumes:
       - ..:/opt/example
       - ./cache:/var/cache/nginx
@@ -45,7 +41,7 @@ services:
       - ./nginx:/etc/nginx/conf.d
       - ./cache:/var/cache/nginx
     ports:
-      - "8000:80"
+      - 8000:80
     restart: always
 volumes:
     db_data:

@@ -16,6 +16,7 @@ var clientConfig = {
     entry: './main',
     output: {
         path: Path.resolve('./server/www'),
+        publicPath: '/',
         filename: 'app.js',
     },
     resolve: {
@@ -106,16 +107,7 @@ if (isDevServer) {
     // config dev-server to support client-side routing
     clientConfig.devServer = {
         inline: true,
-        historyApiFallback: {
-            rewrites: [
-                {
-                    from: /.*/,
-                    to: function(context) {
-                        return context.parsedUrl.pathname.replace(/.*\/(.*)$/, '/$1');
-                    }
-                }
-            ]
-        }
+        historyApiFallback: true,
     };
 }
 
