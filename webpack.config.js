@@ -49,6 +49,23 @@ var clientConfig = {
                     use: 'css-loader!sass-loader',
                 })
             },
+            {
+                test: /\.less$/,
+                use: ExtractTextPlugin.extract({
+                    use: 'css-loader!less-loader',
+                })
+            },
+            {
+                test: /fonts.*\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'file-loader',
+            },
+            {
+                test: /fonts.*\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'file-loader',
+                query: {
+                    emitFile: false,
+                }
+            },
         ]
     },
     plugins: [

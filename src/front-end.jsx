@@ -4,6 +4,7 @@ import Wordpress from 'wordpress';
 import { Route } from 'routing';
 import SideNav from 'widgets/side-nav';
 import TopNav from 'widgets/top-nav';
+import 'font-awesome-webpack';
 import 'style.scss';
 
 class FrontEnd extends PureComponent {
