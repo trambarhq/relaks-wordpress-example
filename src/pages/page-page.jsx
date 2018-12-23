@@ -14,9 +14,8 @@ class PagePage extends AsyncComponent {
         let props = {
             route,
         };
-        let slug = route.params.page;
-        let url = '/wp/v2/pages/';
-        props.page = await wp.fetchOne({ url, slug });
+        let slugs = route.params.slugs;
+        props.pages = await wp.fetchMultiple({ url: '/wp/v2/pages/', slugs });
         return <PagePageSync {...props} />;
     }
 }
@@ -24,10 +23,10 @@ class PagePage extends AsyncComponent {
 class PagePageSync extends PureComponent {
 
     render() {
-        let { page } = this.props;
+        let { pages } = this.props;
+        let activePage = _.last(pages);
         let title = _.get(page, 'title.rendered', '');
         let content = _.get(page, 'content.rendered', '');
-        console.log(page);
         return (
             <div className="page">
                 <h1><HTML text={title} /></h1>

@@ -8,7 +8,7 @@ class CategoryPage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
-        let slug = route.params.category;
+        let slug = route.params.slugs[0];
         let props = {
             route,
         };
@@ -32,7 +32,7 @@ class CategoryPageSync extends PureComponent {
                     <span>Categories > </span>
                     <span>{title}</span>
                 </h4>
-                <PostList route={route} posts={posts} />
+                <PostList route={route} category={category} posts={posts} />
             </div>
         );
     }

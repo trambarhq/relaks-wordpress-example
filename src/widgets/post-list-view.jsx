@@ -7,13 +7,23 @@ class PostListView extends PureComponent {
     static displayName = 'PostListView';
 
     render() {
-        let { post, author } = this.props;
+        let { route, category, post, author, month } = this.props;
         let title = _.get(post, 'title.rendered', '');
         let excerpt = _.get(post, 'excerpt.rendered', '');
         excerpt = cleanExcerpt(excerpt);
+        let slugs = [ post.slug ];
+        if (category) {
+            slugs.unshift(category.slug);
+        }
+        if (month) {
+            slugs.unshift(month.format('YYYY-MM'));
+        }
+        let url = route.find(slugs);
         return (
             <div className="post-list-view">
-                <h2><HTML text={title} /></h2>
+                <h2>
+                    <a href={url}><HTML text={title} /></a>
+                </h2>
                 <p><HTML text={excerpt} /></p>
             </div>
         );

@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { hydrate, render } from 'react-dom';
 import { FrontEnd } from 'front-end';
-import { routes } from 'routing';
+import { routes, setPageType } from 'routing';
 import WordpressDataSource from 'wordpress-data-source';
 import RouteManager from 'relaks-route-manager';
 import { harvest } from 'relaks-harvest';
@@ -27,6 +27,9 @@ if (typeof(window) === 'object') {
             routes,
             basePath: pageBasePath,
             preloadingDelay: 2000,
+        });
+        routeManager.addEventListener('beforechange', (evt) => {
+            evt.postponeDefault(setPageType(dataSource, evt.params));
         });
         routeManager.activate();
         await routeManager.start();

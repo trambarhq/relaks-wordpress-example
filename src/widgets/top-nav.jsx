@@ -15,7 +15,7 @@ class TopNav extends AsyncComponent {
         meanwhile.show(<TopNavSync {...props} />);
         props.system = await wp.fetchOne('/');
         meanwhile.show(<TopNavSync {...props} />);
-        props.pages = await wp.fetchList('/wp/v2/pages/');
+        props.pages = await wp.fetchList('/wp/v2/pages/?parent=0');
         return <TopNavSync {...props} />;
     }
 }
@@ -66,7 +66,7 @@ class TopNavSync extends PureComponent {
         let { route } = this.props;
         let title = _.get(page, 'title.rendered');
         let slug = _.get(page, 'slug');
-        let url = route.find('page', { page: slug });
+        let url = route.find([ slug ]);
         return (
             <div className="button" key={i}>
                 <a href={url}>{title}</a>

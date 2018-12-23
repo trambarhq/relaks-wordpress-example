@@ -9,7 +9,8 @@ class ArchivePage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
-        let month = Moment(route.params.month);
+        let slug = route.params.slugs[0];
+        let month = Moment(slug);
         let props = {
             route,
             month,

@@ -1,3 +1,5 @@
+let _ = require('lodash');
+
 class Route {
     constructor(routeManager) {
         this.routeManager = routeManager;
@@ -10,71 +12,72 @@ class Route {
         return this.routeManager.change(url, options);
     }
 
-    find(name, params) {
-        return this.routeManager.find(name, params);
-    }
-
-    extractID(url) {
-        var si = url.lastIndexOf('/');
-        var ei;
-        if (si === url.length - 1) {
-            ei = si;
-            si = url.lastIndexOf('/', ei - 1);
-        }
-        var text = url.substring(si + 1, ei);
-        return parseInt(text);
+    find(slugs) {
+        return this.routeManager.find('page', { slugs });
     }
 }
 
 let routes = {
-    'welcome': {
-        path: '/',
-        load: async (match) => {
-            match.params.module = await import('pages/welcome-page' /* webpackChunkName: "welcome" */);
-        }
-    },
-    'welcome-post': {
-        path: '/posts/${post}',
-        params: { post: String },
-        load: async (match) => {
-            match.params.module = await import('pages/welcome-post-page' /* webpackChunkName: "welcome-post" */);
-        }
-    },
     'page': {
-        path: '/pages/${page}',
-        params: { page: String },
-        load: async (match) => {
-            match.params.module = await import('pages/page-page' /* webpackChunkName: "page" */);
-        }
-    },
-    'category': {
-        path: '/categories/${category}',
-        params: { category: String },
-        load: async (match) => {
-            match.params.module = await import('pages/category-page' /* webpackChunkName: "category" */);
-        }
-    },
-    'category-post': {
-        path: '/categories/${category}/${post}',
-        params: { category: String, post: String },
-        load: async (match) => {
-            match.params.module = await import('pages/category-post-page' /* webpackChunkName: "category-post" */);
-        }
-    },
-    'archive': {
-        path: '/archive/${month}',
-        params: { month: String },
-        load: async (match) => {
-            match.params.module = await import('pages/archive-page' /* webpackChunkName: "archive" */);
-        }
-    },
-    'archive-post': {
-        path: '/archive/${month}/${post}',
-        params: { month: String, post: String },
-        load: async (match) => {
-            match.params.module = await import('pages/archive-page' /* webpackChunkName: "archive-post" */);
+        path: {
+            from(path, params) {
+                params.slugs = path.split('/').filter(Boolean);
+                return true;
+            },
+            to(params) {
+                if (params.slugs instanceof Array) {
+                    return `/${params.slugs.join('/')}`;
+                } else {
+                    return `/`;
+                }
+            }
+        },
+        load: (match) => {
+            let type = match.params.pageType;
+            if (type) {
+                match.params.module = require(`pages/${type}-page`);
+            }
         }
     },
 };
 
-export { Route, routes };
+async function setPageType(dataSource, params) {
+    let type;
+    let slugs = params.slugs;
+    if (slugs.length > 0) {
+        let rootSlugType = await getSlugType(dataSource, slugs[0]);
+        if (rootSlugType === 'page') {
+            type = 'page';
+        } else if (rootSlugType === 'category') {
+            if (slugs.length === 1) {
+                type = 'category';
+            } else if (slugs.length === 2) {
+                type = 'category-post';
+            }
+        } else if (rootSlugType === 'archive') {
+            if (slugs.length === 1 || slugs.length === 2) {
+                type = 'archive';
+            } else if (slugs.length === 3) {
+                type = 'archive-post';
+            }
+        }
+    }
+    params.pageType = type || 'welcome';
+}
+
+async function getSlugType(dataSource, slug) {
+    let options = {}; // { minimum: '100%' };
+    let pages = await dataSource.fetchList('/wp/v2/pages/?parent=0', options);
+    if (_.some(pages, { slug })) {
+        return 'page';
+    }
+    let categories = await dataSource.fetchList('/wp/v2/categories/', options);
+    if (_.some(categories, { slug })) {
+        return 'category';
+    }
+    if (/^\d{4}\-\d{2}$/.test(slug)) {
+        return 'archive';
+    }
+}
+
+export { Route, routes, setPageType };
