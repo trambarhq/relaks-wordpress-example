@@ -44,36 +44,35 @@ class SideNav extends AsyncComponent {
         // build the archive tree
         props.archive = [];
         if (latestPost && earliestPost) {
-            let lastMonthEnd = Moment(latestPost.date_gmt).endOf('month');
-            let firstMonthStart = Moment(earliestPost.date_gmt).startOf('month');
-            let currentYearEntry;
-            // loop from the last month to the first
-            let e = lastMonthEnd.clone();
-            let s = e.clone().startOf('month');
-            while (s >= firstMonthStart) {
-                let year = s.year();
-                let month = s.month() + 1;
-                if (!currentYearEntry || currentYearEntry.year !== year) {
-                    // start a new year
-                    currentYearEntry = {
-                        year,
-                        label: s.format('YYYY'),
-                        months: []
-                    };
-                    props.archive.push(currentYearEntry);
-                }
-                let monthEntry = {
-                    month,
-                    label: s.format('MMMM'),
-                    slug: s.format('YYYY-MM'),
-                    post: undefined,
-                    start: s.clone(),
-                    end: e.clone(),
-                 };
-                currentYearEntry.months.push(monthEntry);
+            let lastPostDate = Moment(latestPost.date_gmt);
+            let firstPostDate = Moment(earliestPost.date_gmt);
+            // loop through the years
+            let lastYear = lastPostDate.year();
+            let firstYear = firstPostDate.year();
+            for (let y = lastYear; y >= firstYear; y--) {
+                let yearEntry = {
+                    year: y,
+                    label: Moment(`${y}-01-01`).format('YYYY'),
+                    months: []
+                };
+                props.archive.push(yearEntry);
 
-                e.subtract(1, 'month');
-                s.subtract(1, 'month');
+                // loop through the months
+                let lastMonth = (y === lastYear) ? lastPostDate.month() : 11;
+                let firstMonth = (y === firstYear) ? firstPostDate.month() : 0;
+                for (let m = lastMonth; m >= firstMonth; m--) {
+                    let start = Moment(new Date(y, m, 1));
+                    let end = start.clone().endOf('month');
+                    let monthEntry = {
+                        month: m + 1,
+                        label: start.format('MMMM'),
+                        slug: start.format('YYYY-MM'),
+                        post: undefined,
+                        start,
+                        end,
+                    };
+                    yearEntry.months.push(monthEntry);
+                }
             }
             meanwhile.show(<SideNavSync {...props} />);
 
@@ -83,7 +82,7 @@ class SideNav extends AsyncComponent {
                     for (let monthEntry of yearEntry.months) {
                         let before = monthEntry.end.toISOString();
                         let after = monthEntry.start.toISOString();
-                        let url = `/wp/v2/posts/?before=${before}&after=${after}`;
+                        let url = `/wp/v2/posts/?after=${after}&before=${before}`;
                         monthEntry.posts = await wp.fetchList(url);
 
                         // force prop change
