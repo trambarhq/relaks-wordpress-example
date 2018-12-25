@@ -14,17 +14,20 @@ class PagePage extends AsyncComponent {
         let props = {
             route,
         };
-        let slugs = route.params.slugs;
-        props.pages = await wp.fetchMultiple({ url: '/wp/v2/pages/', slugs });
+        let slug = _.last(route.params.slugs);
+        let parentSlugs = _.slice(route.params.slugs, 0, -1);
+        props.page = await wp.fetchOne('/wp/v2/pages/', slug);
+        meanwhile.show(<PagePageSync {...props} />);
+        props.parentPages = await wp.fetchMultiple('/wp/v2/pages/', parentSlugs);
         return <PagePageSync {...props} />;
     }
 }
 
 class PagePageSync extends PureComponent {
+    static displayName = 'PagePageSync';
 
     render() {
-        let { pages } = this.props;
-        let activePage = _.last(pages);
+        let { page } = this.props;
         let title = _.get(page, 'title.rendered', '');
         let content = _.get(page, 'content.rendered', '');
         return (

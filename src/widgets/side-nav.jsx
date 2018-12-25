@@ -11,9 +11,10 @@ class SideNav extends AsyncComponent {
     constructor(props) {
         super(props);
         let { route } = this.props;
+        let { monthSlug } = route.params;
         let selectedYear;
-        if (route.params.month) {
-            selectedYear = parseInt(route.params.month.substr(0, 4));
+        if (monthSlug) {
+            selectedYear = parseInt(monthSlug.substr(0, 4));
         } else {
             selectedYear = Moment().year();
         }
@@ -24,6 +25,7 @@ class SideNav extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
+        let { monthSlug } = route.params;
         let { selectedYear } = this.state;
         let props = {
             route,
@@ -80,16 +82,33 @@ class SideNav extends AsyncComponent {
             for (let yearEntry of props.archive) {
                 if (yearEntry.year === selectedYear) {
                     for (let monthEntry of yearEntry.months) {
-                        let before = monthEntry.end.toISOString();
                         let after = monthEntry.start.toISOString();
-                        let url = `/wp/v2/posts/?after=${after}&before=${before}`;
-                        monthEntry.posts = await wp.fetchList(url);
+                        let before = monthEntry.end.toISOString();
+                        monthEntry.posts = await wp.fetchList(`/wp/v2/posts/?after=${after}&before=${before}`);
 
                         // force prop change
                         props.archive = _.clone(props.archive);
                         meanwhile.show(<SideNavSync {...props} />);
                     }
                 }
+            }
+
+            // load the posts of each categories
+            props.categoryPosts = [];
+            for (let category of props.categories) {
+                let url;
+                if (monthSlug) {
+                    let month = Moment(monthSlug);
+                    let after = month.toISOString();
+                    let before = month.endOf('month').toISOString();
+                    url = `/wp/v2/posts/?after=${after}&before=${before}&categories=${category.id}`;
+                } else {
+                    url = `/wp/v2/posts/?categories=${category.id}`;
+                }
+                let posts = await wp.fetchList(url);
+                props.categoryPosts = _.clone(props.categoryPosts);
+                props.categoryPosts.push(posts);
+                meanwhile.show(<SideNavSync {...props} />);
             }
         }
         return <SideNavSync {...props} />;
@@ -133,11 +152,20 @@ class SideNavSync extends PureComponent {
     }
 
     renderCategory(category, i) {
-        let { route } = this.props;
+        let { route, categoryPosts } = this.props;
+        let { monthSlug } = route.params;
         let name = _.get(category, 'name', '');
         let description = _.get(category, 'description', '');
-        let slug = _.get(category, 'slug', '');
-        let url = route.find([ slug ]);
+        let categorySlug = _.get(category, 'slug', '');
+        let slugs = [ categorySlug ];
+        if (monthSlug) {
+            slugs.unshift(monthSlug);
+        }
+        let url = route.find(slugs);
+        let posts = (categoryPosts) ? categoryPosts[i] : undefined;
+        if (_.isEmpty(posts) && !_.isUndefined(posts)) {
+            url = undefined;
+        }
         return (
             <li key={i}>
                 <a href={url} title={description}>{name}</a>
@@ -188,9 +216,9 @@ class SideNavSync extends PureComponent {
 
     renderMonth(monthEntry, i) {
         let { route } = this.props;
-        let url;
-        if (!_.isEmpty(monthEntry.posts) || _.isUndefined(monthEntry.posts)) {
-            url = route.find([ monthEntry.slug ]);
+        let url = route.find([ monthEntry.slug ]);
+        if (_.isEmpty(monthEntry.posts) && !_.isUndefined(monthEntry.posts)) {
+            url = undefined;
         }
         return (
             <li key={i}>
@@ -221,6 +249,7 @@ if (process.env.NODE_ENV !== 'production') {
     };
     SideNavSync.propTypes = {
         categories: PropTypes.arrayOf(PropTypes.object),
+        categoryPosts: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)),
         archive: PropTypes.arrayOf(PropTypes.object),
         selectedYear: PropTypes.number,
         route: PropTypes.instanceOf(Route),

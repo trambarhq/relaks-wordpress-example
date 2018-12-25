@@ -85,7 +85,7 @@ prototype.resolveURL = function(url) {
             url = baseURL + '?rest_route=' + encodeURI(url);
         }
     }
-    return url;
+    return addTrailingSlash(url);
 };
 
 /**
@@ -120,55 +120,48 @@ prototype.notifyChanges = function(changed) {
 /**
  * Fetch one object at the URL.
  *
- * @param  {String|Object} url
+ * @param  {String} url
+ * @param  {Number|String|undefined} id
  * @param  {Object|undefined} options
  *
  * @return {Promise<Object>}
  */
-prototype.fetchOne = function(url, options) {
-    if (url instanceof Object) {
-        var pageURL = attachSlug(url.url, url.slug);
-        var pageOptions = {
-            afterDelete: 'remove',
-            afterInsert: 'ignore',
-            afterUpdate: 'replace',
-        };
-        for (var key in options) {
-            pageOptions[key] = options[key];
-        }
-        return this.fetchPage(pageURL, 1, pageOptions).then(function(objects) {
+prototype.fetchOne = function(url, id, options) {
+    if (id) {
+        return this.fetchMultiple(url, [ id ], options).then(function(objects) {
             return objects[0] || null;
         });
-    }
-    var _this = this;
-    var absURL = this.resolveURL(url);
-    var props = {
-        type: 'object',
-        url: absURL,
-        options: options || {},
-    };
-    var query = this.findQuery(props);
-    if (!query) {
-        query = this.deriveQuery(absURL, true);
-    }
-    if (!query) {
-        var time = getTime();
-        query = props;
-        query.promise = this.get(absURL).then(function(response) {
-            var object = response;
-            query.object = object;
-            query.time = time;
-            _this.processFreshObject(object, absURL, query, true);
+    } else {
+        var _this = this;
+        var absURL = this.resolveURL(url);
+        var props = {
+            type: 'object',
+            url: absURL,
+            options: options || {},
+        };
+        var query = this.findQuery(props);
+        if (!query) {
+            query = this.deriveQuery(absURL, true);
+        }
+        if (!query) {
+            var time = getTime();
+            query = props;
+            query.promise = this.get(absURL).then(function(response) {
+                var object = response;
+                query.object = object;
+                query.time = time;
+                _this.processFreshObject(object, absURL, query, true);
+                return object;
+            });
+            this.queries.unshift(query);
+        }
+        return query.promise.then(function(object) {
+            if (query.expired)  {
+                _this.refreshOne(query);
+            }
             return object;
         });
-        this.queries.unshift(query);
     }
-    return query.promise.then(function(object) {
-        if (query.expired)  {
-            _this.refreshOne(query);
-        }
-        return object;
-    });
 };
 
 /**
@@ -338,66 +331,162 @@ prototype.fetchNextPage = function(query, initial) {
  * resolve with cached results when there're sufficient numbers of objects.
  * An onChange will be trigger once the full set is retrieved.
  *
- * @param  {Array<String>} urls
+ * @param  {String} url
+ * @param  {Array<Number|String>} ids
  * @param  {Object} options
  *
  * @return {Promise<Array>}
  */
-prototype.fetchMultiple = function(urls, options) {
-    // see which ones are cached already
+prototype.fetchMultiple = function(url, ids, options) {
     var _this = this;
-    var cached = 0;
-    var fetchOptions = {};
-    for (var name in options) {
-        if (name !== 'minimum') {
-            fetchOptions[name] = options[name];
-        }
-    }
-    var cachedResults = [];
-    var promises = urls.map(function(url) {
-        var absURL = _this.resolveURL(url);
-        var props = {
-            url: absURL,
-            type: 'object',
-            options: fetchOptions
-        };
-        var query = _this.findQuery(props);
-        if (!query) {
-            query = _this.deriveQuery(absURL, true);
-        }
-        if (query && query.object) {
-            cached++;
-            cachedResults.push(query.object);
-            return query.object;
+    var absURL = this.resolveURL(url);
+    var byID = {
+        ids: [],
+        objects: [],
+        expired: false,
+        urlParam: 'include',
+    };
+    var bySlug = {
+        ids: [],
+        objects: [],
+        expired: false,
+        urlParam: 'slug',
+    };
+    // look for cached objects from among existing queries
+    var cachedObjectHash = {};
+    var remaining = ids.slice().filter(Boolean);
+    this.scanCachedObjects(absURL, function(object, query) {
+        var index = remaining.indexOf(object.id);
+        if (index !== -1) {
+            cachedObjectHash[object.id] = object;
+            if (query.expired) {
+                byID.expired = true;
+            }
         } else {
-            cachedResults.push(null);
-            return _this.fetchOne(absURL, fetchOptions);
+            if (object.slug) {
+                index = ids.indexOf(object.slug);
+                if (index !== -1) {
+                    cachedObjectHash[object.slug] = object;
+                    if (query.expired) {
+                        bySlug.expired = true;
+                    }
+                }
+            }
+        }
+        if (index !== -1) {
+            remaining.splice(index, 1);
+        }
+        if (remaining.length === 0) {
+            return false;
         }
     });
 
-    // wait for the complete list to arrive
-    var completeListPromise;
-    if (cached < urls.length) {
-        completeListPromise = this.waitForResults(promises).then(function(outcome) {
-            if (outcome.error) {
-                throw outcome.error;
+    // map ids to cached objects, remembering which one is found by numeric id
+    // and which one is found by slug
+    var cached = 0;
+    var cachedResults = ids.map(function(id) {
+        var cachedObject = cachedObjectHash[id];
+        var byX;
+        if (typeof(id) === 'number') {
+            byX = byID;
+        } else if (typeof(id) === 'string') {
+            byX = bySlug;
+        }
+        if (byX) {
+            if (byX.ids.indexOf(id) === -1) {
+                byX.ids.push(id);
+                if (cachedObject) {
+                    byX.objects.push(cachedObject);
+                    cached++;
+                }
             }
-            return outcome.results;
+            return cachedObject || null;
+        }
+    });
+
+    // create list queries (one usually; two if ids contains a mix of strings and numbers)
+    var listPromises = [ byID, bySlug ].map(function(byX) {
+        if (byX.ids.length === 0) {
+            return null;
+        }
+        var listURL = attachURLParameter(absURL, byX.urlParam, byX.ids);
+        var listOptions = {
+            pageSize: Math.min(100, byX.ids.length),
+            minimum: '100%',
+            afterInsert: 'ignore',
+            afterUpdate: 'replace',
+            afterDelete: 'remove',
+        };
+        for (var key in options) {
+            listOptions[key] = options[key];
+        }
+        var props = {
+            type: 'list',
+            url: listURL,
+            options: listOptions,
+        };
+        var query = _this.findQuery(props);
+        if (!query) {
+            query = props;
+            if (byX.ids.length === byX.objects.length) {
+                // no wait if we have all the objects
+                query.promise = Promise.resolve(byX.objects);
+                query.expired = byX.expired;
+                if (query.expired) {
+                    _this.refreshList(query);
+                }
+            } else {
+                // fetch the first page
+                query.promise = _this.fetchNextPage(query, true);
+            }
+            _this.queries.push(query);
+        }
+        return query.promise;
+    });
+
+    // create a promise that's fulfiled when the list queries are done
+    var completeListPromise = Promise.all(listPromises).then(function(lists) {
+        var objectHash = {};
+        lists.forEach(function(list) {
+            if (list) {
+                list.forEach(function(object) {
+                    objectHash[object.id] = object;
+                    if (object.slug) {
+                        objectHash[object.slug] = object;
+                    }
+                });
+            }
         });
-    }
+        return ids.map(function(id) {
+            return objectHash[id] || null;
+        });
+    });
 
     // see whether partial result set should be immediately returned
-    var minimum = getMinimum(options, urls.length, urls.length);
-    if (cached < minimum && completeListPromise) {
+    var minimum = getMinimum(options, ids.length, ids.length);
+    if (cached < minimum) {
         return completeListPromise;
     } else {
-        if (completeListPromise) {
-            // return partial list then fire change event when complete list arrives
-            completeListPromise.then(function(objects) {
-                _this.notifyChanges();
-            });
-        }
+        // return partial list--the list query will issue change event
         return Promise.resolve(cachedResults);
+    }
+};
+
+prototype.scanCachedObjects = function(absURL, cb) {
+    for (var i = 0; i < this.queries.length; i++) {
+        var query = this.queries[i];
+        if (query.type === 'page' || query.type === 'list') {
+            var url = omitSearchString(query.url);
+            if (url === absURL && query.objects) {
+                for (var j = 0; j < query.objects.length; j++) {
+                    var object = query.objects[j];
+                    var ret = cb(object, query);
+                    if (ret === false) {
+                        return;
+                    }
+                }
+            }
+        }
     }
 };
 
@@ -1490,44 +1579,6 @@ prototype.invalidateToken = function(token) {
     }
 };
 
-prototype.waitForResults = function(promises) {
-    var _this = this;
-    var results = [];
-    var errors = [];
-    var firstError = null;
-    promises = promises.map(function(promise, index) {
-        if (promise.then instanceof Function) {
-            return promise.then(function(result) {
-                results[index] = result;
-                errors[index] = null;
-            }, function(err) {
-                results[index] = null;
-                errors[index] = err;
-                if (!firstError) {
-                    firstError = err;
-                }
-            });
-        } else {
-            results[index] = promise;
-            errors[index] = null;
-            return null;
-        }
-    });
-    this.stopExpirationCheck();
-    return Promise.all(promises).then(function() {
-        _this.startExpirationCheck();
-        if (firstError) {
-            firstError.results = results;
-            firstError.errors = errors;
-        }
-        return {
-            results: results,
-            errors: errors,
-            error: firstError,
-        };
-    });
-}
-
 /**
  * Start expiration checking
  */
@@ -2144,27 +2195,24 @@ function getObjectFolderURL(folderURL, object) {
  * @return {String}
  */
 function attachPageNumber(url, page) {
-    if (page === 1) {
-        return url;
+    return (page === 1) ? url : attachURLParameter(url, 'page', page);
+}
+
+function attachURLParameter(url, name, value) {
+    var qi = url.indexOf('?');
+    var sep = (qi === -1) ? '?' : '&';
+    var assignments;
+    if (value instanceof Array && value.length === 1) {
+        value = value[0];
     }
-    var qi = url.indexOf('?');
-    var sep = (qi === -1) ? '?' : '&';
-    return url + sep + 'page=' + page;
-}
-
-function attachSlug(url, slug) {
-    var qi = url.indexOf('?');
-    var sep = (qi === -1) ? '?' : '&';
-    return url + sep + 'slug=' + encodeURI(slug);
-}
-
-function attachSlugs(url, slugs) {
-    var qi = url.indexOf('?');
-    var sep = (qi === -1) ? '?' : '&';
-    var pairs = slugs.map(function(slug) {
-        return 'slug[]=' + encodeURI(slug);
-    });
-    return url + sep + pairs.join('&');
+    if (value instanceof Array) {
+        assignments = value.map(function(value) {
+            return name + '[]=' + encodeURI(value);
+        }).join('&');
+    } else {
+        assignments = name + '=' + encodeURI(value)
+    }
+    return url + sep + assignments;
 }
 
 function omitSearchString(url) {
@@ -2221,9 +2269,9 @@ function matchAnyURL(url, otherURLs) {
  * @return {Number}
  */
 function findObjectIndex(list, object) {
-    var keyA = object.id || object.url;
+    var keyA = object.id;
     for (var i = 0; i < list.length; i++) {
-        var keyB = list[i].id || list[i].url;
+        var keyB = list[i].id;
         if (keyA === keyB) {
             return i;
         }
@@ -2333,8 +2381,8 @@ function cloneObject(src) {
  */
 function sortObjects(list) {
     list.sort(function(a, b) {
-        var keyA = a.id || a.url;
-        var keyB = b.id || b.url;
+        var keyA = a.id;
+        var keyB = b.id;
         if (keyA < keyB) {
             return -1;
         } else if (keyA > keyB) {

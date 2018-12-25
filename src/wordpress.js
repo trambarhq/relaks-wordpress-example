@@ -11,12 +11,13 @@ class Wordpress {
      * Fetch one object from data source
      *
      * @param  {String} url
+     * @param  {Number|String} id
      * @param  {Object} options
      *
      * @return {Promise<Object>}
      */
-    fetchOne(url, options) {
-        return this.dataSource.fetchOne(url, options);
+    fetchOne(url, id, options) {
+        return this.dataSource.fetchOne(url, id, options);
     }
 
     /**
@@ -37,16 +38,17 @@ class Wordpress {
     /**
      * Fetch multiple objects from data source
      *
-     * @param  {Array<String>} urls
+     * @param  {String} url
+     * @param  {Array<Number|String>} ids
      * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    fetchMultiple(urls, options) {
+    fetchMultiple(url, ids, options) {
         if (this.ssr === 'seo') {
             options = Object.assign({}, options, { minimum: '100%' });
         }
-        return this.dataSource.fetchMultiple(urls, options);
+        return this.dataSource.fetchMultiple(url, ids, options);
     }
 }
 

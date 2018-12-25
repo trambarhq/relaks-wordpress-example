@@ -1,5 +1,7 @@
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
+import { Route } from 'routing';
+import WordPress from 'wordpress';
 
 import PostList from 'widgets/post-list';
 

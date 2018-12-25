@@ -1,5 +1,7 @@
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
+import { Route } from 'routing';
+import WordPress from 'wordpress';
 
 import PostList from 'widgets/post-list';
 
@@ -13,9 +15,9 @@ class CategoryPage extends AsyncComponent {
             route,
         };
         meanwhile.show(<CategoryPageSync {...props} />);
-        props.category = await wp.fetchOne({ url: '/wp/v2/categories/', slug });
+        props.category = await wp.fetchOne('/wp/v2/categories/', slug);
         meanwhile.show(<CategoryPageSync {...props} />);
-        props.posts = await wp.fetchList(`/wp/v2/posts/?categories[]=${props.category.id}`);
+        props.posts = await wp.fetchList(`/wp/v2/posts/?categories=${props.category.id}`);
         return <CategoryPageSync {...props} />;
     }
 }

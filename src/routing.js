@@ -42,27 +42,48 @@ let routes = {
 };
 
 async function setPageType(dataSource, params) {
-    let type;
     let slugs = params.slugs;
     if (slugs.length > 0) {
-        let rootSlugType = await getSlugType(dataSource, slugs[0]);
-        if (rootSlugType === 'page') {
-            type = 'page';
-        } else if (rootSlugType === 'category') {
+        let slugType1 = await getSlugType(dataSource, slugs[0]);
+        if (slugType1 === 'page') {
+            params.pageType = 'page';
+            params.pageSlug = _.last(slugs);
+            params.parentPageSlugs = _.slice(slugs, 0, -1);
+        } else if (slugType1 === 'category') {
             if (slugs.length === 1) {
-                type = 'category';
+                params.pageType = 'category';
+                params.categorySlug = slugs[0];
             } else if (slugs.length === 2) {
-                type = 'category-post';
+                params.pageType = 'category-post';
+                params.categorySlug = slugs[0];
+                params.postSlug = slugs[1];
             }
-        } else if (rootSlugType === 'archive') {
-            if (slugs.length === 1 || slugs.length === 2) {
-                type = 'archive';
+        } else if (slugType1 === 'archive') {
+            if (slugs.length === 1) {
+                params.pageType = 'archive';
+                params.monthSlug = slugs[0];
+            } else if (slugs.length === 2) {
+                let slugType2 = await getSlugType(dataSource, slugs[1]);
+                if (slugType2 === 'category') {
+                    params.pageType = 'archive';
+                    params.monthSlug = slugs[0];
+                    params.categorySlug = slugs[1];
+                } else {
+                    params.pageType = 'archive-post';
+                    params.monthSlug = slugs[0];
+                    params.postSlug = slugs[1];
+                }
             } else if (slugs.length === 3) {
-                type = 'archive-post';
+                params.pageType = 'archive-post';
+                params.monthSlug = slugs[0];
+                params.categorySlug = slugs[1];
+                params.postSlug = slugs[2];
             }
         }
     }
-    params.pageType = type || 'welcome';
+    if (!params.pageType) {
+        params.pageType = 'welcome';
+    }
 }
 
 async function getSlugType(dataSource, slug) {

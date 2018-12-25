@@ -16,7 +16,7 @@ class PostList extends PureComponent {
             {
                 posts.map((post, i) => {
                     let author = _.find(authors, { id: post.author_id });
-                    return <PostListView route={route} category={category} post={post} author={author} key={i} />
+                    return <PostListView route={route} month={month} category={category} post={post} author={author} key={i} />
                 })
             }
             </div>
