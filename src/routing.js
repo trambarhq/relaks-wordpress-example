@@ -54,7 +54,7 @@ async function setPageType(dataSource, params) {
                 params.pageType = 'category';
                 params.categorySlug = slugs[0];
             } else if (slugs.length === 2) {
-                params.pageType = 'category-post';
+                params.pageType = 'post';
                 params.categorySlug = slugs[0];
                 params.postSlug = slugs[1];
             }
@@ -69,12 +69,12 @@ async function setPageType(dataSource, params) {
                     params.monthSlug = slugs[0];
                     params.categorySlug = slugs[1];
                 } else {
-                    params.pageType = 'archive-post';
+                    params.pageType = 'post';
                     params.monthSlug = slugs[0];
                     params.postSlug = slugs[1];
                 }
             } else if (slugs.length === 3) {
-                params.pageType = 'archive-post';
+                params.pageType = 'post';
                 params.monthSlug = slugs[0];
                 params.categorySlug = slugs[1];
                 params.postSlug = slugs[2];

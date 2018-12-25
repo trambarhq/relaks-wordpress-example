@@ -3,6 +3,7 @@ import { AsyncComponent } from 'relaks';
 import { Route } from 'routing';
 import WordPress from 'wordpress';
 
+import Breadcrumb from 'widgets/breadcrumb';
 import PostList from 'widgets/post-list';
 
 class CategoryPage extends AsyncComponent {
@@ -10,14 +11,15 @@ class CategoryPage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
-        let slug = route.params.slugs[0];
+        let { categorySlug } = route.params;
         let props = {
             route,
         };
         meanwhile.show(<CategoryPageSync {...props} />);
-        props.category = await wp.fetchOne('/wp/v2/categories/', slug);
+        props.categories = await wp.fetchList('/wp/v2/categories/');
         meanwhile.show(<CategoryPageSync {...props} />);
-        props.posts = await wp.fetchList(`/wp/v2/posts/?categories=${props.category.id}`);
+        let category = _.find(props.categories, { slug: categorySlug });
+        props.posts = await wp.fetchList(`/wp/v2/posts/?categories=${category.id}`);
         return <CategoryPageSync {...props} />;
     }
 }
@@ -26,18 +28,35 @@ class CategoryPageSync extends PureComponent {
     static displayName = 'CategoryPageSync';
 
     render() {
-        let { route, posts, category } = this.props;
-        let title = _.get(category, 'name');
+        let { route, posts, categories } = this.props;
+        let { categorySlug } = route.params;
+        let category = _.find(categories, { slug: categorySlug });
+        let categoryLabel = _.get(category, 'name', '');
+        let trail = [
+            { label: 'Categories' },
+            { label: categoryLabel },
+        ];
         return (
             <div className="page">
-                <h4>
-                    <span>Categories > </span>
-                    <span>{title}</span>
-                </h4>
-                <PostList route={route} category={category} posts={posts} />
+                <Breadcrumb trail={trail} />
+                <PostList route={route} categories={categories} posts={posts} />
             </div>
         );
     }
+}
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    CategoryPage.propTypes = {
+        wp: PropTypes.instanceOf(WordPress),
+        route: PropTypes.instanceOf(Route),
+    };
+    CategoryPageSync.propTypes = {
+        category: PropTypes.object,
+        posts: PropTypes.arrayOf(PropTypes.object),
+        route: PropTypes.instanceOf(Route),
+    };
 }
 
 export {

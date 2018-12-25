@@ -15,7 +15,7 @@ if (typeof(window) === 'object') {
         let host = `${location.protocol}//${location.host}`;
         if (process.env.NODE_ENV !== 'production' && process.env.WEBPACK_DEV_SERVER) {
             // use hardcoded URL when we're running in dev-server
-            host = 'http://localhost:8000';
+            host = 'http://192.168.0.56:8000';
         }
         let dataSource = new WordpressDataSource({
             baseURL: `${host}/wp-json`,

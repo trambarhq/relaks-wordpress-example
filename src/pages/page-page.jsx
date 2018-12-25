@@ -11,14 +11,13 @@ class PagePage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
+        let { pageSlug, parentPageSlugs } = route.params;
         let props = {
             route,
         };
-        let slug = _.last(route.params.slugs);
-        let parentSlugs = _.slice(route.params.slugs, 0, -1);
-        props.page = await wp.fetchOne('/wp/v2/pages/', slug);
+        props.page = await wp.fetchOne('/wp/v2/pages/', pageSlug);
         meanwhile.show(<PagePageSync {...props} />);
-        props.parentPages = await wp.fetchMultiple('/wp/v2/pages/', parentSlugs);
+        props.parentPages = await wp.fetchMultiple('/wp/v2/pages/', parentPageSlugs);
         return <PagePageSync {...props} />;
     }
 }
@@ -48,6 +47,7 @@ if (process.env.NODE_ENV !== 'production') {
     };
     PagePageSync.propTypes = {
         page: PropTypes.object,
+        parentPages: PropTypes.arrayOf(PropTypes.object),
         route: PropTypes.instanceOf(Route).isRequired,
     };
 }

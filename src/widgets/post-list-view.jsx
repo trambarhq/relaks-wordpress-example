@@ -21,9 +21,9 @@ class PostListView extends PureComponent {
         let url = route.find(slugs);
         return (
             <div className="post-list-view">
-                <h2>
+                <h3>
                     <a href={url}><HTML text={title} /></a>
-                </h2>
+                </h3>
                 <p><HTML text={excerpt} /></p>
             </div>
         );

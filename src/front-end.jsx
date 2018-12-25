@@ -63,6 +63,13 @@ class FrontEnd extends PureComponent {
         hammer.on('swiperight', this.handleSwipeRight);
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        let { route } = this.state;
+        if (prevState.route !== route) {
+            document.body.parentElement.scrollTop = 0;
+        }
+    }
+
     /**
      * Called when the data source changes
      *
