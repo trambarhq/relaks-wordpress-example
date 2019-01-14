@@ -24,7 +24,7 @@ class PostListView extends PureComponent {
                 <h3>
                     <a href={url}><HTML text={title} /></a>
                 </h3>
-                <p><HTML text={excerpt} /></p>
+                <div className="excerpt"><HTML text={excerpt} /></div>
             </div>
         );
     }

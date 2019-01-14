@@ -50,12 +50,6 @@ var clientConfig = {
                 })
             },
             {
-                test: /\.less$/,
-                use: ExtractTextPlugin.extract({
-                    use: 'css-loader!less-loader',
-                })
-            },
-            {
                 test: /fonts.*\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                 loader: 'file-loader',
             },
@@ -86,6 +80,7 @@ var serverConfig = {
     target: 'node',
     output: {
         path: Path.resolve('./server/client'),
+        publicPath: '/',
         filename: 'app.js',
         libraryTarget: 'commonjs2',
     },

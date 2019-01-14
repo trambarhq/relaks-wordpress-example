@@ -4,6 +4,8 @@ import React, { PureComponent } from 'react';
 import HTML from 'widgets/html';
 
 class PostView extends PureComponent {
+    static displayName = 'PostView';
+
     render() {
         let { category, post } = this.props;
         let title = _.get(post, 'title.rendered', '');
@@ -11,10 +13,9 @@ class PostView extends PureComponent {
         return (
             <div className="page">
                 <h1><HTML text={title} /></h1>
-                <HTML text={content} />
+                <div className="content"><HTML text={content} /></div>
             </div>
         );
-
     }
 }
 

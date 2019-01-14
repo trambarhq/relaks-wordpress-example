@@ -63,6 +63,9 @@ if (typeof(window) === 'object') {
             routes,
             basePath: pageBasePath,
         });
+        routeManager.addEventListener('beforechange', (evt) => {
+            evt.postponeDefault(setPageType(dataSource, evt.params));
+        });
         routeManager.activate();
         await routeManager.start(options.path);
 

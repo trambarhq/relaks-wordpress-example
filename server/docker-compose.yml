@@ -25,7 +25,7 @@ services:
     image: node:8
     volumes:
       - ..:/opt/example
-      - ./cache:/var/cache/nginx
+      - web_cache:/var/cache/nginx
     command: [ node, /opt/example/server/index.js ]
     environment:
       WORDPRESS_HOST: wordpress
@@ -39,9 +39,10 @@ services:
     image: nginx:latest
     volumes:
       - ./nginx:/etc/nginx/conf.d
-      - ./cache:/var/cache/nginx
+      - web_cache:/var/cache/nginx
     ports:
       - 8000:80
     restart: always
 volumes:
     db_data:
+    web_cache:

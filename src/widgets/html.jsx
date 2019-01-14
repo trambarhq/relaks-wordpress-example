@@ -1,26 +1,11 @@
-import React from 'react';
+import React, { PureComponent } from 'react';
+import ReactHtmlParser from 'react-html-parser';
 
-function HTML(props) {
-    let text = props.text;
-    if (!text) {
-        return null;
+class HTML extends PureComponent {
+    render() {
+        let { text } = this.props;
+        return ReactHtmlParser(text);
     }
-    if (isHTML(text)) {
-        let markup = { __html: text };
-        return <span dangerouslySetInnerHTML={markup} />
-    } else {
-        return text;
-    }
-}
-
-function isHTML(text) {
-    if (text.indexOf('<') !== -1) {
-        return true;
-    }
-    if (text.indexOf('&') !== -1) {
-        return true;
-    }
-    return false;
 }
 
 if (process.env.NODE_ENV !== 'production') {

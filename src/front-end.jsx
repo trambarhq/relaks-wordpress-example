@@ -1,11 +1,12 @@
 import React, { PureComponent } from 'react';
-import Hammer from 'hammerjs';
 import Wordpress from 'wordpress';
 import { Route } from 'routing';
 import SideNav from 'widgets/side-nav';
 import TopNav from 'widgets/top-nav';
-import 'font-awesome-webpack';
 import 'style.scss';
+import '@fortawesome/fontawesome-free/scss/fontawesome.scss';
+import '@fortawesome/fontawesome-free/scss/regular.scss';
+import '@fortawesome/fontawesome-free/scss/solid.scss';
 
 class FrontEnd extends PureComponent {
     static displayName = 'FrontEnd';
@@ -58,9 +59,12 @@ class FrontEnd extends PureComponent {
         dataSource.addEventListener('change', this.handleDataSourceChange);
         document.addEventListener('scroll', this.handleScroll);
 
-        let hammer = new Hammer(document.body);
-        hammer.on('swipeleft', this.handleSwipeLeft);
-        hammer.on('swiperight', this.handleSwipeRight);
+        if (typeof(window) === 'object') {
+            let Hammer = require('hammerjs');
+            let hammer = new Hammer(document.body);
+            hammer.on('swipeleft', this.handleSwipeLeft);
+            hammer.on('swiperight', this.handleSwipeRight);
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {

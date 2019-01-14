@@ -88,9 +88,8 @@ function handleTimestampRequest(req, res, next) {
 function handleError(err, req, res, next) {
     if (!res.headersSent) {
         res.type('text').status(400).send(err.message);
-    } else {
-        console.error(err);
     }
+    console.error(err);
 }
 
 async function handlePurgeRequest(req, res) {
