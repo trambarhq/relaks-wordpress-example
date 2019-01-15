@@ -13,9 +13,6 @@ class PostList extends PureComponent {
         if (!posts) {
             return null;
         }
-        if (posts.length < 20) {
-            posts.more();
-        }
         return (
             <div className="posts">
             {
@@ -31,6 +28,14 @@ class PostList extends PureComponent {
 
     componentDidMount() {
         document.addEventListener('scroll', this.handleScroll);
+        this.componentDidUpdate();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        let { posts, minimum } = this.props;
+        if (posts.length < minimum) {
+            posts.more();
+        }
     }
 
     componentWillUnmount() {
@@ -38,15 +43,20 @@ class PostList extends PureComponent {
     }
 
     handleScroll = (evt) => {
-        let { posts } = this.props;
+        let { posts, maximum } = this.props;
         let { scrollTop, scrollHeight } = document.body.parentNode;
         if (scrollTop > (scrollHeight / 2)) {
-            if (posts.length < 1000) {
+            if (posts.length < maximum) {
                 posts.more();
             }
         }
     }
 }
+
+PostList.defaultProps = {
+    minimum: 20,
+    maximum: 1000,
+};
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
@@ -55,6 +65,8 @@ if (process.env.NODE_ENV !== 'production') {
         categories: PropTypes.arrayOf(PropTypes.object),
         month: PropTypes.instanceOf(Moment),
         route: PropTypes.instanceOf(Route),
+        minimum: PropTypes.number,
+        maximum: PropTypes.number,
     };
 }
 

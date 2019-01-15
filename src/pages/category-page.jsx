@@ -39,7 +39,7 @@ class CategoryPageSync extends PureComponent {
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
-                <PostList route={route} categories={categories} posts={posts} />
+                <PostList route={route} categories={categories} posts={posts} minimum={40} />
             </div>
         );
     }

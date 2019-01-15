@@ -15,7 +15,7 @@ class TopNav extends AsyncComponent {
         meanwhile.show(<TopNavSync {...props} />);
         props.system = await wp.fetchOne('/');
         meanwhile.show(<TopNavSync {...props} />);
-        props.pages = await wp.fetchList('/wp/v2/pages/?parent=0');
+        props.pages = await wp.fetchList('/wp/v2/pages/?parent=0', { minimum: '100%' });
         return <TopNavSync {...props} />;
     }
 }

@@ -87,7 +87,7 @@ async function setPageType(dataSource, params) {
 }
 
 async function getSlugType(dataSource, slug) {
-    let options = {}; // { minimum: '100%' };
+    let options = { minimum: '100%' };
     let pages = await dataSource.fetchList('/wp/v2/pages/?parent=0', options);
     if (_.some(pages, { slug })) {
         return 'page';

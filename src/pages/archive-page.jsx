@@ -53,7 +53,7 @@ class ArchivePageSync extends PureComponent {
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
-                <PostList route={route} posts={posts} month={month} categories={categories} />
+                <PostList route={route} posts={posts} month={month} categories={categories} minimum={100} />
             </div>
         );
     }

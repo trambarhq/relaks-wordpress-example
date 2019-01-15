@@ -24,8 +24,10 @@ A:link, A:visited {
   background-color: #66023c;
   overflow: hidden;
   color: #cccccc; }
-  .side-nav A {
+  .side-nav A:link, .side-nav A:visited {
     color: #cccccc; }
+    .side-nav A:link:hover, .side-nav A:visited:hover {
+      color: #eeccdd; }
   .side-nav .archive LI {
     margin-top: 0.1em;
     margin-bottom: 0.1em; }
@@ -42,8 +44,6 @@ A:link, A:visited {
   top: 0;
   width: calc(100% - 18em);
   background-color: #990000; }
-  .top-nav A {
-    color: #cccccc; }
   .top-nav .title-bar {
     display: flex;
     align-items: center;
@@ -51,6 +51,10 @@ A:link, A:visited {
     background-color: #990000;
     height: 8em;
     transition: height 0.5s; }
+    .top-nav .title-bar A:link, .top-nav .title-bar A:visited {
+      color: #ffffff; }
+      .top-nav .title-bar A:link:hover, .top-nav .title-bar A:visited:hover {
+        color: #ffdddd; }
     .top-nav .title-bar .title .fa {
       font-size: 4em;
       transition: font-size 0.5s, margin-left 0.5s, margin-right 0.5s;
@@ -76,6 +80,10 @@ A:link, A:visited {
     height: 1.75em;
     overflow: hidden;
     transition: height 0.4s; }
+    .top-nav .page-bar A:link, .top-nav .page-bar A:visited {
+      color: #cccccc; }
+      .top-nav .page-bar A:link:hover, .top-nav .page-bar A:visited:hover {
+        color: #eecccc; }
     .top-nav .page-bar .button {
       padding-left: 0.5em;
       padding-right: 0.5em;
@@ -121,6 +129,10 @@ A:link, A:visited {
   margin-left: 18em;
   min-height: 100vh;
   background-color: #ffffff; }
+  .page-container A:link, .page-container A:visited {
+    color: #660000; }
+    .page-container A:link:hover, .page-container A:visited:hover {
+      color: #990000; }
   .page-container .page {
     max-width: 60em; }
 

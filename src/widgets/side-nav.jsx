@@ -34,7 +34,7 @@ class SideNav extends AsyncComponent {
         };
         meanwhile.delay(50, 50);
         meanwhile.show(<SideNavSync {...props} />);
-        props.categories = await wp.fetchList('/wp/v2/categories/');
+        props.categories = await wp.fetchList('/wp/v2/categories/', { minimum: '100%' });
         meanwhile.show(<SideNavSync {...props} />);
 
         // get the latest post and the earliest post

@@ -70,7 +70,10 @@ class FrontEnd extends PureComponent {
     componentDidUpdate(prevProps, prevState) {
         let { route } = this.state;
         if (prevState.route !== route) {
-            document.body.parentElement.scrollTop = 0;
+            if (!(prevState.route.history.length < route.history.length)) {
+                // not going backward
+                document.body.parentElement.scrollTop = 0;
+            }
         }
     }
 

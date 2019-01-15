@@ -28,7 +28,7 @@ class WelcomePageSync extends PureComponent {
         let { route, categories, posts } = this.props;
         return (
             <div className="page">
-                <PostList categories={categories} route={route} posts={posts} />
+                <PostList categories={categories} route={route} posts={posts} minimum={40} />
             </div>
         );
     }
