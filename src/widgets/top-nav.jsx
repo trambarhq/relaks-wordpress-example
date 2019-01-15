@@ -23,6 +23,14 @@ class TopNav extends AsyncComponent {
 class TopNavSync extends PureComponent {
     static displayName = 'TopNavSync';
 
+    constructor(props) {
+        super(props);
+        let { route } = props;
+        let { search } = route.params;
+        this.searchTimeout = 0;
+        this.state = { search };
+    }
+
     render() {
         let { onMouseOver, onMouseOut } = this.props;
         return (
@@ -38,7 +46,7 @@ class TopNavSync extends PureComponent {
         let { route, system } = this.props;
         let name = _.get(system, 'name', '');
         let description = _.get(system, 'description', '');
-        let url = route.find([]);
+        let url = route.find({});
         return (
             <div className="title-bar">
                 <div className="title" title={description}>
@@ -79,15 +87,44 @@ class TopNavSync extends PureComponent {
 
     renderSearchBar() {
         let { route } = this.props;
-        let search = _.get(route.params, 'search', '');
+        let { search } = this.state;
         return (
             <div className="search-bar">
                 <span className="input-container">
-                    <input type="text" value={search} readOnly />
+                    <input type="text" value={search || ''} onChange={this.handleSearchChange} />
                     <i className="fa fa-search" />
                 </span>
             </div>
         );
+    }
+
+    performSearch = (evt) => {
+        let { search } = this.state;
+        let { route } = this.props;
+        let url = route.find({ search });
+        let options = {
+            replace: (route.params.pageType === 'search')
+        };
+        route.change(url);
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        let { route } = this.props;
+        if (prevProps.route !== route) {
+            let { search } = route.params;
+            this.setState({ search });
+        }
+    }
+
+    componentWillUnmount() {
+        clearTimeout(this.searchTimeout);
+    }
+
+    handleSearchChange = (evt) => {
+        let search = evt.target.value;
+        this.setState({ search });
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(this.performSearch, 500);
     }
 }
 

@@ -160,17 +160,18 @@ A {
             box-sizing: content-box;
 
             INPUT {
+                font-size: 1em;
                 max-width: 20em;
                 width: 100%;
-                padding-left: 1.8em;
+                padding-left: 1.4em;
                 border: 1px solid #660000;
                 border-radius: 0;
             }
 
             .fa-search {
                 position: absolute;
-                left: 0.25em;
-                top: 0.4em;
+                left: 0.4em;
+                top: 0.5em;
                 font-size: 0.8em;
                 color: transparentize(#660000, 0.75);
                 pointer-events: none;

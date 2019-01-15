@@ -12,8 +12,13 @@ class Route {
         return this.routeManager.change(url, options);
     }
 
-    find(slugs) {
-        return this.routeManager.find('page', { slugs });
+    find(params) {
+        if (params instanceof Array) {
+            let slugs = params;
+            return this.routeManager.find('page', { slugs });
+        } else {
+            return this.routeManager.find('page', params);
+        }
     }
 }
 
@@ -31,6 +36,9 @@ let routes = {
                     return `/`;
                 }
             }
+        },
+        query: {
+            search: '${search}',
         },
         load: (match) => {
             let type = match.params.pageType;
@@ -82,7 +90,11 @@ async function setPageType(dataSource, params) {
         }
     }
     if (!params.pageType) {
-        params.pageType = 'welcome';
+        if (params.search !== undefined) {
+            params.pageType = 'search';
+        } else {
+            params.pageType = 'welcome';
+        }
     }
 }
 

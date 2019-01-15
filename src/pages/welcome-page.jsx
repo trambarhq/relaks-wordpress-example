@@ -10,7 +10,6 @@ class WelcomePage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
-        let slug = route.params.category;
         let props = {
             route,
         };
