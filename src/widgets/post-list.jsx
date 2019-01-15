@@ -13,6 +13,9 @@ class PostList extends PureComponent {
         if (!posts) {
             return null;
         }
+        if (posts.length < 20) {
+            posts.more();
+        }
         return (
             <div className="posts">
             {
@@ -24,6 +27,24 @@ class PostList extends PureComponent {
             }
             </div>
         )
+    }
+
+    componentDidMount() {
+        document.addEventListener('scroll', this.handleScroll);
+    }
+
+    componentWillUnmount() {
+        document.removeEventListener('scroll', this.handleScroll);
+    }
+
+    handleScroll = (evt) => {
+        let { posts } = this.props;
+        let { scrollTop, scrollHeight } = document.body.parentNode;
+        if (scrollTop > (scrollHeight / 2)) {
+            if (posts.length < 1000) {
+                posts.more();
+            }
+        }
     }
 }
 

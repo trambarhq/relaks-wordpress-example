@@ -31,8 +31,12 @@ A {
     overflow: hidden;
     color: #cccccc;
 
-    A {
+    A:link, A:visited {
         color: #cccccc;
+
+        &:hover {
+            color: #eeccdd;
+        }
     }
 
     .archive {
@@ -62,10 +66,6 @@ A {
     width: calc(100% - 18em);
     background-color: #990000;  // prevent visual glitch in Android
 
-    A {
-        color: #cccccc;
-    }
-
     .title-bar {
         display: flex;
         align-items: center;
@@ -73,6 +73,14 @@ A {
         background-color: #990000;
         height: 8em;
         transition: height 0.5s;
+
+        A:link, A:visited {
+            color: #ffffff;
+
+            &:hover {
+                color: #ffdddd;
+            }
+        }
 
         .title {
             .fa {
@@ -112,6 +120,14 @@ A {
         height: 1.75em;
         overflow: hidden;
         transition: height 0.4s;
+
+        A:link, A:visited {
+            color: #cccccc;
+
+            &:hover {
+                color: #eecccc;
+            }
+        }
 
         .button {
             padding-left: 0.5em;
@@ -175,6 +191,14 @@ A {
     margin-left: 18em;
     min-height: 100vh;
     background-color: #ffffff;
+
+    A:link, A:visited {
+        color: #660000;
+
+        &:hover {
+            color: #990000;
+        }
+    }
 
     .page {
         max-width: 60em;

@@ -35,14 +35,17 @@ class TopNavSync extends PureComponent {
     }
 
     renderTitleBar() {
-        let { system } = this.props;
+        let { route, system } = this.props;
         let name = _.get(system, 'name', '');
         let description = _.get(system, 'description', '');
+        let url = route.find([]);
         return (
             <div className="title-bar">
                 <div className="title" title={description}>
-                    <i className="fa fa-home" />
-                    <span className="site-name">{name}</span>
+                    <a href={url}>
+                        <i className="fa fa-home" />
+                        <span className="site-name">{name}</span>
+                    </a>
                 </div>
             </div>
         );

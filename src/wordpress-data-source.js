@@ -188,15 +188,7 @@ prototype.fetchPage = function(url, page, options) {
         var time = getTime();
         query = props;
         query.promise = this.get(pageURL).then(function(response) {
-            var objects, total;
-            if (response instanceof Array) {
-                objects = response;
-                total = objects.length;
-            } else {
-                objects = response.results;
-                total = response.count;
-            }
-            objects.total = total;
+            var objects = response;
             query.objects = objects;
             query.time = time;
             _this.processFreshObjects(objects, pageURL, query, true);
@@ -267,53 +259,40 @@ prototype.fetchNextPage = function(query, initial) {
     }
     var _this = this;
     var time = getTime();
-    var nextURL = (initial) ? query.url : query.nextURL;
+    var nextURL = attachPageNumber(query.url, query.nextPage);
     var nextPromise = this.get(nextURL).then(function(response) {
-        if (response instanceof Array) {
-            // the full list is returned
-            var objects = response;
+        // append retrieved objects to list
+        var total = response.total;
+        var freshObjects = response;
+        var objects = appendObjects(query.objects, freshObjects);
+        query.objects = objects;
+        query.promise = nextPromise;
+        query.nextPromise = null;
+        query.nextPage = (query.nextPage || 1) + 1;
+        if (initial) {
+            query.time = time;
+        }
+        _this.processFreshObjects(freshObjects, nextURL, query, initial);
+
+        // attach function to results so caller can ask for more results
+        if (objects.length < total && freshObjects.length > 0) {
+            objects.more = _this.fetchNextPage.bind(_this, query, false);
+            objects.total = total;
+
+            // if minimum is provide, fetch more if it's not met
+            var minimum = getMinimum(query.options, total, NaN);
+            if (objects.length < minimum) {
+                // fetch the next page
+                return _this.fetchNextPage(query, false);
+            }
+        } else {
             objects.more = _this.fetchNoMore.bind(_this, query);
             objects.total = objects.length;
-            query.objects = objects;
-            query.time = time;
-            query.nextPromise = null;
-            _this.processFreshObjects(objects, nextURL, query, true);
-            return objects;
-        } else if (response instanceof Object) {
-            // append retrieved objects to list
-            var total = response.count;
-            var freshObjects = response.results;
-            var objects = appendObjects(query.objects, freshObjects);
-            query.objects = objects;
-            query.promise = nextPromise;
-            query.nextPromise = null;
-            query.nextURL = response.next;
-            query.nextPage = (query.nextPage || 1) + 1;
-            if (initial) {
-                query.time = time;
-            }
-            _this.processFreshObjects(freshObjects, nextURL, query, initial);
-
-            // attach function to results so caller can ask for more results
-            if (query.nextURL) {
-                objects.more = _this.fetchNextPage.bind(_this, query, false);
-                objects.total = total;
-
-                // if minimum is provide, fetch more if it's not met
-                var minimum = getMinimum(query.options, total, NaN);
-                if (objects.length < minimum) {
-                    // fetch the next page
-                    return _this.fetchNextPage(query, false);
-                }
-            } else {
-                objects.more = _this.fetchNoMore.bind(_this, query);
-                objects.total = objects.length;
-            }
-
-            // inform parent component that more data is available
-            _this.notifyChanges(!initial);
-            return objects;
         }
+
+        // inform parent component that more data is available
+        _this.notifyChanges(!initial);
+        return objects;
     }).catch(function(err) {
         if (!initial) {
             query.nextPromise = null;
@@ -593,102 +572,81 @@ prototype.refreshList = function(query) {
     query.refreshing = true;
 
     var _this = this;
-    if (query.nextPage) {
-        // updating paginated list
-        // wait for any call to more() to finish first
-        (query.nextPromise || Promise.resolve()).then(function() {
-            // suppress fetching of additional pages for the time being
-            var oldObjects = query.objects;
-            var morePromise, moreResolve, moreReject;
-            var fetchMoreAfterward = function() {
-                if (!morePromise) {
-                    morePromise = new Promise(function(resolve, reject) {
-                        moreResolve = resolve;
-                        moreReject = reject;
-                    });
-                }
-                return morePromise;
-            };
-            oldObjects.more = fetchMoreAfterward;
-
-            var refreshedObjects;
-            var pageRemaining = query.nextPage - 1;
-            var nextURL = query.url;
-
-            var refreshNextPage = function() {
-                return _this.get(nextURL).then(function(response) {
-                    pageRemaining--;
-                    nextURL = response.next;
-                    if (pageRemaining === 0) {
-                        // set query.nextURL to the URL given by the server
-                        // in the event that new pages have become available
-                        query.nextURL = nextURL;
-                    }
-                    refreshedObjects = appendObjects(refreshedObjects, response.results);
-
-                    var total = response.count;
-                    var objects = joinObjectLists(refreshedObjects, oldObjects);
-                    var freshObjects = replaceIdentificalObjects(objects, query.objects);
-                    if (freshObjects) {
-                        objects.total = total;
-                        objects.more = fetchMoreAfterward;
-                        query.objects = objects;
-                        query.promise = Promise.resolve(objects);
-                        _this.processFreshObjects(freshObjects, query.url, query, false);
-                        _this.notifyChanges();
-                    }
-
-                    // keep going until all pages have been updated
-                    if (query.nextURL !== nextURL) {
-                        return refreshNextPage();
-                    }
+    // updating paginated list
+    // wait for any call to more() to finish first
+    (query.nextPromise || Promise.resolve()).then(function() {
+        // suppress fetching of additional pages for the time being
+        var oldObjects = query.objects;
+        var morePromise, moreResolve, moreReject;
+        var fetchMoreAfterward = function() {
+            if (!morePromise) {
+                morePromise = new Promise(function(resolve, reject) {
+                    moreResolve = resolve;
+                    moreReject = reject;
                 });
-            };
+            }
+            return morePromise;
+        };
+        oldObjects.more = fetchMoreAfterward;
 
-            var time = getTime();
-            refreshNextPage().then(function() {
-                // we're done
-                query.time = time;
-                query.refreshing = false;
-                query.expired = false;
+        var refreshedObjects;
+        var pageRemaining = query.nextPage - 1;
+        var nextURL = query.url;
+        var nextPage = 1;
 
-                // reenable fetching of additional pages
-                if (query.nextURL) {
-                    query.objects.more = _this.fetchNextPage.bind(_this, query, false);
-                } else {
-                    query.objects.more = _this.fetchNoMore.bind(_this, query);
+        var refreshNextPage = function() {
+            return _this.get(nextURL).then(function(response) {
+                pageRemaining--;
+                nextPage++;
+                nextURL = attachPageNumber(query.url, nextPage);
+                if (pageRemaining === 0) {
+                    // set query.nextPage to the URL given by the server
+                    // in the event that new pages have become available
+                    query.nextPage = nextPage;
+                }
+                refreshedObjects = appendObjects(refreshedObjects, response.results);
+
+                var total = response.total;
+                var objects = joinObjectLists(refreshedObjects, oldObjects);
+                var freshObjects = replaceIdentificalObjects(objects, query.objects);
+                if (freshObjects) {
+                    objects.total = total;
+                    objects.more = fetchMoreAfterward;
+                    query.objects = objects;
+                    query.promise = Promise.resolve(objects);
+                    _this.processFreshObjects(freshObjects, query.url, query, false);
+                    _this.notifyChanges();
                 }
 
-                // trigger it if more() had been called
-                if (morePromise) {
-                    query.objects.more().then(moreResolve, moreReject);
+                // keep going until all pages have been updated
+                if (query.nextPage !== nextPage) {
+                    return refreshNextPage();
                 }
-            }).catch(function(err) {
-                query.refreshing = false;
             });
-        });
-    } else {
-        // updating un-paginated list
+        };
+
         var time = getTime();
-        this.get(query.url).then(function(response) {
-            var objects = response;
+        refreshNextPage().then(function() {
+            // we're done
             query.time = time;
             query.refreshing = false;
             query.expired = false;
-            var freshObjects = replaceIdentificalObjects(objects, query.objects);
-            if (freshObjects) {
-                objects.more = _this.fetchNoMore.bind(this, query);
-                objects.total = objects.length;
-                query.objects = objects;
-                query.promise = Promise.resolve(objects);
-                _this.processFreshObjects(freshObjects, query.url, query, false);
-                _this.notifyChanges();
+
+            // reenable fetching of additional pages
+            if (query.objects.length < query.objects.total) {
+                query.objects.more = _this.fetchNextPage.bind(_this, query, false);
+            } else {
+                query.objects.more = _this.fetchNoMore.bind(_this, query);
+            }
+
+            // trigger it if more() had been called
+            if (morePromise) {
+                query.objects.more().then(moreResolve, moreReject);
             }
         }).catch(function(err) {
             query.refreshing = false;
-            throw err;
         });
-    }
+    });
 };
 
 prototype.processFreshObject = function(object, objectURL, excludeQuery, notify) {
@@ -1719,7 +1677,13 @@ prototype.request = function(url, options, token, waitForAuthentication) {
             if (response.status == 204) {
                 return null;
             }
-            return response.json();
+            var total = parseInt(response.headers.get('X-WP-Total'));
+            return response.json().then(function(objects) {
+                if (objects instanceof Array && total === total) {
+                    objects.total = total;
+                }
+                return objects;
+            });
         } else {
             if (response.status === 401 || response.status === 403) {
                 _this.invalidateToken(token);
@@ -2195,7 +2159,7 @@ function getObjectFolderURL(folderURL, object) {
  * @return {String}
  */
 function attachPageNumber(url, page) {
-    return (page === 1) ? url : attachURLParameter(url, 'page', page);
+    return (page > 1) ? attachURLParameter(url, 'page', page) : url;
 }
 
 function attachURLParameter(url, name, value) {
