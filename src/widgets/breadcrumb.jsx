@@ -12,6 +12,14 @@ function Breadcrumb(props) {
     return <h4 className="breadcrumb">{children}</h4>;
 }
 
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    Breadcrumb.propTypes = {
+        trail: PropTypes.arrayOf(PropTypes.object),
+    };
+}
+
 export {
     Breadcrumb as default,
     Breadcrumb,

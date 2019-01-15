@@ -5,7 +5,9 @@ import { Route } from 'routing';
 import WordPress from 'wordpress';
 
 import HTML from 'widgets/html';
+import Breadcrumb from 'widgets/breadcrumb';
 import PageView from 'widgets/page-view';
+import PageList from 'widgets/page-list';
 
 class PagePage extends AsyncComponent {
     static displayName = 'PagePage';
@@ -19,6 +21,8 @@ class PagePage extends AsyncComponent {
         props.page = await wp.fetchOne('/wp/v2/pages/', pageSlug);
         meanwhile.show(<PagePageSync {...props} />);
         props.parentPages = await wp.fetchMultiple('/wp/v2/pages/', parentPageSlugs);
+        meanwhile.show(<PagePageSync {...props} />);
+        props.childPages = await wp.fetchList(`/wp/v2/pages/?parent=${props.page.id}`, { minimum: '100%' });
         return <PagePageSync {...props} />;
     }
 }
@@ -27,10 +31,25 @@ class PagePageSync extends PureComponent {
     static displayName = 'PagePageSync';
 
     render() {
-        let { page } = this.props;
+        let { route, page, parentPages, childPages } = this.props;
+        let trail = [];
+        let parents = [];
+        if (parentPages) {
+            for (let parentPage of parentPages) {
+                parents.push(parentPage);
+
+                let title = _.get(parentPage, 'title.rendered', '');
+                let slugs = _.map(parents, 'slug');
+                let url = route.find(slugs);
+                trail.push({ label: <HTML text={title} />, url })
+            }
+            parents.push(page);
+        }
         return (
             <div className="page">
+                <Breadcrumb trail={trail} />
                 <PageView page={page} />
+                <PageList route={route} pages={childPages} parentPages={parents} />
             </div>
         );
     }
@@ -46,6 +65,7 @@ if (process.env.NODE_ENV !== 'production') {
     PagePageSync.propTypes = {
         page: PropTypes.object,
         parentPages: PropTypes.arrayOf(PropTypes.object),
+        childPages: PropTypes.arrayOf(PropTypes.object),
         route: PropTypes.instanceOf(Route).isRequired,
     };
 }

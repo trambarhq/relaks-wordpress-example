@@ -1,5 +1,7 @@
 import _ from 'lodash';
+import Moment from 'moment';
 import React, { PureComponent } from 'react';
+import { Route } from 'routing';
 
 import HTML from 'widgets/html';
 
@@ -7,7 +9,7 @@ class PostListView extends PureComponent {
     static displayName = 'PostListView';
 
     render() {
-        let { route, category, post, author, month } = this.props;
+        let { route, category, post, month } = this.props;
         let title = _.get(post, 'title.rendered', '');
         let excerpt = _.get(post, 'excerpt.rendered', '');
         excerpt = cleanExcerpt(excerpt);
@@ -36,6 +38,17 @@ function cleanExcerpt(excerpt) {
         excerpt = excerpt.substr(0, index);
     }
     return excerpt;
+}
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    PostListView.propTypes = {
+        category: PropTypes.object,
+        post: PropTypes.object,
+        month: PropTypes.instanceOf(Moment),
+        route: PropTypes.instanceOf(Route).isRequired,
+    };
 }
 
 export {

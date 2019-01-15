@@ -16,10 +16,10 @@ class PostList extends PureComponent {
         return (
             <div className="posts">
             {
-                posts.map((post, i) => {
+                posts.map((post) => {
                     let author = _.find(authors, { id: post.author_id });
                     let category = _.find(categories, { id: post.categories[0] });
-                    return <PostListView route={route} month={month} category={category} post={post} author={author} key={i} />
+                    return <PostListView route={route} month={month} category={category} post={post} author={author} key={post.id} />
                 })
             }
             </div>
