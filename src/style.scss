@@ -200,8 +200,17 @@ A {
         }
     }
 
-    .page {
+    .page, .post {
         max-width: 60em;
+
+        .meta {
+            float: right;
+            text-align: right;
+
+            .author {
+                margin-top: 0.25em;
+            }
+        }
     }
 }
 

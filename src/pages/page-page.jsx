@@ -5,6 +5,7 @@ import { Route } from 'routing';
 import WordPress from 'wordpress';
 
 import HTML from 'widgets/html';
+import PageView from 'widgets/page-view';
 
 class PagePage extends AsyncComponent {
     static displayName = 'PagePage';
@@ -27,12 +28,9 @@ class PagePageSync extends PureComponent {
 
     render() {
         let { page } = this.props;
-        let title = _.get(page, 'title.rendered', '');
-        let content = _.get(page, 'content.rendered', '');
         return (
             <div className="page">
-                <h1><HTML text={title} /></h1>
-                <HTML text={content} />
+                <PageView page={page} />
             </div>
         );
     }

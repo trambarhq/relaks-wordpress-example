@@ -33,7 +33,7 @@ class PostList extends PureComponent {
 
     componentDidUpdate(prevProps, prevState) {
         let { posts, minimum } = this.props;
-        if (posts.length < minimum) {
+        if (posts && posts.length < minimum) {
             posts.more();
         }
     }
@@ -46,7 +46,7 @@ class PostList extends PureComponent {
         let { posts, maximum } = this.props;
         let { scrollTop, scrollHeight } = document.body.parentNode;
         if (scrollTop > (scrollHeight / 2)) {
-            if (posts.length < maximum) {
+            if (posts && posts.length < maximum) {
                 posts.more();
             }
         }

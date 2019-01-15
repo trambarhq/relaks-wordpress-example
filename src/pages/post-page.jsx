@@ -26,6 +26,8 @@ class PostPage extends AsyncComponent {
             meanwhile.show(<PostPageSync {...props} />);
         }
         props.post = await wp.fetchOne('/wp/v2/posts/', postSlug);
+        meanwhile.show(<PostPageSync {...props} />);
+        props.author = await wp.fetchOne('/wp/v2/users', props.post.author);
         return <PostPageSync {...props} />;
     }
 }
@@ -34,7 +36,7 @@ class PostPageSync extends PureComponent {
     static displayName = 'PostPageSync';
 
     render() {
-        let { route, month, category, post } = this.props;
+        let { route, month, category, post, author } = this.props;
         let { monthSlug, categorySlug } = route.params;
         let trail = [];
         if (monthSlug) {
@@ -57,7 +59,7 @@ class PostPageSync extends PureComponent {
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
-                <PostView category={category} post={post} />
+                <PostView category={category} post={post} author={author}/>
             </div>
         );
     }
@@ -73,6 +75,7 @@ if (process.env.NODE_ENV !== 'production') {
     PostPageSync.propTypes = {
         category: PropTypes.object,
         post: PropTypes.object,
+        author: PropTypes.object,
         month: PropTypes.instanceOf(Moment),
         route: PropTypes.instanceOf(Route),
     };

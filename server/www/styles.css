@@ -133,8 +133,13 @@ A:link, A:visited {
     color: #660000; }
     .page-container A:link:hover, .page-container A:visited:hover {
       color: #990000; }
-  .page-container .page {
+  .page-container .page, .page-container .post {
     max-width: 60em; }
+    .page-container .page .meta, .page-container .post .meta {
+      float: right;
+      text-align: right; }
+      .page-container .page .meta .author, .page-container .post .meta .author {
+        margin-top: 0.25em; }
 
 @media only screen and (max-width: 800px) {
   .page-container {
