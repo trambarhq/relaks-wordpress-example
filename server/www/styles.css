@@ -106,15 +106,16 @@ A:link, A:visited {
       position: relative;
       box-sizing: content-box; }
       .top-nav .search-bar .input-container INPUT {
+        font-size: 1em;
         max-width: 20em;
         width: 100%;
-        padding-left: 1.8em;
+        padding-left: 1.4em;
         border: 1px solid #660000;
         border-radius: 0; }
       .top-nav .search-bar .input-container .fa-search {
         position: absolute;
-        left: 0.25em;
-        top: 0.4em;
+        left: 0.4em;
+        top: 0.5em;
         font-size: 0.8em;
         color: rgba(102, 0, 0, 0.25);
         pointer-events: none; }
@@ -140,6 +141,19 @@ A:link, A:visited {
       text-align: right; }
       .page-container .page .meta .author, .page-container .post .meta .author {
         margin-top: 0.25em; }
+    .page-container .page .comments, .page-container .post .comments {
+      font-size: 0.9em;
+      padding-left: 1.5em; }
+      .page-container .page .comments .commenter .avatar, .page-container .post .comments .commenter .avatar {
+        width: 1.5em;
+        height: 1.5em;
+        margin-right: 0.5em;
+        margin-bottom: -0.5em; }
+      .page-container .page .comments .commenter .name, .page-container .post .comments .commenter .name {
+        font-weight: bold;
+        vertical-align: middle; }
+      .page-container .page .comments .replies, .page-container .post .comments .replies {
+        padding-left: 1.5em; }
 
 @media only screen and (max-width: 800px) {
   .page-container {

@@ -68,7 +68,11 @@ class FrontEnd extends PureComponent {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        let { dataSource, ssr } = this.props;
         let { route } = this.state;
+        if (prevProps.ssr !== ssr) {
+            this.setState({ wp: new Wordpress(dataSource, ssr) });
+        }
         if (prevState.route !== route) {
             if (!(prevState.route.history.length < route.history.length)) {
                 // not going backward
