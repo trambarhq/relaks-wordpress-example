@@ -39,12 +39,13 @@ class FrontEnd extends PureComponent {
         if (sideNavCollapsed) {
             classNames.push('side-collapsed');
         }
+        let key = route.url;
         return (
             <div className={classNames.join(' ')}>
                 <SideNav route={route} wp={wp} />
                 <TopNav route={route} wp={wp} />
                 <div className="page-container">
-                    <PageComponent route={route} wp={wp} />
+                    <PageComponent route={route} wp={wp} key={key} />
                 </div>
             </div>
         );

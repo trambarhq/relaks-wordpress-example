@@ -31,11 +31,16 @@ A {
     overflow: hidden;
     color: #cccccc;
 
-    A:link, A:visited {
-        color: #cccccc;
+    A {
+        opacity: 0.5;
 
-        &:hover {
-            color: #eeccdd;
+        &:link, &:visited {
+            opacity: 1;
+            color: #cccccc;
+
+            &:hover {
+                color: #eeccdd;
+            }
         }
     }
 
@@ -130,6 +135,7 @@ A {
         }
 
         .button {
+            flex: 0 0 auto;
             padding-left: 0.5em;
             padding-right: 0.5em;
             border-right: 1px solid transparentize(#cccccc, 0.75);
@@ -207,9 +213,17 @@ A {
         .meta {
             float: right;
             text-align: right;
+            margin-left: 1em;
+            margin-top: 0.4em;
 
             .author {
                 margin-top: 0.25em;
+            }
+        }
+
+        .post-list-view {
+            .excerpt {
+                margin-top: -0.7em;
             }
         }
 
