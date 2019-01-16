@@ -7,6 +7,7 @@ import WordPress from 'wordpress';
 
 import Breadcrumb from 'widgets/breadcrumb';
 import PostView from 'widgets/post-view';
+import CommentSection from 'widgets/comment-section';
 
 class PostPage extends AsyncComponent {
     static displayName = 'AchivePostPage';
@@ -27,7 +28,11 @@ class PostPage extends AsyncComponent {
         }
         props.post = await wp.fetchOne('/wp/v2/posts/', postSlug);
         meanwhile.show(<PostPageSync {...props} />);
-        props.author = await wp.fetchOne('/wp/v2/users', props.post.author);
+        props.author = await wp.fetchOne('/wp/v2/users/', props.post.author);
+        if (!wp.ssr) {
+            meanwhile.show(<PostPageSync {...props} />);
+            props.comments = await wp.fetchList(`/wp/v2/comments/?post=${props.post.id}`);
+        }
         return <PostPageSync {...props} />;
     }
 }
@@ -36,7 +41,7 @@ class PostPageSync extends PureComponent {
     static displayName = 'PostPageSync';
 
     render() {
-        let { route, month, category, post, author } = this.props;
+        let { route, month, category, post, author, comments } = this.props;
         let { monthSlug, categorySlug } = route.params;
         let trail = [];
         if (monthSlug) {
@@ -59,7 +64,8 @@ class PostPageSync extends PureComponent {
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
-                <PostView category={category} post={post} author={author}/>
+                <PostView category={category} post={post} author={author} />
+                <CommentSection comments={comments} />
             </div>
         );
     }
@@ -76,6 +82,7 @@ if (process.env.NODE_ENV !== 'production') {
         category: PropTypes.object,
         post: PropTypes.object,
         author: PropTypes.object,
+        comments: PropTypes.arrayOf(PropTypes.object),
         month: PropTypes.instanceOf(Moment),
         route: PropTypes.instanceOf(Route),
     };

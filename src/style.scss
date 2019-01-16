@@ -212,6 +212,29 @@ A {
                 margin-top: 0.25em;
             }
         }
+
+        .comments {
+            font-size: 0.9em;
+            padding-left: 1.5em;
+
+            .commenter {
+                .avatar {
+                    width: 1.5em;
+                    height: 1.5em;
+                    margin-right: 0.5em;
+                    margin-bottom: -0.5em;
+                }
+
+                .name {
+                    font-weight: bold;
+                    vertical-align: middle;
+                }
+            }
+
+            .replies {
+                padding-left: 1.5em;
+            }
+        }
     }
 }
 
