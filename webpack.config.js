@@ -17,7 +17,7 @@ var clientConfig = {
     output: {
         path: Path.resolve('./server/www'),
         publicPath: '/',
-        filename: 'app.js',
+        filename: 'front-end.js',
     },
     resolve: {
         extensions: [ '.js', '.jsx' ],
@@ -81,7 +81,7 @@ var serverConfig = {
     output: {
         path: Path.resolve('./server/client'),
         publicPath: '/',
-        filename: 'app.js',
+        filename: 'front-end.js',
         libraryTarget: 'commonjs2',
     },
     resolve: clientConfig.resolve,

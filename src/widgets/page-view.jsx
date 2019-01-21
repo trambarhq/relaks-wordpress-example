@@ -8,7 +8,7 @@ class PageView extends PureComponent {
     static displayName = 'PageView';
 
     render() {
-        let { page } = this.props;
+        let { page, transform } = this.props;
         let title = _.get(page, 'title.rendered', '');
         let content = _.get(page, 'content.rendered', '');
         let date = _.get(page, 'modified_gmt');
@@ -21,7 +21,9 @@ class PageView extends PureComponent {
                     <div className="date">{date}</div>
                 </div>
                 <h1><HTML text={title} /></h1>
-                <div className="content"><HTML text={content} /></div>
+                <div className="content">
+                    <HTML text={content} transform={transform}/>
+                </div>
             </div>
         );
     }
@@ -32,6 +34,7 @@ if (process.env.NODE_ENV !== 'production') {
 
     PageView.propTypes = {
         category: PropTypes.object,
+        transform: PropTypes.func,
     };
 }
 

@@ -24,10 +24,13 @@ A:link, A:visited {
   background-color: #66023c;
   overflow: hidden;
   color: #cccccc; }
-  .side-nav A:link, .side-nav A:visited {
-    color: #cccccc; }
-    .side-nav A:link:hover, .side-nav A:visited:hover {
-      color: #eeccdd; }
+  .side-nav A {
+    opacity: 0.5; }
+    .side-nav A:link, .side-nav A:visited {
+      opacity: 1;
+      color: #cccccc; }
+      .side-nav A:link:hover, .side-nav A:visited:hover {
+        color: #eeccdd; }
   .side-nav .archive LI {
     margin-top: 0.1em;
     margin-bottom: 0.1em; }
@@ -85,6 +88,7 @@ A:link, A:visited {
       .top-nav .page-bar A:link:hover, .top-nav .page-bar A:visited:hover {
         color: #eecccc; }
     .top-nav .page-bar .button {
+      flex: 0 0 auto;
       padding-left: 0.5em;
       padding-right: 0.5em;
       border-right: 1px solid rgba(204, 204, 204, 0.25); }
@@ -138,9 +142,13 @@ A:link, A:visited {
     max-width: 60em; }
     .page-container .page .meta, .page-container .post .meta {
       float: right;
-      text-align: right; }
+      text-align: right;
+      margin-left: 1em;
+      margin-top: 0.4em; }
       .page-container .page .meta .author, .page-container .post .meta .author {
         margin-top: 0.25em; }
+    .page-container .page .post-list-view .excerpt, .page-container .post .post-list-view .excerpt {
+      margin-top: -0.7em; }
     .page-container .page .comments, .page-container .post .comments {
       font-size: 0.9em;
       padding-left: 1.5em; }
@@ -154,6 +162,8 @@ A:link, A:visited {
         vertical-align: middle; }
       .page-container .page .comments .replies, .page-container .post .comments .replies {
         padding-left: 1.5em; }
+    .page-container .page IMG, .page-container .post IMG {
+      max-width: 100%; }
 
 @media only screen and (max-width: 800px) {
   .page-container {

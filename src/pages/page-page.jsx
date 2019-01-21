@@ -31,7 +31,7 @@ class PagePageSync extends PureComponent {
     static displayName = 'PagePageSync';
 
     render() {
-        let { route, page, parentPages, childPages } = this.props;
+        let { route, page, parentPages, childPages, transform } = this.props;
         let trail = [];
         let parents = [];
         if (parentPages) {
@@ -48,7 +48,7 @@ class PagePageSync extends PureComponent {
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
-                <PageView page={page} />
+                <PageView page={page} transform={route.transformLink} />
                 <PageList route={route} pages={childPages} parentPages={parents} />
             </div>
         );

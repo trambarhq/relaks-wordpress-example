@@ -1,22 +1,22 @@
-const FS = require('fs');
+const Bluebird = require('bluebird');
+const FS = Bluebird.promisifyAll(require('fs'));
 const OS = require('os');
 const Express = require('express');
-const CrossFetch = require('cross-fetch');
-const DNSCache = require('dnscache');
-const Crypto = require('crypto');
+const Compression = require('compression');
 const SpiderDetector = require('spider-detector')
+const DNSCache = require('dnscache');
+const CrossFetch = require('cross-fetch');
 const ReactDOMServer = require('react-dom/server');
-const ClientApp = require('./client/app');
+const FrontEnd = require('./client/front-end');
+const NginxCache = require('./nginx-cache');
 
 // enable DNS caching
 let dnsCache = DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
-const basePath = `/`;
 const perPage = 10;
 const serverPort = 80;
 const wordpressHost = process.env.WORDPRESS_HOST;
 const nginxHost = process.env.NGINX_HOST;
-const nginxCache = process.env.NGINX_CACHE;
 
 let wordpressIP;
 dnsCache.lookup(wordpressHost, (err, result) => {
@@ -27,13 +27,39 @@ dnsCache.lookup(wordpressHost, (err, result) => {
 
 let app = Express();
 app.set('json spaces', 2);
+app.use(Compression())
 app.use(SpiderDetector.middleware());
 app.use(`/`, Express.static(`${__dirname}/www`));
 app.get('/.mtime', handleTimestampRequest);
+app.get('/json/*', handleJSONRequest);
 app.get(`/*`, handlePageRequest);
 app.purge(`/*`, handlePurgeRequest);
 app.use(handleError);
 app.listen(serverPort);
+
+let pageDependencies = {};
+
+async function handleJSONRequest(req, res, next) {
+    try {
+        let path = `/wp-json/${req.url.substr(6)}`;
+        let url = `http://${wordpressHost}${path}`;
+        let sres = await CrossFetch(url);
+        let text = await sres.text();
+        res.send(text);
+    } catch (err) {
+        next(err);
+    }
+}
+
+function handleTimestampRequest(req, res, next) {
+    try {
+        let now = new Date;
+        let ts = now.toISOString();
+        res.type('text').send(ts);
+    } catch (err) {
+        next(err);
+    }
+}
 
 async function handlePageRequest(req, res, next) {
     try {
@@ -52,10 +78,10 @@ async function handlePageRequest(req, res, next) {
             return CrossFetch(url, options);
         };
         let options = { host, path, target, fetch };
-        let rootNode = await ClientApp.render(options);
+        let rootNode = await FrontEnd.render(options);
         let appHTML = ReactDOMServer.renderToString(rootNode);
         let indexHTMLPath = `${__dirname}/client/index.html`;
-        let html = await replaceHTMLComment(indexHTMLPath, 'APP', appHTML);
+        let html = await replaceHTMLComment(indexHTMLPath, 'REACT', appHTML);
 
         if (target === 'hydrate') {
             // add <noscript> tag to redirect to SEO version
@@ -66,20 +92,8 @@ async function handlePageRequest(req, res, next) {
         }
         res.type('html').send(html);
 
-        recordDependencies(path, sourceURLs);
-    } catch (err) {
-        next(err);
-    }
-}
-
-function handleTimestampRequest(req, res, next) {
-    try {
-        let now = new Date;
-        let ts = now.toISOString();
-        res.type('text').send(ts);
-
-        let path = req.url;
-        recordDependencies(path, '*');
+        // save the URLs that the page depends on
+        pageDependencies[path] = sourceURLs.map(addTrailingSlash);
     } catch (err) {
         next(err);
     }
@@ -92,124 +106,85 @@ function handleError(err, req, res, next) {
     console.error(err);
 }
 
-async function handlePurgeRequest(req, res) {
+function handlePurgeRequest(req, res) {
     let remoteIP = req.connection.remoteAddress;
     if (remoteIP === wordpressIP) {
         let url = req.url;
         let method = req.headers['x-purge-method'];
-        await purgeCachedFile(url, method);
-
-        let pattern = (method === 'regex') ? new RegExp(url) : url;
-        let isJSON;
-        if (pattern instanceof RegExp) {
-            isJSON = pattern.test('/wp-json');
-        } else {
-            isJSON = pattern.startsWith('/wp-json');
-        }
-        if (isJSON) {
-            await purgeDependentPages(pattern);
-        }
+        purgeCachedFile(url, method);
     }
     res.end();
 }
 
-let pageDependencies = {};
-
-function recordDependencies(url, sourceURLs) {
-    if (sourceURLs instanceof Array) {
-        sourceURLs = sourceURLs.map(removeTrailingSlash);
-    }
-    pageDependencies[url] = sourceURLs;
-}
-
-async function purgeDependentPages(host, pattern) {
-    for (let [ url, sourceURLs ] of Object.entries(pageDependencies)) {
-        let match = false;
-        if (sourceURLs === '*') {
-            match = true;
-        } else if (pattern instanceof RegExp) {
-            match = sourceURLs.some((sourceURL) => {
-                return pattern.test(sourceURL);
-            });
-        } else {
-            let url = removeTrailingSlash(pattern);
-            if (sourceURLs.indexOf(url)) {
-                match = true;
-            }
-        }
-        if (match) {
-            delete pageDependencies[pageURL];
-            await purgeCachedFile(pageURL);
-        }
-    }
-}
-
 async function purgeCachedFile(url, method) {
-    console.log(`Purging: ${url}`);
-    if (method === 'regex') {
-        // delete everything
-        let files = await new Promise((resolve, reject) => {
-            FS.readdir(nginxCache, (err, files) => {
-                if (!err) {
-                    resolve(files);
-                } else {
-                    resolve([]);
-                }
-            });
-        });
-        let isMD5 = /^[0-9a-f]{32}$/;
-        for (let file of files) {
-            if (isMD5.test(file)) {
-                await unlinkFile(`${nginxCache}/${file}`);
+    let pattern, isJSON;
+    if (method === 'default' && url.startsWith('/wp-json/')) {
+        let path = url.substr(9);
+        let m = /^(\w+\/\w+\/(\w+)\/)(\d+)\/$/.exec(path);
+        if (m) {
+            let folderPath = m[1];
+            let folderType = m[2];
+            pattern = new RegExp(`^/json/${folderPath}.*`);
+        }
+    } else if (method === 'regex' && url === '.*') {
+        pattern = /.*/;
+    }
+    if (!pattern) {
+        return;
+    }
+    let purged = await NginxCache.purge(pattern);
+    for (let [ pageURL, sourceURLs ] of Object.entries(pageDependencies)) {
+        let affected = false;
+        for (let jsonURL of purged) {
+            jsonURL = addTrailingSlash(jsonURL);
+            if (sourceURLs.indexOf(jsonURL)) {
+                affected = true;
+                break;
             }
         }
-    } else {
-        let hash = Crypto.createHash('md5').update(url);
-        let md5 = hash.digest("hex");
-        await unlinkFile(`${nginxCache}/${md5}`);
+        if (affected) {
+            delete pageDependencies[pageURL];
+            await NginxCache.purge(pageURL);
+        }
     }
-}
-
-async function unlinkFile(path) {
-    console.log(`Unlinking ${path}`);
-    await new Promise((resolve, reject) => {
-        FS.unlink(path, (err) => {
-            if (!err) {
-                resolve(true);
-            } else {
-                resolve(false);
-            }
-        });
-    });
+    await NginxCache.purge('/.mtime');
 }
 
 async function replaceHTMLComment(path, comment, newElement) {
-    let text = await new Promise((resolve, reject) => {
-        FS.readFile(path, 'utf-8', (err, text) => {
-            if (!err) {
-                resolve(text);
-            } else {
-                reject(err);
-            }
-        });
-    });
+    let text = await FS.readFileAsync(path, 'utf-8');
     return text.replace(`<!--${comment}-->`, newElement).replace(`<!--${comment}-->`, newElement);
 }
 
 /**
- * Remove trailing slash from URL
+ * Add trailing slash to URL
  *
  * @param  {String} url
  *
  * @return {String}
  */
-function removeTrailingSlash(url) {
-    var lc = url.charAt(url.length - 1);
-    if (lc === '/') {
-        url = url.substr(0, url.length - 1);
+function addTrailingSlash(url) {
+    let qi = url.indexOf('?');
+    if (qi === -1) {
+        qi = url.length;
+    }
+    let lc = url.charAt(qi - 1);
+    if (lc !== '/') {
+        url = url.substr(0, qi) + '/' + url.substr(qi);
     }
     return url;
 }
+
+[ './index', './nginx-cache', './client/front-end' ].forEach((path) => {
+    let fullPath = require.resolve(path);
+    FS.watchFile(fullPath, (curr, prev) => {
+        if (curr.mtime !== prev.mtime) {
+            console.log('Restarting');
+            process.exit(0);
+        }
+    });
+});
+
+NginxCache.purge(/.*/);
 
 process.on('unhandledRejection', (err) => {
     console.error(err);

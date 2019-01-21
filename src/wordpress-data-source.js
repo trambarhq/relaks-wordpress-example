@@ -1662,11 +1662,11 @@ prototype.delete = function(url) {
  */
 prototype.request = function(url, options, token, waitForAuthentication) {
     var _this = this;
+    if (!options) {
+        options = {};
+    }
     if (token) {
         var keyword = this.options.authorizationKeyword;
-        if (!options) {
-            options = {};
-        }
         if (!options.headers) {
             options.headers = {};
         }

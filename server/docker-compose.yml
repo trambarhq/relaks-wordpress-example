@@ -16,6 +16,8 @@ services:
     depends_on:
       - db
     image: wordpress:latest
+    volumes:
+      - wp_content:/var/www/html/wp-content
     environment:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: wordpress
@@ -45,4 +47,5 @@ services:
     restart: always
 volumes:
     db_data:
+    wp_content:
     web_cache:

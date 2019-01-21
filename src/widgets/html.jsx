@@ -3,11 +3,8 @@ import ReactHtmlParser from 'react-html-parser';
 
 class HTML extends PureComponent {
     render() {
-        let { text } = this.props;
-        let options = {};
-        if (transformFunc) {
-            options.transform = transformFunc;
-        }
+        let { text, transform } = this.props;
+        let options = { transform };
         return ReactHtmlParser(text, options);
     }
 }
@@ -16,17 +13,11 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
     HTML.propTypes = {
         text: PropTypes.string,
+        transform: PropTypes.func,
     };
-}
-
-let transformFunc = null;
-
-function setTransformFunction(f) {
-    transformFunc = f;
 }
 
 export {
     HTML as default,
     HTML,
-    setTransformFunction,
 };

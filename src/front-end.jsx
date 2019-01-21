@@ -15,7 +15,7 @@ class FrontEnd extends PureComponent {
         super(props);
         let { routeManager, dataSource } = this.props;
         this.state = {
-            route: new Route(routeManager),
+            route: new Route(routeManager, dataSource),
             wp: new Wordpress(dataSource, props.ssr),
             sideNavCollapsed: true,
             topNavCollapsed: false,
@@ -97,7 +97,8 @@ class FrontEnd extends PureComponent {
      * @param  {RelaksRouteManagerEvent} evt
      */
     handleRouteChange = (evt) => {
-        this.setState({ route: new Route(evt.target) });
+        let { dataSource } = this.props;
+        this.setState({ route: new Route(evt.target, dataSource) });
     }
 
     /**

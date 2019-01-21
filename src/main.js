@@ -1,11 +1,12 @@
+import { delay } from 'bluebird';
 import { createElement } from 'react';
 import { hydrate, render } from 'react-dom';
 import { FrontEnd } from 'front-end';
-import { routes, setPageType } from 'routing';
+import { Route, routes } from 'routing';
 import WordpressDataSource from 'wordpress-data-source';
 import RouteManager from 'relaks-route-manager';
 import { harvest } from 'relaks-harvest';
-import Relaks from 'relaks';
+import Relaks, { plant } from 'relaks';
 
 const pageBasePath = '';
 
@@ -18,7 +19,7 @@ if (typeof(window) === 'object') {
             host = 'http://192.168.0.56:8000';
         }
         let dataSource = new WordpressDataSource({
-            baseURL: `${host}/wp-json`,
+            baseURL: `${host}/json`,
         });
         dataSource.activate();
 
@@ -29,32 +30,50 @@ if (typeof(window) === 'object') {
             preloadingDelay: 2000,
         });
         routeManager.addEventListener('beforechange', (evt) => {
-            evt.postponeDefault(setPageType(dataSource, evt.params));
+            let route = new Route(routeManager, dataSource);
+            evt.postponeDefault(route.setPageType(evt.params));
         });
         routeManager.activate();
         await routeManager.start();
 
-        let appContainer = document.getElementById('app-container');
-        if (!appContainer) {
-            throw new Error('Unable to find app element in DOM');
-        }
+        let container = document.getElementById('react-container');
         // expect SSR unless we're running in dev-server
         if (!(process.env.NODE_ENV !== 'production' && process.env.WEBPACK_DEV_SERVER)) {
             let ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: 'hydrate' });
             let seeds = await harvest(ssrElement, { seeds: true });
-            Relaks.set('seeds', seeds);
-            hydrate(ssrElement, appContainer);
+            plant(seeds);
+            hydrate(ssrElement, container);
         }
 
-        let appElement = createElement(FrontEnd, { dataSource, routeManager });
-        render(appElement, appContainer);
+        let csrElement = createElement(FrontEnd, { dataSource, routeManager });
+        render(csrElement, container);
+
+        // check for changes periodically
+        let mtimeURL = `${host}/.mtime`;
+        let mtimeLast;
+        for (;;) {
+            try {
+                let res = await fetch(mtimeURL);
+                let mtime = await res.text();
+                if (mtime !== mtimeLast) {
+                    if (mtimeLast) {
+                        console.log('changed');
+                        dataSource.invalidate();
+                    }
+                    mtimeLast = mtime;
+                }
+            } catch (err) {
+
+            }
+            await delay(10 * 1000);
+        }
     }
 
     window.addEventListener('load', initialize);
 } else {
     async function serverSideRender(options) {
         let dataSource = new WordpressDataSource({
-            baseURL: `${options.host}/wp-json`,
+            baseURL: `${options.host}/json`,
             fetchFunc: options.fetch,
         });
         dataSource.activate();
@@ -64,7 +83,8 @@ if (typeof(window) === 'object') {
             basePath: pageBasePath,
         });
         routeManager.addEventListener('beforechange', (evt) => {
-            evt.postponeDefault(setPageType(dataSource, evt.params));
+            let route = new Route(routeManager, dataSource);
+            evt.postponeDefault(route.setPageType(evt.params));
         });
         routeManager.activate();
         await routeManager.start(options.path);
