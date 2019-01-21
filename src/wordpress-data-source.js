@@ -515,14 +515,8 @@ prototype.refreshPage = function(query) {
     var time = getTime();
     var pageURL = attachPageNumber(query.url, query.page);
     this.get(pageURL).then(function(response) {
-        var objects, total;
-        if (response instanceof Array) {
-            objects = response;
-            total = response.length;
-        } else {
-            objects = response.results
-            total = response.count;
-        }
+        var objects = response;
+        var total = response.total;
 
         // remove other pages (unless they're refreshing)
         var otherQueries = [];
@@ -604,7 +598,7 @@ prototype.refreshList = function(query) {
                     // in the event that new pages have become available
                     query.nextPage = nextPage;
                 }
-                refreshedObjects = appendObjects(refreshedObjects, response.results);
+                refreshedObjects = appendObjects(refreshedObjects, response);
 
                 var total = response.total;
                 var objects = joinObjectLists(refreshedObjects, oldObjects);
