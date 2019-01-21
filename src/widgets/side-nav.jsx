@@ -153,11 +153,10 @@ class SideNavSync extends PureComponent {
 
     renderCategory(category, i) {
         let { route, categoryPosts } = this.props;
-        let { monthSlug } = route.params;
+        let { monthSlug, categorySlug } = route.params;
         let name = _.get(category, 'name', '');
         let description = _.get(category, 'description', '');
-        let categorySlug = _.get(category, 'slug', '');
-        let slugs = [ categorySlug ];
+        let slugs = [ category.slug ];
         if (monthSlug) {
             slugs.unshift(monthSlug);
         }
@@ -166,9 +165,13 @@ class SideNavSync extends PureComponent {
         if (_.isEmpty(posts) && !_.isUndefined(posts)) {
             url = undefined;
         }
+        let className;
+        if (categorySlug === category.slug) {
+            className = 'selected';
+        }
         return (
             <li key={i}>
-                <a href={url} title={description}>{name}</a>
+                <a className={className} href={url} title={description}>{name}</a>
             </li>
         );
     }
@@ -191,16 +194,13 @@ class SideNavSync extends PureComponent {
 
     renderYear(yearEntry, i) {
         let { selectedYear } = this.props;
-        let labelClass = 'year';
         let listClass = 'months';
-        if (yearEntry.year === selectedYear) {
-            labelClass += ' selected';
-        } else {
+        if (yearEntry.year !== selectedYear) {
             listClass += ' collapsed';
         }
         return (
             <li key={i}>
-                <span className={labelClass} data-year={yearEntry.year} onClick={this.handleYearClick}>
+                <span data-year={yearEntry.year} onClick={this.handleYearClick}>
                     {yearEntry.label}
                 </span>
                 <ul className={listClass}>
@@ -216,13 +216,18 @@ class SideNavSync extends PureComponent {
 
     renderMonth(monthEntry, i) {
         let { route } = this.props;
+        let { monthSlug } = route.params;
         let url = route.find([ monthEntry.slug ]);
         if (_.isEmpty(monthEntry.posts) && !_.isUndefined(monthEntry.posts)) {
             url = undefined;
         }
+        let className;
+        if (monthSlug === monthEntry.slug) {
+            className = 'selected';
+        }
         return (
             <li key={i}>
-                <a href={url}>{monthEntry.label}</a>
+                <a className={className} href={url}>{monthEntry.label}</a>
             </li>
         );
     }

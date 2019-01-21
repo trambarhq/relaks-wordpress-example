@@ -44,10 +44,39 @@ A {
         }
     }
 
+    .categories {
+        LI {
+            margin-top: 0.2em;
+            margin-bottom: 0.2em;
+
+            A {
+                padding: 0.2em 0.5em 0.17em 0.5em;
+                margin-left: -0.4em;
+
+                &.selected {
+                    border-radius: 0.5em;
+                    background-color: #990000;
+                    color: #eeeeee;
+                }
+            }
+        }
+    }
+
     .archive {
         LI {
-            margin-top: 0.1em;
-            margin-bottom: 0.1em;
+            margin-top: 0.2em;
+            margin-bottom: 0.2em;
+
+            A {
+                padding: 0.2em 0.5em 0.17em 0.5em;
+                margin-left: -0.4em;
+
+                &.selected {
+                    border-radius: 0.5em;
+                    background-color: #990000;
+                    color: #eeeeee;
+                }
+            }
         }
 
         .year {
