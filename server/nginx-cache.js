@@ -2,15 +2,14 @@ const Bluebird = require('bluebird');
 const FS = Bluebird.promisifyAll(require('fs'));
 const Crypto = require('crypto');
 
-const nginxCache = process.env.NGINX_CACHE;
+const NGINX_CACHE = process.env.NGINX_CACHE;
 
 async function purge(pattern) {
     console.log(`Purging: ${pattern}`);
     let purged = [];
     if (typeof(pattern) === 'string') {
         let url = pattern;
-        let hash = Crypto.createHash('md5').update(url);
-        let md5 = hash.digest('hex');
+        let md5 = Crypto.createHash('md5').update(url).digest('hex');
         let success = await removeCacheEntry({ url, md5 });
         if (success) {
             purged.push(url);
@@ -29,8 +28,6 @@ async function purge(pattern) {
     return purged;
 }
 
-const isMD5 = /^[0-9a-f]{32}$/;
-
 let cacheEntriesPromise = null;
 
 async function loadCacheEntries() {
@@ -43,10 +40,10 @@ async function loadCacheEntries() {
 }
 
 async function loadCacheEntriesUncached() {
-    let files = await FS.readdirAsync(nginxCache);
+    let files = await FS.readdirAsync(NGINX_CACHE);
     let entries = [];
     for (let file of files) {
-        if (isMD5.test(file)) {
+        if (/^[0-9a-f]{32}$/.test(file)) {
             let entry = await loadCacheEntry(file);
             if (entry) {
                 entries.push(entry);
@@ -60,7 +57,7 @@ let cacheEntryCache = {};
 
 async function loadCacheEntry(md5) {
     try {
-        let path = `${nginxCache}/${md5}`;
+        let path = `${NGINX_CACHE}/${md5}`;
         let { mtime } = await FS.statAsync(path);
         let entry = cacheEntryCache[md5];
         if (!entry || entry.mtime !== mtime) {
@@ -91,7 +88,7 @@ async function loadCacheEntryKey(path) {
 async function removeCacheEntry(entry) {
     try {
         delete cacheEntryCache[entry.md5];
-        await FS.unlinkAsync(`${nginxCache}/${entry.md5}`);
+        await FS.unlinkAsync(`${NGINX_CACHE}/${entry.md5}`);
         console.log(`Purged: ${entry.url}`);
         return true;
     } catch (err){
@@ -99,4 +96,6 @@ async function removeCacheEntry(entry) {
     }
 }
 
-exports.purge = purge;
+module.exports = {
+    purge,
+};

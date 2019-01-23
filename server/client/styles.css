@@ -31,9 +31,26 @@ A:link, A:visited {
       color: #cccccc; }
       .side-nav A:link:hover, .side-nav A:visited:hover {
         color: #eeccdd; }
+  .side-nav .categories LI {
+    margin-top: 0.2em;
+    margin-bottom: 0.2em; }
+    .side-nav .categories LI A {
+      padding: 0.2em 0.5em 0.17em 0.5em;
+      margin-left: -0.4em; }
+      .side-nav .categories LI A.selected {
+        border-radius: 0.5em;
+        background-color: #990000;
+        color: #eeeeee; }
   .side-nav .archive LI {
-    margin-top: 0.1em;
-    margin-bottom: 0.1em; }
+    margin-top: 0.2em;
+    margin-bottom: 0.2em; }
+    .side-nav .archive LI A {
+      padding: 0.2em 0.5em 0.17em 0.5em;
+      margin-left: -0.4em; }
+      .side-nav .archive LI A.selected {
+        border-radius: 0.5em;
+        background-color: #990000;
+        color: #eeeeee; }
   .side-nav .archive .year {
     cursor: pointer; }
   .side-nav .archive .months {
