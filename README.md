@@ -1,3 +1,7 @@
+[![Uncached page access](docs/img/uncached.gif)](docs/uncached.md)
+
+[![Cached page access](docs/img/cached.gif)](docs/cached.md)
+
 1. Run docker-compose up -d
 2. Go to http://localhost:8000/wp-admin/
 3. Enter site info
