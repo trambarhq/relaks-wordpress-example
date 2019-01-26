@@ -8,7 +8,7 @@ class PostView extends PureComponent {
     static displayName = 'PostView';
 
     render() {
-        let { category, post, author, transform } = this.props;
+        let { post, author, transform } = this.props;
         let title = _.get(post, 'title.rendered', '');
         let content = _.get(post, 'content.rendered', '');
         let date = _.get(post, 'date_gmt');
@@ -35,7 +35,6 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     PostView.propTypes = {
-        category: PropTypes.object,
         post: PropTypes.object,
         author: PropTypes.object,
         transform: PropTypes.func,

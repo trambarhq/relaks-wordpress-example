@@ -9,7 +9,7 @@ class PostList extends PureComponent {
     static displayName = 'PostList'
 
     render() {
-        let { route, posts, categories, month, authors } = this.props;
+        let { route, posts } = this.props;
         if (!posts) {
             return null;
         }
@@ -17,9 +17,7 @@ class PostList extends PureComponent {
             <div className="posts">
             {
                 posts.map((post) => {
-                    let author = _.find(authors, { id: post.author_id });
-                    let category = _.find(categories, { id: post.categories[0] });
-                    return <PostListView route={route} month={month} category={category} post={post} author={author} key={post.id} />
+                    return <PostListView route={route} post={post} key={post.id} />
                 })
             }
             </div>
@@ -62,8 +60,6 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     PostList.propTypes = {
-        categories: PropTypes.arrayOf(PropTypes.object),
-        month: PropTypes.instanceOf(Moment),
         route: PropTypes.instanceOf(Route),
         minimum: PropTypes.number,
         maximum: PropTypes.number,

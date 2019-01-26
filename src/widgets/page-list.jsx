@@ -8,7 +8,7 @@ class PageList extends PureComponent {
     static displayName = 'PageList'
 
     render() {
-        let { route, pages, parentPages } = this.props;
+        let { route, pages } = this.props;
         if (!pages) {
             return null;
         }
@@ -18,7 +18,7 @@ class PageList extends PureComponent {
                 pages.map((page) => {
                     return (
                         <li key={page.id}>
-                            <PageListView route={route} page={page} parentPages={parentPages} />
+                            <PageListView route={route} page={page} />
                         </li>
                     );
                 })
@@ -44,7 +44,6 @@ if (process.env.NODE_ENV !== 'production') {
 
     PageList.propTypes = {
         pages: PropTypes.arrayOf(PropTypes.object),
-        parentPages: PropTypes.arrayOf(PropTypes.object),
         route: PropTypes.instanceOf(Route).isRequired,
     };
 }

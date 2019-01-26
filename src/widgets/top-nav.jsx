@@ -46,7 +46,7 @@ class TopNavSync extends PureComponent {
         let { route, system } = this.props;
         let name = _.get(system, 'name', '');
         let description = _.get(system, 'description', '');
-        let url = route.find({});
+        let url = route.getRootURL();
         return (
             <div className="title-bar">
                 <div className="title" title={description}>
@@ -76,8 +76,7 @@ class TopNavSync extends PureComponent {
     renderPageLinkButton(page, i) {
         let { route } = this.props;
         let title = _.get(page, 'title.rendered');
-        let slug = _.get(page, 'slug');
-        let url = route.find([ slug ]);
+        let url = route.getObjectURL(page);
         return (
             <div className="button" key={i}>
                 <a href={url}>{title}</a>
@@ -101,7 +100,7 @@ class TopNavSync extends PureComponent {
     performSearch = (evt) => {
         let { search } = this.state;
         let { route } = this.props;
-        let url = route.find({ search });
+        let url = route.getSearchURL(search);
         let options = {
             replace: (route.params.pageType === 'search')
         };

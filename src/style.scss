@@ -30,6 +30,7 @@ A {
     background-color: #66023c;
     overflow: hidden;
     color: #cccccc;
+    padding: 0 1em 0 1em;
 
     A {
         opacity: 0.5;
@@ -42,6 +43,10 @@ A {
                 color: #eeccdd;
             }
         }
+    }
+
+    UL {
+        margin-left: -1em;
     }
 
     .categories {

@@ -31,7 +31,7 @@ if (typeof(window) === 'object') {
         });
         routeManager.addEventListener('beforechange', (evt) => {
             let route = new Route(routeManager, dataSource);
-            evt.postponeDefault(route.setPageType(evt.params));
+            evt.postponeDefault(route.setParameters(evt));
         });
         routeManager.activate();
         await routeManager.start();
@@ -57,7 +57,6 @@ if (typeof(window) === 'object') {
                 let mtime = await res.text();
                 if (mtime !== mtimeLast) {
                     if (mtimeLast) {
-                        console.log('changed');
                         dataSource.invalidate();
                     }
                     mtimeLast = mtime;
@@ -84,7 +83,7 @@ if (typeof(window) === 'object') {
         });
         routeManager.addEventListener('beforechange', (evt) => {
             let route = new Route(routeManager, dataSource);
-            evt.postponeDefault(route.setPageType(evt.params));
+            evt.postponeDefault(route.setParameters(evt));
         });
         routeManager.activate();
         await routeManager.start(options.path);

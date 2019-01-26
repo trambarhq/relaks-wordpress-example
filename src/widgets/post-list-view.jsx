@@ -9,18 +9,11 @@ class PostListView extends PureComponent {
     static displayName = 'PostListView';
 
     render() {
-        let { route, category, post, month } = this.props;
+        let { route, post } = this.props;
         let title = _.get(post, 'title.rendered', '');
         let excerpt = _.get(post, 'excerpt.rendered', '');
         excerpt = cleanExcerpt(excerpt);
-        let slugs = [ post.slug ];
-        if (category) {
-            slugs.unshift(category.slug);
-        }
-        if (month) {
-            slugs.unshift(month.format('YYYY-MM'));
-        }
-        let url = route.find(slugs);
+        let url = route.getObjectURL(post);
         return (
             <div className="post-list-view">
                 <h3>
@@ -44,9 +37,7 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     PostListView.propTypes = {
-        category: PropTypes.object,
         post: PropTypes.object,
-        month: PropTypes.instanceOf(Moment),
         route: PropTypes.instanceOf(Route).isRequired,
     };
 }

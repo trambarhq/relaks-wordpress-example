@@ -8,11 +8,9 @@ class PageListView extends PureComponent {
     static displayName = 'PageListView';
 
     render() {
-        let { route, parentPages, page } = this.props;
+        let { route, page } = this.props;
         let title = _.get(page, 'title.rendered', '');
-        let parentSlugs = _.map(parentPages, 'slug');
-        let slugs = _.concat(parentSlugs, page.slug);
-        let url = route.find(slugs);
+        let url = route.getObjectURL(page);
         return (
             <div className="page-list-view">
                 <a href={url}><HTML text={title} /></a>
@@ -26,7 +24,6 @@ if (process.env.NODE_ENV !== 'production') {
 
     PageListView.propTypes = {
         page: PropTypes.object,
-        parentPages: PropTypes.arrayOf(PropTypes.object),
         route: PropTypes.instanceOf(Route).isRequired,
     };
 }

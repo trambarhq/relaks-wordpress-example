@@ -10,6 +10,7 @@ const HTML_TEMPLATE = `${__dirname}/client/index.html`;
 
 async function generate(path, target) {
     // retrieve cached JSON through Nginx
+    console.log(`Regenerating page: ${path}`);
     let host = `http://${NGINX_HOST}`;
     // create a fetch() that remembers the URLs used
     let sourceURLs = [];

@@ -11,21 +11,13 @@ class SideNav extends AsyncComponent {
     constructor(props) {
         super(props);
         let { route } = this.props;
-        let { monthSlug } = route.params;
-        let selectedYear;
-        if (monthSlug) {
-            selectedYear = parseInt(monthSlug.substr(0, 4));
-        } else {
-            selectedYear = Moment().year();
-        }
-        this.state = {
-            selectedYear
-        };
+        let { date } = route.params;
+        let selectedYear = _.get(date, 'year', Moment().year());
+        this.state = { selectedYear };
     }
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
-        let { monthSlug } = route.params;
         let { selectedYear } = this.state;
         let props = {
             route,
@@ -68,7 +60,10 @@ class SideNav extends AsyncComponent {
                     let monthEntry = {
                         month: m + 1,
                         label: start.format('MMMM'),
-                        slug: start.format('YYYY-MM'),
+                        date: {
+                            year: start.year(),
+                            month: start.month() + 1,
+                        },
                         post: undefined,
                         start,
                         end,
@@ -96,15 +91,7 @@ class SideNav extends AsyncComponent {
             // load the posts of each categories
             props.categoryPosts = [];
             for (let category of props.categories) {
-                let url;
-                if (monthSlug) {
-                    let month = Moment(monthSlug);
-                    let after = month.toISOString();
-                    let before = month.endOf('month').toISOString();
-                    url = `/wp/v2/posts/?after=${after}&before=${before}&categories=${category.id}`;
-                } else {
-                    url = `/wp/v2/posts/?categories=${category.id}`;
-                }
+                let url = `/wp/v2/posts/?categories=${category.id}`;
                 let posts = await wp.fetchList(url);
                 props.categoryPosts = _.clone(props.categoryPosts);
                 props.categoryPosts.push(posts);
@@ -125,7 +112,9 @@ class SideNavSync extends PureComponent {
     render() {
         return (
             <div className="side-nav">
+                <h3>Categories</h3>
                 {this.renderCategories()}
+                <h3>Archives</h3>
                 {this.renderArchive()}
             </div>
         )
@@ -136,6 +125,8 @@ class SideNavSync extends PureComponent {
         if (!categories) {
             return null;
         }
+        // only top-level categories
+        categories = _.filter(categories, { parent: 0 });
         // don't show categories with no post
         categories = _.filter(categories, 'count');
         // list category with more posts first
@@ -153,20 +144,16 @@ class SideNavSync extends PureComponent {
 
     renderCategory(category, i) {
         let { route, categoryPosts } = this.props;
-        let { monthSlug, categorySlug } = route.params;
+        let { categorySlugs } = route.params;
         let name = _.get(category, 'name', '');
         let description = _.get(category, 'description', '');
-        let slugs = [ category.slug ];
-        if (monthSlug) {
-            slugs.unshift(monthSlug);
-        }
-        let url = route.find(slugs);
+        let url = route.getObjectURL(category);
         let posts = (categoryPosts) ? categoryPosts[i] : undefined;
         if (_.isEmpty(posts) && !_.isUndefined(posts)) {
             url = undefined;
         }
         let className;
-        if (categorySlug === category.slug) {
+        if (category.slug === _.last(categorySlugs)) {
             className = 'selected';
         }
         return (
@@ -216,13 +203,13 @@ class SideNavSync extends PureComponent {
 
     renderMonth(monthEntry, i) {
         let { route } = this.props;
-        let { monthSlug } = route.params;
-        let url = route.find([ monthEntry.slug ]);
+        let { date } = route.params;
+        let url = route.getArchiveURL(monthEntry.date);
         if (_.isEmpty(monthEntry.posts) && !_.isUndefined(monthEntry.posts)) {
             url = undefined;
         }
         let className;
-        if (monthSlug === monthEntry.slug) {
+        if (_.isEqual(monthEntry.date, date)) {
             className = 'selected';
         }
         return (

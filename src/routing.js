@@ -16,77 +16,113 @@ class Route {
         return this.routeManager.change(url, options);
     }
 
-    find(params) {
-        if (params instanceof Array) {
-            let slugs = params;
-            return this.routeManager.find('page', { slugs });
-        } else {
-            return this.routeManager.find('page', params);
-        }
+    getRootURL() {
+        return this.composeURL({ path: '/' });
     }
 
-    async setPageType(params) {
-        let slugs = params.slugs;
-        if (slugs.length > 0) {
-            let slugType1 = await this.getSlugType(slugs[0]);
-            if (slugType1 === 'page') {
-                params.pageType = 'page';
-                params.pageSlug = _.last(slugs);
-                params.parentPageSlugs = _.slice(slugs, 0, -1);
-            } else if (slugType1 === 'category') {
-                if (slugs.length === 1) {
-                    params.pageType = 'category';
-                    params.categorySlug = slugs[0];
-                } else if (slugs.length === 2) {
-                    params.pageType = 'post';
-                    params.categorySlug = slugs[0];
-                    params.postSlug = slugs[1];
-                }
-            } else if (slugType1 === 'archive') {
-                if (slugs.length === 1) {
-                    params.pageType = 'archive';
-                    params.monthSlug = slugs[0];
-                } else if (slugs.length === 2) {
-                    let slugType2 = await this.getSlugType(slugs[1]);
-                    if (slugType2 === 'category') {
-                        params.pageType = 'archive';
-                        params.monthSlug = slugs[0];
-                        params.categorySlug = slugs[1];
-                    } else {
-                        params.pageType = 'post';
-                        params.monthSlug = slugs[0];
-                        params.postSlug = slugs[1];
-                    }
-                } else if (slugs.length === 3) {
-                    params.pageType = 'post';
-                    params.monthSlug = slugs[0];
-                    params.categorySlug = slugs[1];
-                    params.postSlug = slugs[2];
-                }
-            }
-        }
-        if (!params.pageType) {
-            if (params.search !== undefined) {
-                params.pageType = 'search';
-            } else {
-                params.pageType = 'welcome';
-            }
-        }
+    getSearchURL(search) {
+        return this.composeURL({ path: '/', query: { s: search } });
     }
 
-    async getSlugType(slug) {
-        let options = { minimum: '100%' };
-        let pages = await this.dataSource.fetchList('/wp/v2/pages/?parent=0', options);
-        if (_.some(pages, { slug })) {
-            return 'page';
+    getArchiveURL(date) {
+        let { year, month } = date;
+        return this.composeURL({ path: `/date/${year}/${month}/` });
+    }
+
+    getObjectURL(object) {
+        let { siteURL } = this.params;
+        let url = object.link;
+        if (!_.startsWith(url, siteURL)) {
+            throw new Error(`Object URL does not match site URL`);
         }
-        let categories = await this.dataSource.fetchList('/wp/v2/categories/', options);
-        if (_.some(categories, { slug })) {
-            return 'category';
+        let path = url.substr(siteURL.length);
+        return this.composeURL({ path });
+    }
+
+
+
+    composeURL(urlParts) {
+        let context = _.clone(this.routeManager.context);
+        this.routeManager.rewrite('to', urlParts, context);
+        return this.routeManager.compose(urlParts);
+    }
+
+    async setParameters(evt) {
+        let params = await this.getParameters(evt.path, evt.query);
+        params.module = require(`pages/${params.pageType}-page`);
+        _.assign(evt.params, params);
+    }
+
+    async getParameters(path, query) {
+        // get the site URL and see what the page's URL would be if it
+        // were on WordPress itself
+        let siteURL = await this.getSiteURL();
+        let link = siteURL + path;
+        console.log(link);
+
+        // see if it's a search
+        let search = query.s;
+        if (search) {
+            return { pageType: 'search', search, siteURL };
         }
-        if (/^\d{4}\-\d{2}$/.test(slug)) {
-            return 'archive';
+
+        // see if it's pointing to the root page
+        if (path === '/') {
+            return { pageType: 'welcome', siteURL };
         }
+
+        // see if it's pointing to an archive
+        let date = findDate(path);
+        if (date) {
+            return { pageType: 'archive', date, siteURL };
+        }
+
+        // see if it's pointing to a post by ID
+        let postID = findPostID(path);
+        if (postID) {
+            let post = await this.dataSource.fetchOne('/wp/v2/posts/', postID);
+            if (post) {
+                let postSlug = post.slug;
+                return { pageType: 'post', postSlug, siteURL };
+            }
+        }
+
+        // see if it's pointing to a page
+        let allPages = await this.dataSource.fetchList('/wp/v2/pages/', { minimum: '100%' });
+        let pageSlugs = findMatchingSlugs(allPages, link);
+        if (pageSlugs) {
+            return { pageType: 'page', pageSlugs, siteURL };
+        }
+
+        // see if it's pointing to a category
+        let allCategories = await this.dataSource.fetchList('/wp/v2/categories/', { minimum: '100%' });
+        let categorySlugs = findMatchingSlugs(allCategories, link);
+        if (categorySlugs) {
+            return { pageType: 'category', categorySlugs, siteURL };
+        }
+
+        // see if it's pointing to a tag
+        let allTags = await this.dataSource.fetchList('/wp/v2/tags/', { minimum: '100%' });
+        let tagSlugs = findMatchingSlugs(allTags, link);
+        if (tagSlugs) {
+            let tagSlug = tagSlugs[0];
+            return { pageType: 'tag', tagSlug, siteURL };
+        }
+
+        // see if it's pointing to a post
+        let postSlug = _.last(_.filter(_.split(path, '/')));
+        let post = await this.dataSource.fetchOne('/wp/v2/posts/', postSlug);
+        if (post) {
+            return { pageType: 'post', postSlug, siteURL };
+        }
+
+        // go to the welcome page if we can't find a match
+        return { pageType: 'welcome', siteURL };
+    }
+
+    async getSiteURL() {
+        let site = await this.dataSource.fetchOne('/');
+        return _.trimEnd(site.url, '/');
     }
 
     async preloadPage(params) {
@@ -126,31 +162,44 @@ class Route {
     }
 }
 
-let routes = {
-    'page': {
-        path: {
-            from(path, params) {
-                params.slugs = path.split('/').filter(Boolean);
-                return true;
-            },
-            to(params) {
-                if (params.slugs instanceof Array) {
-                    return `/${params.slugs.join('/')}`;
-                } else {
-                    return `/`;
-                }
-            }
-        },
-        query: {
-            search: '${search}',
-        },
-        load: (match) => {
-            let type = match.params.pageType;
-            if (type) {
-                match.params.module = require(`pages/${type}-page`);
-            }
+function findDate(path) {
+    if (_.startsWith(path, '/date/')) {
+        path = path.substr(5);
+    }
+    let m = /^\/(\d{4})\/(\d+)\/?/.exec(path);
+    if (m) {
+        return {
+            year: parseInt(m[1]),
+            month: parseInt(m[2]),
+        };
+    }
+}
+
+function findPostID(path) {
+    if (_.startsWith(path, '/archives/')) {
+        let id = parseInt(path.substr(10));
+        if (id === id) {
+            return id;
         }
-    },
+    }
+}
+
+function findMatchingSlugs(objects, link) {
+    let matches = [];
+    for (let object of objects) {
+        let objectLink = _.trimEnd(object.link, '/') + '/';
+        if (_.startsWith(objectLink, link)) {
+            matches.push(object);
+        }
+    }
+    if (matches.length > 0) {
+        let slugs = _.map(_.sortBy(matches, 'link.length'), 'slug');
+        return slugs;
+    }
+}
+
+let routes = {
+    'page': { path: '*' },
 };
 
 export {

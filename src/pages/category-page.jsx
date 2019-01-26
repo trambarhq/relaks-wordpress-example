@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import { Route } from 'routing';
@@ -11,14 +12,14 @@ class CategoryPage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
-        let { categorySlug } = route.params;
+        let { categorySlugs } = route.params;
         let props = {
             route,
         };
         meanwhile.show(<CategoryPageSync {...props} />);
-        props.categories = await wp.fetchList('/wp/v2/categories/');
+        props.categories = await wp.fetchMultiple('/wp/v2/categories/', categorySlugs);
         meanwhile.show(<CategoryPageSync {...props} />);
-        let category = _.find(props.categories, { slug: categorySlug });
+        let category = _.last(props.categories);
         props.posts = await wp.fetchList(`/wp/v2/posts/?categories=${category.id}`);
         return <CategoryPageSync {...props} />;
     }
@@ -29,13 +30,17 @@ class CategoryPageSync extends PureComponent {
 
     render() {
         let { route, posts, categories } = this.props;
-        let { categorySlug } = route.params;
-        let category = _.find(categories, { slug: categorySlug });
-        let categoryLabel = _.get(category, 'name', '');
-        let trail = [
-            { label: 'Categories' },
-            { label: categoryLabel },
-        ];
+        let trail = [ { label: 'Categories' } ];
+        let category = _.last(categories);
+        for (let c of categories) {
+            let label = _.get(c, 'name', '');
+            if (c !== category) {
+                let url = route.getObjectURL(c);
+                trail.push({ label, url });
+            } else {
+                trail.push({ label });
+            }
+        }
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />

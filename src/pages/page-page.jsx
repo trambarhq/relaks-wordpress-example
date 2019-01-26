@@ -14,15 +14,15 @@ class PagePage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
-        let { pageSlug, parentPageSlugs } = route.params;
+        let { pageSlugs } = route.params;
         let props = {
             route,
         };
-        props.page = await wp.fetchOne('/wp/v2/pages/', pageSlug);
         meanwhile.show(<PagePageSync {...props} />);
-        props.parentPages = await wp.fetchMultiple('/wp/v2/pages/', parentPageSlugs);
+        props.pages = await wp.fetchMultiple('/wp/v2/pages/', pageSlugs);
         meanwhile.show(<PagePageSync {...props} />);
-        props.childPages = await wp.fetchList(`/wp/v2/pages/?parent=${props.page.id}`, { minimum: '100%' });
+        let page = _.last(props.pages);
+        props.childPages = await wp.fetchList(`/wp/v2/pages/?parent=${page.id}`, { minimum: '100%' });
         return <PagePageSync {...props} />;
     }
 }
@@ -31,25 +31,21 @@ class PagePageSync extends PureComponent {
     static displayName = 'PagePageSync';
 
     render() {
-        let { route, page, parentPages, childPages, transform } = this.props;
+        let { route, pages, childPages, transform } = this.props;
+        let page = _.last(pages);
         let trail = [];
-        let parents = [];
-        if (parentPages) {
-            for (let parentPage of parentPages) {
-                parents.push(parentPage);
-
-                let title = _.get(parentPage, 'title.rendered', '');
-                let slugs = _.map(parents, 'slug');
-                let url = route.find(slugs);
+        for (let p of pages) {
+            if (p !== page) {
+                let title = _.get(page, 'title.rendered', '');
+                let url = route.getObjectURL(p);
                 trail.push({ label: <HTML text={title} />, url })
             }
-            parents.push(page);
         }
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
                 <PageView page={page} transform={route.transformLink} />
-                <PageList route={route} pages={childPages} parentPages={parents} />
+                <PageList route={route} pages={childPages} />
             </div>
         );
     }
