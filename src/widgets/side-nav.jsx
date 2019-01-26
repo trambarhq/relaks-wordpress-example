@@ -87,15 +87,24 @@ class SideNav extends AsyncComponent {
                     }
                 }
             }
+        }
 
-            // load the posts of each categories
-            props.categoryPosts = [];
-            for (let category of props.categories) {
+        props.tags = await wp.fetchList('/wp/v2/tags/', { minimum: '100%' });
+        meanwhile.show(<SideNavSync {...props} />);
+
+        // load the posts of each category
+        for (let category of props.categories) {
+            if (category.count > 0) {
                 let url = `/wp/v2/posts/?categories=${category.id}`;
-                let posts = await wp.fetchList(url);
-                props.categoryPosts = _.clone(props.categoryPosts);
-                props.categoryPosts.push(posts);
-                meanwhile.show(<SideNavSync {...props} />);
+                await wp.fetchList(url);
+            }
+        }
+
+        // load the posts of each tag
+        for (let tag of props.tags) {
+            if (tag.count > 0) {
+                let url = `/wp/v2/posts/?tags=${tag.id}`;
+                await wp.fetchList(url);
             }
         }
         return <SideNavSync {...props} />;
@@ -112,46 +121,44 @@ class SideNavSync extends PureComponent {
     render() {
         return (
             <div className="side-nav">
-                <h3>Categories</h3>
                 {this.renderCategories()}
-                <h3>Archives</h3>
                 {this.renderArchive()}
+                {this.renderTags()}
             </div>
         )
     }
 
     renderCategories() {
         let { categories } = this.props;
-        if (!categories) {
-            return null;
-        }
         // only top-level categories
         categories = _.filter(categories, { parent: 0 });
         // don't show categories with no post
         categories = _.filter(categories, 'count');
-        // list category with more posts first
+        // list categories with more posts first
         categories = _.orderBy(categories, [ 'count', 'name' ], [ 'desc', 'asc' ]);
+        if (_.isEmpty(categories)) {
+            return null;
+        }
         return (
-            <ul className="categories">
-            {
-                categories.map((category, i) => {
-                    return this.renderCategory(category, i);
-                })
-            }
-            </ul>
+            <div>
+                <h3>Categories</h3>
+                <ul className="categories">
+                {
+                    categories.map((category, i) => {
+                        return this.renderCategory(category, i);
+                    })
+                }
+                </ul>
+            </div>
         );
     }
 
     renderCategory(category, i) {
-        let { route, categoryPosts } = this.props;
+        let { route } = this.props;
         let { categorySlugs } = route.params;
         let name = _.get(category, 'name', '');
         let description = _.get(category, 'description', '');
         let url = route.getObjectURL(category);
-        let posts = (categoryPosts) ? categoryPosts[i] : undefined;
-        if (_.isEmpty(posts) && !_.isUndefined(posts)) {
-            url = undefined;
-        }
         let className;
         if (category.slug === _.last(categorySlugs)) {
             className = 'selected';
@@ -164,12 +171,53 @@ class SideNavSync extends PureComponent {
         );
     }
 
+    renderTags() {
+        let { tags } = this.props;
+        // don't show tags with no post
+        tags = _.filter(tags, 'count');
+        // list tags with more posts first
+        tags = _.orderBy(tags, [ 'count', 'name' ], [ 'desc', 'asc' ]);
+        if (_.isEmpty(tags)) {
+            return null;
+        }
+        return (
+            <div>
+                <h3>Tags</h3>
+                <div className="tags">
+                {
+                    tags.map((tag, i) => {
+                        return this.renderTag(tag, i);
+                    })
+                }
+                </div>
+            </div>
+        );
+    }
+
+    renderTag(tag, i) {
+        let { route } = this.props;
+        let { tagSlug } = route.params;
+        let name = _.get(tag, 'name', '');
+        let description = _.get(tag, 'description', '');
+        let url = route.getObjectURL(tag);
+        let className;
+        if (tag.slug === tagSlug) {
+            className = 'selected';
+        }
+        return (
+            <span key={i}>
+                <a className={className} href={url} title={description} key={i}>{name}</a>
+                {' '}
+            </span>
+        );
+    }
+
     renderSubcategories(category) {
         let { categories } = this.props;
         let subcategories = _.filter(categories, { parent: category.id });
         subcategories = _.filter(subcategories, 'count');
         subcategories = _.orderBy(subcategories, [ 'count', 'name' ], [ 'desc', 'asc' ]);
-        if (!subcategories.length === 0) {
+        if (_.isEmpty(subcategories)) {
             return null;
         }
         return (
@@ -189,13 +237,16 @@ class SideNavSync extends PureComponent {
             return null;
         }
         return (
-            <ul className="archive">
-            {
-                archive.map((entry, i) => {
-                    return this.renderYear(entry, i);
-                })
-            }
-            </ul>
+            <div>
+                <h3>Archives</h3>
+                <ul className="archive">
+                {
+                    archive.map((entry, i) => {
+                        return this.renderYear(entry, i);
+                    })
+                }
+                </ul>
+            </div>
         );
     }
 
@@ -261,7 +312,7 @@ if (process.env.NODE_ENV !== 'production') {
     };
     SideNavSync.propTypes = {
         categories: PropTypes.arrayOf(PropTypes.object),
-        categoryPosts: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)),
+        tags: PropTypes.arrayOf(PropTypes.object),
         archive: PropTypes.arrayOf(PropTypes.object),
         selectedYear: PropTypes.number,
         route: PropTypes.instanceOf(Route),
