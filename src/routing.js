@@ -26,7 +26,7 @@ class Route {
 
     getArchiveURL(date) {
         let { year, month } = date;
-        return this.composeURL({ path: `/date/${year}/${month}/` });
+        return this.composeURL({ path: `/date/${year}/${_.padStart(month, 2, '0')}/` });
     }
 
     getObjectURL(object) {
@@ -38,8 +38,6 @@ class Route {
         let path = url.substr(siteURL.length);
         return this.composeURL({ path });
     }
-
-
 
     composeURL(urlParts) {
         let context = _.clone(this.routeManager.context);
@@ -57,8 +55,7 @@ class Route {
         // get the site URL and see what the page's URL would be if it
         // were on WordPress itself
         let siteURL = await this.getSiteURL();
-        let link = siteURL + path;
-        console.log(link);
+        let link = _.trimEnd(siteURL + path, '/') + '/';
 
         // see if it's a search
         let search = query.s;
@@ -188,7 +185,7 @@ function findMatchingSlugs(objects, link) {
     let matches = [];
     for (let object of objects) {
         let objectLink = _.trimEnd(object.link, '/') + '/';
-        if (_.startsWith(objectLink, link)) {
+        if (_.startsWith(link, objectLink)) {
             matches.push(object);
         }
     }

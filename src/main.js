@@ -3,7 +3,7 @@ import { createElement } from 'react';
 import { hydrate, render } from 'react-dom';
 import { FrontEnd } from 'front-end';
 import { Route, routes } from 'routing';
-import WordpressDataSource from 'wordpress-data-source';
+import WordpressDataSource from 'relaks-wordpress-data-source';
 import RouteManager from 'relaks-route-manager';
 import { harvest } from 'relaks-harvest';
 import Relaks, { plant } from 'relaks';

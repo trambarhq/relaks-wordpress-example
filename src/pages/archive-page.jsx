@@ -13,7 +13,7 @@ class ArchivePage extends AsyncComponent {
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
         let { date } = route.params;
-        let month = Moment(`${date.year}-${date.month}`);
+        let month = Moment(`${date.year}-${_.padStart(date.month, 2, '0')}`);
         let props = {
             route,
             month,

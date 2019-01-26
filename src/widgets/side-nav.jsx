@@ -139,7 +139,7 @@ class SideNavSync extends PureComponent {
                 })
             }
             </ul>
-        )
+        );
     }
 
     renderCategory(category, i) {
@@ -159,7 +159,27 @@ class SideNavSync extends PureComponent {
         return (
             <li key={i}>
                 <a className={className} href={url} title={description}>{name}</a>
+                {this.renderSubcategories(category)}
             </li>
+        );
+    }
+
+    renderSubcategories(category) {
+        let { categories } = this.props;
+        let subcategories = _.filter(categories, { parent: category.id });
+        subcategories = _.filter(subcategories, 'count');
+        subcategories = _.orderBy(subcategories, [ 'count', 'name' ], [ 'desc', 'asc' ]);
+        if (!subcategories.length === 0) {
+            return null;
+        }
+        return (
+            <ul className="subcategories">
+            {
+                subcategories.map((subcategory, i) => {
+                    return this.renderCategory(subcategory, i);
+                })
+            }
+            </ul>
         );
     }
 
