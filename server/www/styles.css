@@ -23,7 +23,8 @@ A:link, A:visited {
   bottom: 0;
   background-color: #66023c;
   overflow: hidden;
-  color: #cccccc; }
+  color: #cccccc;
+  padding: 0 1em 0 1em; }
   .side-nav A {
     opacity: 0.5; }
     .side-nav A:link, .side-nav A:visited {
@@ -31,6 +32,8 @@ A:link, A:visited {
       color: #cccccc; }
       .side-nav A:link:hover, .side-nav A:visited:hover {
         color: #eeccdd; }
+  .side-nav UL {
+    margin-left: -1em; }
   .side-nav .categories LI {
     margin-top: 0.2em;
     margin-bottom: 0.2em; }
@@ -57,6 +60,8 @@ A:link, A:visited {
     overflow: hidden; }
     .side-nav .archive .months.collapsed {
       height: 0; }
+  .side-nav .tags {
+    margin-left: 0.5em; }
 
 .top-nav {
   position: fixed;

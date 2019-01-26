@@ -10,6 +10,8 @@ var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlug
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 var event = process.env.npm_lifecycle_event;
+var devDataHost = 'http://localhost:8000';
+var cordovaDataHost = process.env.CORDOVA_DATA_HOST;
 
 var clientConfig = {
     context: Path.resolve('./src'),
@@ -91,7 +93,29 @@ var serverConfig = {
         new NamedModulesPlugin,
         new HtmlWebpackPlugin({
             template: Path.resolve(`./src/index.html`),
-            filename: Path.resolve(`./server/client/index.html`),
+            filename: 'index.html',
+        }),
+        new ExtractTextPlugin('styles.css'),
+    ],
+    devtool: clientConfig.devtool,
+};
+
+var cordovaConfig = {
+    context: clientConfig.context,
+    entry: clientConfig.entry,
+    output: {
+        path: Path.resolve('./cordova/sample-app/www'),
+        publicPath: '',
+        filename: 'front-end.js',
+    },
+    resolve: clientConfig.resolve,
+    module: clientConfig.module,
+    plugins: [
+        new NamedChunksPlugin,
+        new NamedModulesPlugin,
+        new HtmlWebpackPlugin({
+            template: Path.resolve(`./src/index.html`),
+            filename: 'index.html',
         }),
         new ExtractTextPlugin('styles.css'),
     ],
@@ -109,11 +133,11 @@ if (isDevServer) {
     // need HTML page
     clientConfig.plugins.push(new HtmlWebpackPlugin({
         template: Path.resolve(`./src/index.html`),
-        filename: Path.resolve(`./server/www/index.html`),
+        filename: 'index.html',
     }));
-    // set constant
+    // set data host
     var constants = {
-        'process.env.WEBPACK_DEV_SERVER': 'true',
+        'process.env.DATA_HOST': JSON.stringify(devDataHost),
     };
     clientConfig.plugins.unshift(new DefinePlugin(constants));
     // config dev-server to support client-side routing
@@ -125,12 +149,18 @@ if (isDevServer) {
 
 var constants = {};
 if (event === 'build') {
-    console.log('Optimizing JS code');
+    if (cordovaDataHost) {
+        configs.push(cordovaConfig);
+        console.log('Building for Cordova: ' + cordovaDataHost);
+    }
 
+    console.log('Optimizing JS code');
     configs.forEach((config) => {
         // set NODE_ENV to production
+        var dataHost = (config === cordovaConfig) ? cordovaDataHost : undefined;
         var constants = {
-            'process.env.NODE_ENV': '"production"',
+            'process.env.NODE_ENV': JSON.stringify('production'),
+            'process.env.DATA_HOST': JSON.stringify(dataHost),
         };
         config.plugins.unshift(new DefinePlugin(constants));
 

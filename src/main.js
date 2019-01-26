@@ -13,11 +13,7 @@ const pageBasePath = '';
 if (typeof(window) === 'object') {
     async function initialize(evt) {
         // create data source
-        let host = `${location.protocol}//${location.host}`;
-        if (process.env.NODE_ENV !== 'production' && process.env.WEBPACK_DEV_SERVER) {
-            // use hardcoded URL when we're running in dev-server
-            host = 'http://192.168.0.56:8000';
-        }
+        let host = process.env.DATA_HOST || `${location.protocol}//${location.host}`;
         let dataSource = new WordpressDataSource({
             baseURL: `${host}/json`,
         });
@@ -28,6 +24,7 @@ if (typeof(window) === 'object') {
             routes,
             basePath: pageBasePath,
             preloadingDelay: 2000,
+            useHashFallback: (location.host === ''),
         });
         routeManager.addEventListener('beforechange', (evt) => {
             let route = new Route(routeManager, dataSource);
@@ -37,14 +34,14 @@ if (typeof(window) === 'object') {
         await routeManager.start();
 
         let container = document.getElementById('react-container');
-        // expect SSR unless we're running in dev-server
-        if (!(process.env.NODE_ENV !== 'production' && process.env.WEBPACK_DEV_SERVER)) {
+        if (!process.env.DATA_HOST) {
+            // there is SSR support when we're fetching data from the same host
+            // as the HTML page
             let ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: 'hydrate' });
             let seeds = await harvest(ssrElement, { seeds: true });
             plant(seeds);
             hydrate(ssrElement, container);
         }
-
         let csrElement = createElement(FrontEnd, { dataSource, routeManager });
         render(csrElement, container);
 

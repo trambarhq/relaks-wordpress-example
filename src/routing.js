@@ -42,7 +42,13 @@ class Route {
     composeURL(urlParts) {
         let context = _.clone(this.routeManager.context);
         this.routeManager.rewrite('to', urlParts, context);
-        return this.routeManager.compose(urlParts);
+        let url = this.routeManager.compose(urlParts);
+        if (this.routeManager.options.useHashFallback) {
+            if (url != undefined) {
+                url = '#' + url;
+            }
+        }
+        return url;
     }
 
     async setParameters(evt) {

@@ -4417,8 +4417,8 @@ readers do not read off random characters that represent icons */
   font-family: 'Font Awesome 5 Free';
   font-style: normal;
   font-weight: 400;
-  src: url(/8e9f0ee6d016526776c27f91fea55cca.eot);
-  src: url(/8e9f0ee6d016526776c27f91fea55cca.eot?#iefix) format("embedded-opentype"), url(/e65d96d04378217b8b5caff2fb1b62cb.woff2) format("woff2"), url(/fc5252e568503bfb163233ec63b8a2ce.woff) format("woff"), url(/deb8619e67992d3fa088b5dcbb8cff36.ttf) format("truetype"), url(/734248d027cbaac7f03c0d931ec95593.svg#fontawesome) format("svg"); }
+  src: url(8e9f0ee6d016526776c27f91fea55cca.eot);
+  src: url(8e9f0ee6d016526776c27f91fea55cca.eot?#iefix) format("embedded-opentype"), url(e65d96d04378217b8b5caff2fb1b62cb.woff2) format("woff2"), url(fc5252e568503bfb163233ec63b8a2ce.woff) format("woff"), url(deb8619e67992d3fa088b5dcbb8cff36.ttf) format("truetype"), url(734248d027cbaac7f03c0d931ec95593.svg#fontawesome) format("svg"); }
 
 .far {
   font-family: 'Font Awesome 5 Free';
@@ -4431,8 +4431,8 @@ readers do not read off random characters that represent icons */
   font-family: 'Font Awesome 5 Free';
   font-style: normal;
   font-weight: 900;
-  src: url(/f72d546abcc27880adf8428792c72519.eot);
-  src: url(/f72d546abcc27880adf8428792c72519.eot?#iefix) format("embedded-opentype"), url(/8086e197694282b26c7b729945ecc377.woff2) format("woff2"), url(/52b8345b6d8e11988d8db917c366b4da.woff) format("woff"), url(/1709a2810c3752483683f3f7d287aa89.ttf) format("truetype"), url(/27603739fe78fee587c7b84873475b61.svg#fontawesome) format("svg"); }
+  src: url(f72d546abcc27880adf8428792c72519.eot);
+  src: url(f72d546abcc27880adf8428792c72519.eot?#iefix) format("embedded-opentype"), url(8086e197694282b26c7b729945ecc377.woff2) format("woff2"), url(52b8345b6d8e11988d8db917c366b4da.woff) format("woff"), url(1709a2810c3752483683f3f7d287aa89.ttf) format("truetype"), url(27603739fe78fee587c7b84873475b61.svg#fontawesome) format("svg"); }
 
 .fa,
 .fas {
