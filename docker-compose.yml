@@ -32,14 +32,14 @@ services:
       - wordpress
     image: node:8
     volumes:
-      - ..:/opt/example
+      - .:/opt/example
       - web_cache:/var/cache/nginx
     networks:
       network:
         ipv4_address: 172.129.0.4
     environment:
-      WORDPRESS_HOST: wordpress
-      NGINX_HOST: nginx
+      WORDPRESS_HOST: http://wordpress
+      NGINX_HOST: http://nginx
       NGINX_CACHE: /var/cache/nginx/data
     command: [ node, /opt/example/server/index.js ]
     restart: always
@@ -49,7 +49,7 @@ services:
       - node
     image: nginx:latest
     volumes:
-      - ./nginx:/etc/nginx/conf.d
+      - ./server/nginx:/etc/nginx/conf.d
       - web_cache:/var/cache/nginx
     networks:
       network:

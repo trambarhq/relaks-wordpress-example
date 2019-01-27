@@ -3,7 +3,7 @@ const CrossFetch = require('cross-fetch');
 const WORDPRESS_HOST = process.env.WORDPRESS_HOST;
 
 async function fetch(path) {
-    let url = `http://${WORDPRESS_HOST}${path}`;
+    let url = `${WORDPRESS_HOST}${path}`;
     let res = await CrossFetch(url);
     let object = await res.json();
     removeSuperfluousProps(path, object);

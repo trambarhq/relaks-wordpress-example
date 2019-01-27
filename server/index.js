@@ -35,7 +35,7 @@ app.use(handleError);
 app.listen(SERVER_PORT);
 
 // purge cache when starting up
-NginxCache.purge(/.*/);
+//NginxCache.purge(/.*/);
 
 async function handleTimestampRequest(req, res, next) {
     try {
@@ -82,7 +82,7 @@ async function handlePurgeRequest(req, res) {
     // verify that require is coming from WordPress
     let remoteIP = req.connection.remoteAddress;
     res.end();
-    let wordpressIP = await dnsCache.lookupAsync(WORDPRESS_HOST);
+    let wordpressIP = await dnsCache.lookupAsync(WORDPRESS_HOST.replace(/^https?:\/\//));
     if (remoteIP !== `::ffff:${wordpressIP}`) {
         return;
     }

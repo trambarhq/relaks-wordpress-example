@@ -185,7 +185,8 @@ A:link, A:visited {
       .page-container .page .comments .replies, .page-container .post .comments .replies {
         padding-left: 1.5em; }
     .page-container .page IMG, .page-container .post IMG {
-      max-width: 100%; }
+      max-width: 100%;
+      height: auto; }
 
 @media only screen and (max-width: 800px) {
   .page-container {

@@ -6,6 +6,10 @@
     "watch": "webpack --watch",
     "build": "webpack",
     "start": "webpack-dev-server --host 0.0.0.0 && exit 0",
+    "start-server": "docker-compose -p example -f docker-compose.yml up -d",
+    "stop-server": "docker-compose -p example -f docker-compose.yml down",
+    "start-server-remote": "docker-compose -p remote -f docker-compose-remote.yml up -d",
+    "stop-server-remote": "docker-compose -p remote -f docker-compose-remote.yml down",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
