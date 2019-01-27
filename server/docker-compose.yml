@@ -4,6 +4,9 @@ services:
     image: mysql:5.7
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      network:
+        ipv4_address: 172.129.0.2
     ports:
       - 3306:3306
     environment:
@@ -16,21 +19,29 @@ services:
     depends_on:
       - db
     image: wordpress:latest
-    volumes:
-      - wp_content:/var/www/html/wp-content
+    networks:
+      network:
+        ipv4_address: 172.129.0.3
     environment:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
     restart: always
   node:
-    image: wordpress-example
+    depends_on:
+      - wordpress
+    image: node:8
     volumes:
+      - ..:/opt/example
       - web_cache:/var/cache/nginx
+    networks:
+      network:
+        ipv4_address: 172.129.0.4
     environment:
       WORDPRESS_HOST: wordpress
       NGINX_HOST: nginx
       NGINX_CACHE: /var/cache/nginx/data
+    command: [ node, /opt/example/server/index.js ]
     restart: always
   nginx:
     depends_on:
@@ -40,10 +51,19 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - web_cache:/var/cache/nginx
+    networks:
+      network:
+        ipv4_address: 172.129.0.5
     ports:
       - 8000:80
     restart: always
 volumes:
-    db_data:
-    wp_content:
-    web_cache:
+  db_data:
+  web_cache:
+networks:
+  network:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 172.129.0.0/16
+         gateway: 172.129.0.1
