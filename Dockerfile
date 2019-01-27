@@ -1,6 +1,6 @@
 FROM node:8
 
-WORKDIR /opt/starwars
+WORKDIR /opt/example
 
 # install dependencies
 COPY package.json ./

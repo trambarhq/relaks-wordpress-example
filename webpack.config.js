@@ -116,6 +116,7 @@ var cordovaConfig = {
         new HtmlWebpackPlugin({
             template: Path.resolve(`./src/index.html`),
             filename: 'index.html',
+            cordova: true,
         }),
         new ExtractTextPlugin('styles.css'),
     ],
