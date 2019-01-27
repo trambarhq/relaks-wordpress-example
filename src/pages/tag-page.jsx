@@ -13,9 +13,7 @@ class TagPage extends AsyncComponent {
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
         let { tagSlug } = route.params;
-        let props = {
-            route,
-        };
+        let props = { route };
         meanwhile.show(<TagPageSync {...props} />);
         props.tag = await wp.fetchOne('/wp/v2/tags/', tagSlug);
         meanwhile.show(<TagPageSync {...props} />);

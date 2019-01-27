@@ -61,7 +61,7 @@ class Route {
         // get the site URL and see what the page's URL would be if it
         // were on WordPress itself
         let siteURL = await this.getSiteURL();
-        let link = _.trimEnd(siteURL + path, '/') + '/';
+        let link = _.trimEnd(siteURL + path, '/');
 
         // see if it's a search
         let search = query.s;
@@ -85,31 +85,29 @@ class Route {
         if (postID) {
             let post = await this.dataSource.fetchOne('/wp/v2/posts/', postID);
             if (post) {
-                let postSlug = post.slug;
-                return { pageType: 'post', postSlug, siteURL };
+                return { pageType: 'post', postSlug: post.slug, siteURL };
             }
         }
 
         // see if it's pointing to a page
         let allPages = await this.dataSource.fetchList('/wp/v2/pages/', { minimum: '100%' });
-        let pageSlugs = findMatchingSlugs(allPages, link);
-        if (pageSlugs) {
-            return { pageType: 'page', pageSlugs, siteURL };
+        let page = _.find(allPages, { link });
+        if (page) {
+            return { pageType: 'page', pageSlug: page.slug, siteURL };
         }
 
         // see if it's pointing to a category
         let allCategories = await this.dataSource.fetchList('/wp/v2/categories/', { minimum: '100%' });
-        let categorySlugs = findMatchingSlugs(allCategories, link);
-        if (categorySlugs) {
-            return { pageType: 'category', categorySlugs, siteURL };
+        let category = _.find(allCategories, { link });
+        if (category) {
+            return { pageType: 'category', categorySlug: category.slug, siteURL };
         }
 
         // see if it's pointing to a tag
         let allTags = await this.dataSource.fetchList('/wp/v2/tags/', { minimum: '100%' });
-        let tagSlugs = findMatchingSlugs(allTags, link);
-        if (tagSlugs) {
-            let tagSlug = tagSlugs[0];
-            return { pageType: 'tag', tagSlug, siteURL };
+        let tag = _.find(allTags, { link });
+        if (tag) {
+            return { pageType: 'tag', tagSlug: tag.slug, siteURL };
         }
 
         // see if it's pointing to a post
@@ -184,20 +182,6 @@ function findPostID(path) {
         if (id === id) {
             return id;
         }
-    }
-}
-
-function findMatchingSlugs(objects, link) {
-    let matches = [];
-    for (let object of objects) {
-        let objectLink = _.trimEnd(object.link, '/') + '/';
-        if (_.startsWith(link, objectLink)) {
-            matches.push(object);
-        }
-    }
-    if (matches.length > 0) {
-        let slugs = _.map(_.sortBy(matches, 'link.length'), 'slug');
-        return slugs;
     }
 }
 

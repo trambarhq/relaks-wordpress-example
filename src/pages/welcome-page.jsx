@@ -10,11 +10,8 @@ class WelcomePage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
-        let props = {
-            route,
-        };
+        let props = { route };
         meanwhile.show(<WelcomePageSync {...props} />);
-        props.categories = await wp.fetchList('/wp/v2/categories/');
         props.posts = await wp.fetchList('/wp/v2/posts/');
         return <WelcomePageSync {...props} />;
     }
@@ -24,10 +21,10 @@ class WelcomePageSync extends PureComponent {
     static displayName = 'WelcomePageSync';
 
     render() {
-        let { route, categories, posts } = this.props;
+        let { route, posts } = this.props;
         return (
             <div className="page">
-                <PostList categories={categories} route={route} posts={posts} minimum={40} />
+                <PostList route={route} posts={posts} minimum={40} />
             </div>
         );
     }

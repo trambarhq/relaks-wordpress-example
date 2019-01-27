@@ -24,11 +24,9 @@ services:
       WORDPRESS_DB_PASSWORD: wordpress
     restart: always
   node:
-    image: node:8
+    image: wordpress-example
     volumes:
-      - ..:/opt/example
       - web_cache:/var/cache/nginx
-    command: [ node, /opt/example/server/index.js ]
     environment:
       WORDPRESS_HOST: wordpress
       NGINX_HOST: nginx

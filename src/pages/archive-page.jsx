@@ -14,10 +14,7 @@ class ArchivePage extends AsyncComponent {
         let { wp, route } = this.props;
         let { date } = route.params;
         let month = Moment(`${date.year}-${_.padStart(date.month, 2, '0')}`);
-        let props = {
-            route,
-            month,
-        };
+        let props = { route, month };
         meanwhile.show(<ArchivePageSync {...props} />);
         let after = month.toISOString();
         let before = month.clone().endOf('month').toISOString();
@@ -33,7 +30,7 @@ class ArchivePageSync extends PureComponent {
     render() {
         let { route, posts, month } = this.props;
         let monthLabel = month.format('MMMM YYYY');
-        let trail = [ { label: 'Archive' }, { label: monthLabel } ];
+        let trail = [ { label: 'Archives' }, { label: monthLabel } ];
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />

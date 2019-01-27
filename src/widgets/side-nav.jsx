@@ -155,12 +155,12 @@ class SideNavSync extends PureComponent {
 
     renderCategory(category, i) {
         let { route } = this.props;
-        let { categorySlugs } = route.params;
+        let { categorySlug } = route.params;
         let name = _.get(category, 'name', '');
         let description = _.get(category, 'description', '');
         let url = route.getObjectURL(category);
         let className;
-        if (category.slug === _.last(categorySlugs)) {
+        if (category.slug === categorySlug) {
             className = 'selected';
         }
         return (

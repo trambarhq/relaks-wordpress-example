@@ -33,7 +33,7 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     PageView.propTypes = {
-        category: PropTypes.object,
+        page: PropTypes.object,
         transform: PropTypes.func,
     };
 }

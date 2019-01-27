@@ -12,14 +12,12 @@ class SearchPage extends AsyncComponent {
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
         let { search } = route.params;
-        let props = {
-            route,
-        };
+        let props = { route };
         meanwhile.show(<SearchPageSync {...props} />);
         props.categories = await wp.fetchList('/wp/v2/categories/');
         if (search) {
-            let url = `/wp/v2/posts/?search=${encodeURIComponent(search)}'`;
-            props.posts = await wp.fetchList(url);
+            let s = encodeURIComponent(search);
+            props.posts = await wp.fetchList(`/wp/v2/posts/?search=${s}`);
         } else {
             props.posts = null;
         }

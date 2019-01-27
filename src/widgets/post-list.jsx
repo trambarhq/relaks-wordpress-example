@@ -60,6 +60,7 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     PostList.propTypes = {
+        posts: PropTypes.arrayOf(PropTypes.object),
         route: PropTypes.instanceOf(Route),
         minimum: PropTypes.number,
         maximum: PropTypes.number,

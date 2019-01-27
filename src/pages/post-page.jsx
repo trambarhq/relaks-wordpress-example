@@ -15,14 +15,11 @@ class PostPage extends AsyncComponent {
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
         let { postSlug } = route.params;
-        let props = {
-            route,
-        };
+        let props = { route };
         meanwhile.show(<PostPageSync {...props} />);
         props.post = await wp.fetchOne('/wp/v2/posts/', postSlug);
         meanwhile.show(<PostPageSync {...props} />);
-        let allCategories = await wp.fetchList('/wp/v2/categories/', { minimum: '100%' });
-        props.categories = findMatchingCategories(allCategories, props.post.categories, route.history);
+        props.categories = await this.findCategoryChain(props.post.categories);
         meanwhile.show(<PostPageSync {...props} />);
         props.author = await wp.fetchOne('/wp/v2/users/', props.post.author);
         if (!wp.ssr) {
@@ -30,6 +27,64 @@ class PostPage extends AsyncComponent {
             props.comments = await wp.fetchList(`/wp/v2/comments/?post=${props.post.id}`);
         }
         return <PostPageSync {...props} />;
+    }
+
+    async findCategoryChain(ids) {
+        let { wp, route } = this.props;
+        let allCategories = await wp.fetchList('/wp/v2/categories/', { minimum: '100%' });
+
+        // add categories, including their parents as well
+        let applicable = [];
+        let include = (id) => {
+            let category = _.find(allCategories, { id })
+            if (category) {
+                if (!_.includes(applicable, category)) {
+                    applicable.push(category);
+                }
+                // add parent category as well
+                include(category.parent);
+            }
+        };
+        for (let id of ids) {
+            include(id);
+        }
+
+        // see how recently a category was visited
+        let historyIndex = (c) => {
+
+            return _.findLastIndex(route.history, { params: { categorySlug: c.slug }});
+        };
+        // see how deep a category is
+        let depth = (c) => {
+            if (c.parent) {
+                let parent = _.find(allCategories, { id: c.parent });
+                if (parent) {
+                    return depth(parent) + 1;
+                }
+            }
+            return 0;
+        };
+
+        // order applicable categories based on how recently it was visited,
+        // how deep it is, and alphabetically; the first criteria makes our
+        // breadcrumb works more sensibly
+        applicable = _.orderBy(applicable, [ historyIndex, depth, 'name' ], [ 'desc', 'desc', 'asc' ]);
+        let anchorCategory = _.first(applicable);
+
+        let trail = [];
+        if (anchorCategory) {
+            // add category and its ancestors
+            for (let c = anchorCategory; c; c = _.find(applicable, { id: c.parent })) {
+                trail.unshift(c);
+            }
+            // add applicable child categories
+            for (let c = anchorCategory; c; c = _.find(applicable, { parent: c.id })) {
+                if (c !== anchorCategory) {
+                    trail.push(c);
+                }
+            }
+        }
+        return trail;
     }
 }
 
@@ -52,61 +107,6 @@ class PostPageSync extends PureComponent {
             </div>
         );
     }
-}
-
-function includeCategory(list, id, allCategories) {
-    let category = _.find(allCategories, { id })
-    if (category) {
-        if (!_.includes(list, category)) {
-            list.push(category);
-        }
-        // add parent category as well
-        includeCategory(list, category.parent, allCategories);
-    }
-}
-
-function findMatchingCategories(allCategories, ids, history) {
-    let applicable = [];
-    for (let id of ids) {
-        includeCategory(applicable, id, allCategories);
-    }
-
-    let historyIndex = (c) => {
-        return _.findLastIndex(history, (route) => {
-            if (route.params.categorySlugs) {
-                return _.includes(route.params.categorySlugs, c.slug);
-            }
-        });
-    };
-    let depth = (c) => {
-        if (c.parent) {
-            let parent = _.find(allCategories, { id: c.parent });
-            if (parent) {
-                return depth(parent) + 1;
-            }
-        }
-        return 0;
-    };
-
-    // order applicable categories based on how recently it was visited,
-    // how deep it is, and alphabetically
-    applicable = _.orderBy(applicable, [ historyIndex, depth, 'name' ], [ 'desc', 'desc', 'asc' ]);
-    let anchorCategory = _.first(applicable);
-
-    let trail = [];
-    if (anchorCategory) {
-        // add category and its ancestors
-        for (let c = anchorCategory; c; c = _.find(applicable, { id: c.parent })) {
-            trail.unshift(c);
-        }
-        // add applicable child categories
-        for (let c = anchorCategory; c; c = _.find(applicable, { parent: c.id })) {
-            if (c !== anchorCategory) {
-                trail.push(c);
-            }
-        }
-    }
-    return trail;
 }
 
 if (process.env.NODE_ENV !== 'production') {

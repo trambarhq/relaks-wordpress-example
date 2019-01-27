@@ -14,15 +14,21 @@ class PagePage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
-        let { pageSlugs } = route.params;
-        let props = {
-            route,
-        };
+        let { pageSlug } = route.params;
+        let props = { route };
         meanwhile.show(<PagePageSync {...props} />);
-        props.pages = await wp.fetchMultiple('/wp/v2/pages/', pageSlugs);
-        meanwhile.show(<PagePageSync {...props} />);
-        let page = _.last(props.pages);
-        props.childPages = await wp.fetchList(`/wp/v2/pages/?parent=${page.id}`, { minimum: '100%' });
+        props.page = await wp.fetchOne('/wp/v2/pages/', pageSlug);
+        props.parentPages = [];
+        let parentID = props.page.parent;
+        while (parentID) {
+            let parentPage = await wp.fetchOne('/wp/v2/pages/', parentID);
+            if (!parentPage) {
+                break;
+            }
+            props.parentPages.push(parentPage);
+            parentID = parentPage.parent;
+        }
+        props.childPages = await wp.fetchList(`/wp/v2/pages/?parent=${props.page.id}`);
         return <PagePageSync {...props} />;
     }
 }
@@ -31,15 +37,12 @@ class PagePageSync extends PureComponent {
     static displayName = 'PagePageSync';
 
     render() {
-        let { route, pages, childPages, transform } = this.props;
-        let page = _.last(pages);
+        let { route, page, parentPages, childPages, transform } = this.props;
         let trail = [];
-        for (let p of pages) {
-            if (p !== page) {
-                let title = _.get(page, 'title.rendered', '');
-                let url = route.getObjectURL(p);
-                trail.push({ label: <HTML text={title} />, url })
-            }
+        for (let parentPage of parentPages) {
+            let title = _.get(parentPage, 'title.rendered', '');
+            let url = route.getObjectURL(parentPage);
+            trail.push({ label: <HTML text={title} />, url })
         }
         return (
             <div className="page">

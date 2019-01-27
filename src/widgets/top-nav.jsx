@@ -15,7 +15,7 @@ class TopNav extends AsyncComponent {
         meanwhile.show(<TopNavSync {...props} />);
         props.system = await wp.fetchOne('/');
         meanwhile.show(<TopNavSync {...props} />);
-        props.pages = await wp.fetchList('/wp/v2/pages/?parent=0', { minimum: '100%' });
+        props.pages = await wp.fetchList('/wp/v2/pages/', { minimum: '100%' });
         return <TopNavSync {...props} />;
     }
 }
@@ -61,6 +61,7 @@ class TopNavSync extends PureComponent {
 
     renderPageLinkBar() {
         let { pages } = this.props;
+        pages = _.filter(pages, { parent: 0 });
         pages = _.sortBy(pages, 'menu_order');
         return (
             <div className="page-bar">

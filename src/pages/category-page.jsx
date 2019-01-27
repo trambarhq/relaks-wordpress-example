@@ -12,15 +12,22 @@ class CategoryPage extends AsyncComponent {
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
-        let { categorySlugs } = route.params;
-        let props = {
-            route,
-        };
+        let { categorySlug } = route.params;
+        let props = { route };
         meanwhile.show(<CategoryPageSync {...props} />);
-        props.categories = await wp.fetchMultiple('/wp/v2/categories/', categorySlugs);
+        props.category = await wp.fetchOne('/wp/v2/categories/', categorySlug);
+        props.parentCategories = [];
+        let parentID = props.category.parent;
+        while (parentID) {
+            let parentCategory = await wp.fetchOne('/wp/v2/categories/', parentID);
+            if (!parentCategory) {
+                break;
+            }
+            props.parentCategories.push(parentCategory);
+            parentID = parentCategory.parent;
+        }
         meanwhile.show(<CategoryPageSync {...props} />);
-        let category = _.last(props.categories);
-        props.posts = await wp.fetchList(`/wp/v2/posts/?categories=${category.id}`);
+        props.posts = await wp.fetchList(`/wp/v2/posts/?categories=${props.category.id}`);
         return <CategoryPageSync {...props} />;
     }
 }
@@ -29,18 +36,15 @@ class CategoryPageSync extends PureComponent {
     static displayName = 'CategoryPageSync';
 
     render() {
-        let { route, posts, categories } = this.props;
+        let { route, posts, category, parentCategories } = this.props;
         let trail = [ { label: 'Categories' } ];
-        let category = _.last(categories);
-        for (let c of categories) {
-            let label = _.get(c, 'name', '');
-            if (c !== category) {
-                let url = route.getObjectURL(c);
-                trail.push({ label, url });
-            } else {
-                trail.push({ label });
-            }
+        let categoryLabel = _.get(category, 'name', '');
+        for (let parentCategory of parentCategories) {
+            let label = _.get(parentCategory, 'name', '');
+            let url = route.getObjectURL(parentCategory);
+            trail.push({ label, url });
         }
+        trail.push({ label: categoryLabel });
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
@@ -59,6 +63,7 @@ if (process.env.NODE_ENV !== 'production') {
     };
     CategoryPageSync.propTypes = {
         category: PropTypes.object,
+        parentCategories: PropTypes.arrayOf(PropTypes.object),
         posts: PropTypes.arrayOf(PropTypes.object),
         route: PropTypes.instanceOf(Route),
     };
