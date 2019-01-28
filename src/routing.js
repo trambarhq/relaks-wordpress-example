@@ -151,7 +151,7 @@ class Route {
             if (node.name === 'a') {
             } else if (node.name === 'img') {
                 // prepend image URL with site URL
-                if (node.attribs.src && !_.startsWith(node.attribs.src, /https?:/)) {
+                if (node.attribs.src && !/^https?:/.test(node.attribs.src)) {
                     node.attribs.src = siteURL + node.attribs.src;
                 }
             }
