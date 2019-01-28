@@ -51,6 +51,9 @@ async function handleJSONRequest(req, res, next) {
     try {
         let path = `/wp-json/${req.url.substr(6)}`;
         let json = await JSONRetriever.fetch(path);
+        if (json.total) {
+            res.set({ 'X-WP-Total': json.total });
+        }
         res.send(json.text);
     } catch (err) {
         next(err);

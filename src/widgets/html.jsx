@@ -5,6 +5,8 @@ class HTML extends PureComponent {
     render() {
         let { text, transform } = this.props;
         let options = { transform };
+        // fix unescaped <
+        text = text.replace(/<([^>]*)</g, '&lt;$1<');
         return ReactHtmlParser(text, options);
     }
 }
