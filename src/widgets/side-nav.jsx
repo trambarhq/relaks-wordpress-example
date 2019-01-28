@@ -118,7 +118,13 @@ class SideNav extends AsyncComponent {
     }
 
     handleYearSelect = (evt) => {
-        this.setState({ selectedYear: evt.year });
+        let { selectedYear } = this.state;
+        if (selectedYear !== evt.year) {
+            selectedYear = evt.year;
+        } else {
+            selectedYear = NaN;
+        }
+        this.setState({ selectedYear });
     }
 }
 
@@ -265,7 +271,7 @@ class SideNavSync extends PureComponent {
         }
         return (
             <li key={i}>
-                <span data-year={yearEntry.year} onClick={this.handleYearClick}>
+                <span className="year" data-year={yearEntry.year} onClick={this.handleYearClick}>
                     {yearEntry.label}
                 </span>
                 <ul className={listClass}>
