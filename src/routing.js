@@ -150,17 +150,23 @@ class Route {
     transformNode = (node) => {
         if (node.type === 'tag') {
             let { siteURL } = this.params;
+            let siteURLInsecure = 'http:' + siteURL.substr(6);
             if (node.name === 'a') {
                 if (node.attribs.href) {
                     if (!_.startsWith(node.attribs.href, '/')) {
                         if (_.startsWith(node.attribs.href, siteURL)) {
                             node.attribs.href = node.attribs.href.substr(siteURL.length);
                             delete node.attribs.target;
+                        } else if (_.startsWith(node.attribs.href, siteURLInsecure)) {
+                            node.attribs.href = node.attribs.href.substr(siteURLInsecure.length);
+                            delete node.attribs.target;
                         } else {
                             node.attribs.target = '_blank';
                         }
                     }
                     if (_.startsWith(node.attribs.href, '/')) {
+                        // strip off page number
+                        node.attribs.href = node.attribs.href.replace(/\/\d+\/?$/, '');
                         this.preloadPage(node.attribs.href);
                     }
                 }
