@@ -93,20 +93,27 @@ class SideNav extends AsyncComponent {
         meanwhile.show(<SideNavSync {...props} />);
 
         // load the posts of each category
-        for (let category of props.categories) {
-            if (category.count > 0) {
-                let url = `/wp/v2/posts/?categories=${category.id}`;
-                await wp.fetchList(url);
+        try {
+            for (let category of props.categories) {
+                if (category.count > 0) {
+                    let url = `/wp/v2/posts/?categories=${category.id}`;
+                    await wp.fetchList(url);
+                }
             }
+        } catch (err) {
         }
 
         // load the posts of each tag
-        for (let tag of props.tags) {
-            if (tag.count > 0) {
-                let url = `/wp/v2/posts/?tags=${tag.id}`;
-                await wp.fetchList(url);
+        try {
+            for (let tag of props.tags) {
+                if (tag.count > 0) {
+                    let url = `/wp/v2/posts/?tags=${tag.id}`;
+                    await wp.fetchList(url);
+                }
             }
+        } catch (err) {
         }
+
         return <SideNavSync {...props} />;
     }
 
