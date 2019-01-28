@@ -73,17 +73,19 @@ class SideNav extends AsyncComponent {
             }
             meanwhile.show(<SideNavSync {...props} />);
 
-            // load the posts of the selected year
-            for (let yearEntry of props.archive) {
-                if (yearEntry.year === selectedYear) {
-                    for (let monthEntry of yearEntry.months) {
-                        let after = monthEntry.start.toISOString();
-                        let before = monthEntry.end.toISOString();
-                        monthEntry.posts = await wp.fetchList(`/wp/v2/posts/?after=${after}&before=${before}`);
+            if (!wp.ssr) {
+                // load the posts of the selected year
+                for (let yearEntry of props.archive) {
+                    if (yearEntry.year === selectedYear) {
+                        for (let monthEntry of yearEntry.months) {
+                            let after = monthEntry.start.toISOString();
+                            let before = monthEntry.end.toISOString();
+                            monthEntry.posts = await wp.fetchList(`/wp/v2/posts/?after=${after}&before=${before}`);
 
-                        // force prop change
-                        props.archive = _.clone(props.archive);
-                        meanwhile.show(<SideNavSync {...props} />);
+                            // force prop change
+                            props.archive = _.clone(props.archive);
+                            meanwhile.show(<SideNavSync {...props} />);
+                        }
                     }
                 }
             }
@@ -92,28 +94,29 @@ class SideNav extends AsyncComponent {
         props.tags = await wp.fetchList('/wp/v2/tags/', { minimum: '100%' });
         meanwhile.show(<SideNavSync {...props} />);
 
-        // load the posts of each category
-        try {
-            for (let category of props.categories) {
-                if (category.count > 0) {
-                    let url = `/wp/v2/posts/?categories=${category.id}`;
-                    await wp.fetchList(url);
+        if (!wp.ssr) {
+            // load the posts of each category
+            try {
+                for (let category of props.categories) {
+                    if (category.count > 0) {
+                        let url = `/wp/v2/posts/?categories=${category.id}`;
+                        await wp.fetchList(url);
+                    }
                 }
+            } catch (err) {
             }
-        } catch (err) {
-        }
 
-        // load the posts of each tag
-        try {
-            for (let tag of props.tags) {
-                if (tag.count > 0) {
-                    let url = `/wp/v2/posts/?tags=${tag.id}`;
-                    await wp.fetchList(url);
+            // load the posts of each tag
+            try {
+                for (let tag of props.tags) {
+                    if (tag.count > 0) {
+                        let url = `/wp/v2/posts/?tags=${tag.id}`;
+                        await wp.fetchList(url);
+                    }
                 }
+            } catch (err) {
             }
-        } catch (err) {
         }
-
         return <SideNavSync {...props} />;
     }
 

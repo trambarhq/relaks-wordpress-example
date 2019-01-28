@@ -62,7 +62,9 @@ A:link, A:visited {
     .side-nav .archive .months.collapsed {
       height: 0; }
   .side-nav .tags {
-    margin-left: 0.5em; }
+    margin-left: 0.5em;
+    line-height: 125%;
+    word-spacing: 0.2em; }
   @media only screen and (min-device-width: 800px) {
     .side-nav::-webkit-scrollbar-track {
       -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2);
@@ -181,6 +183,9 @@ A:link, A:visited {
       margin-top: 0.4em; }
       .page-container .page .meta .author, .page-container .post .meta .author {
         margin-top: 0.25em; }
+    .page-container .page .post-list-view .date, .page-container .post .post-list-view .date {
+      float: right;
+      margin-left: 1em; }
     .page-container .page .post-list-view .excerpt, .page-container .post .post-list-view .excerpt {
       margin-top: -0.7em; }
     .page-container .page .comments, .page-container .post .comments {
