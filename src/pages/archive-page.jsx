@@ -15,7 +15,6 @@ class ArchivePage extends AsyncComponent {
         let { date } = route.params;
         let month = Moment(`${date.year}-${_.padStart(date.month, 2, '0')}`);
         let props = { route, month };
-        meanwhile.show(<ArchivePageSync {...props} />);
         let after = month.toISOString();
         let before = month.clone().endOf('month').toISOString();
         let url = `/wp/v2/posts/?after=${after}&before=${before}`;

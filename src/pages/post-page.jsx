@@ -16,7 +16,6 @@ class PostPage extends AsyncComponent {
         let { wp, route } = this.props;
         let { postSlug } = route.params;
         let props = { route };
-        meanwhile.show(<PostPageSync {...props} />);
         props.post = await wp.fetchOne('/wp/v2/posts/', postSlug);
         meanwhile.show(<PostPageSync {...props} />);
         props.categories = await this.findCategoryChain(props.post.categories);

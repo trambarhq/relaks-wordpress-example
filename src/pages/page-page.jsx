@@ -16,19 +16,19 @@ class PagePage extends AsyncComponent {
         let { wp, route } = this.props;
         let { pageSlug } = route.params;
         let props = { route };
-        meanwhile.show(<PagePageSync {...props} />);
-        props.page = await wp.fetchOne('/wp/v2/pages/', pageSlug);
+        let pages = await wp.fetchList(`/wp/v2/pages/`, { minimum: '100%' });
+        props.page = _.find(pages, { slug: pageSlug });
         props.parentPages = [];
         let parentID = props.page.parent;
         while (parentID) {
-            let parentPage = await wp.fetchOne('/wp/v2/pages/', parentID);
+            let parentPage = _.find(pages, { id: parentID });
             if (!parentPage) {
                 break;
             }
             props.parentPages.push(parentPage);
             parentID = parentPage.parent;
         }
-        props.childPages = await wp.fetchList(`/wp/v2/pages/?parent=${props.page.id}`);
+        props.childPages = _.find(pages, { parent: props.page.id });
         return <PagePageSync {...props} />;
     }
 }

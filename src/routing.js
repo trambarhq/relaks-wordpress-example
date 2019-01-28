@@ -60,6 +60,9 @@ class Route {
         // were on WordPress itself
         let siteURL = await this.getSiteURL();
         let link = _.trimEnd(siteURL + path, '/');
+        let matchLink = (obj) => {
+            return _.trimEnd(obj.link, '/') === link;
+        };
 
         // see if it's a search
         let search = query.s;
@@ -89,21 +92,21 @@ class Route {
 
         // see if it's pointing to a page
         let allPages = await this.dataSource.fetchList('/wp/v2/pages/', { minimum: '100%' });
-        let page = _.find(allPages, { link });
+        let page = _.find(allPages, matchLink);
         if (page) {
             return { pageType: 'page', pageSlug: page.slug, siteURL };
         }
 
         // see if it's pointing to a category
         let allCategories = await this.dataSource.fetchList('/wp/v2/categories/', { minimum: '100%' });
-        let category = _.find(allCategories, { link });
+        let category = _.find(allCategories, matchLink);
         if (category) {
             return { pageType: 'category', categorySlug: category.slug, siteURL };
         }
 
         // see if it's pointing to a tag
         let allTags = await this.dataSource.fetchList('/wp/v2/tags/', { minimum: '100%' });
-        let tag = _.find(allTags, { link });
+        let tag = _.find(allTags, matchLink);
         if (tag) {
             return { pageType: 'tag', tagSlug: tag.slug, siteURL };
         }
@@ -137,7 +140,7 @@ class Route {
 
     transformNode = (node) => {
         if (node.type === 'tag') {
-            if (node.name === 'a') {                
+            if (node.name === 'a') {
             }
         } else if (node.type === 'text') {
             // trim off leading newline characters

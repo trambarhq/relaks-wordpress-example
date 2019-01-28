@@ -14,7 +14,6 @@ class CategoryPage extends AsyncComponent {
         let { wp, route } = this.props;
         let { categorySlug } = route.params;
         let props = { route };
-        meanwhile.show(<CategoryPageSync {...props} />);
         props.category = await wp.fetchOne('/wp/v2/categories/', categorySlug);
         props.parentCategories = [];
         let parentID = props.category.parent;

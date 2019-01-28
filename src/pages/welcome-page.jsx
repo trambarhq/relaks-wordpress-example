@@ -11,7 +11,6 @@ class WelcomePage extends AsyncComponent {
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
         let props = { route };
-        meanwhile.show(<WelcomePageSync {...props} />);
         props.posts = await wp.fetchList('/wp/v2/posts/');
         return <WelcomePageSync {...props} />;
     }
