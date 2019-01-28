@@ -100,6 +100,8 @@ A {
 
     .tags {
         margin-left: 0.5em;
+        line-height: 125%;
+        word-spacing: 0.2em;
     }
 
     // use custom color only on desktop
@@ -280,6 +282,10 @@ A {
         }
 
         .post-list-view {
+            .date {
+                float: right;
+                margin-left: 1em;
+            }
             .excerpt {
                 margin-top: -0.7em;
             }

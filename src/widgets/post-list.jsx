@@ -53,7 +53,7 @@ class PostList extends PureComponent {
 
 PostList.defaultProps = {
     minimum: 20,
-    maximum: 1000,
+    maximum: 5000,
 };
 
 if (process.env.NODE_ENV !== 'production') {

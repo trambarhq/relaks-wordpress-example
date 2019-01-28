@@ -14,8 +14,13 @@ class PostListView extends PureComponent {
         let excerpt = _.get(post, 'excerpt.rendered', '');
         excerpt = cleanExcerpt(excerpt);
         let url = route.getObjectURL(post);
+        let date = _.get(post, 'date_gmt');
+        if (date) {
+            date = Moment(date).format('LL');
+        }
         return (
             <div className="post-list-view">
+                <div className="date">{date}</div>
                 <h3>
                     <a href={url}><HTML text={title} /></a>
                 </h3>
