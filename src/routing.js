@@ -147,7 +147,13 @@ class Route {
 
     transformNode = (node) => {
         if (node.type === 'tag') {
+            let { siteURL } = this.params;
             if (node.name === 'a') {
+            } else if (node.name === 'img') {
+                // prepend image URL with site URL
+                if (node.attribs.src && !_.startsWith(node.attribs.src, /https?:/)) {
+                    node.attribs.src = siteURL + node.attribs.src;
+                }
             }
         } else if (node.type === 'text') {
             // trim off leading newline characters
