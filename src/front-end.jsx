@@ -62,7 +62,7 @@ class FrontEnd extends PureComponent {
 
         if (typeof(window) === 'object') {
             let Hammer = require('hammerjs');
-            let hammer = new Hammer(document.body);
+            let hammer = new Hammer(document.body, { cssProps: { userSelect: 'auto' } });
             hammer.on('swipeleft', this.handleSwipeLeft);
             hammer.on('swiperight', this.handleSwipeRight);
         }
