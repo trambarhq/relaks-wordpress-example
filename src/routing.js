@@ -134,12 +134,14 @@ class Route {
         return _.trimEnd(site.url, '/');
     }
 
-    async preloadPage(params) {
+    async preloadPage(url) {
         try {
-            if (params.postSlug) {
-                this.dataSource.fetchOne('/wp/v2/posts/', params.postSlug);
-            } else if (params.pageSlug) {
-                this.dataSource.fetchOne('/wp/v2/pages/', params.pageSlug);
+            let urlParts = this.routeManager.parse(url);
+            let params = await this.getParameters(urlParts.path, urlParts.query);
+            if (params) {
+                if (params.postSlug) {
+                    await this.dataSource.fetchOne('/wp/v2/posts/', params.postSlug);
+                }
             }
         } catch (err) {
         }
@@ -149,6 +151,19 @@ class Route {
         if (node.type === 'tag') {
             let { siteURL } = this.params;
             if (node.name === 'a') {
+                if (node.attribs.href) {
+                    if (!_.startsWith(node.attribs.href, '/')) {
+                        if (_.startsWith(node.attribs.href, siteURL)) {
+                            node.attribs.href = node.attribs.href.substr(siteURL.length);
+                            delete node.attribs.target;
+                        } else {
+                            node.attribs.target = '_blank';
+                        }
+                    }
+                    if (_.startsWith(node.attribs.href, '/')) {
+                        this.preloadPage(node.attribs.href);
+                    }
+                }
             } else if (node.name === 'img') {
                 // prepend image URL with site URL
                 if (node.attribs.src && !/^https?:/.test(node.attribs.src)) {
