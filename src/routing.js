@@ -1,4 +1,5 @@
-let _ = require('lodash');
+import _ from 'lodash';
+import { RelaksRouteManagerError } from 'relaks-route-manager';
 
 class Route {
     constructor(routeManager, dataSource) {
@@ -49,13 +50,22 @@ class Route {
         return url;
     }
 
-    async setParameters(evt) {
+    async setParameters(evt, fallbackToRoot) {
         let params = await this.getParameters(evt.path, evt.query);
-        params.module = require(`pages/${params.pageType}-page`);
-        _.assign(evt.params, params);
+        if (params) {
+            params.module = require(`pages/${params.pageType}-page`);
+            _.assign(evt.params, params);
+        } else {
+            if (fallbackToRoot) {
+                await this.routeManager.change('/');
+                return false;
+            } else {
+                throw new RelaksRouteManagerError(404, 'Route not found');
+            }
+        }
     }
 
-    async getParameters(path, query) {
+    async getParameters(path, query, fallbackToRoot) {
         // get the site URL and see what the page's URL would be if it
         // were on WordPress itself
         let siteURL = await this.getSiteURL();
@@ -117,9 +127,6 @@ class Route {
         if (post) {
             return { pageType: 'post', postSlug, siteURL };
         }
-
-        // go to the welcome page if we can't find a match
-        return { pageType: 'welcome', siteURL };
     }
 
     async getSiteURL() {

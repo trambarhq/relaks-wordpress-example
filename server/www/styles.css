@@ -22,7 +22,8 @@ A:link, A:visited {
   top: 0;
   bottom: 0;
   background-color: #66023c;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   color: #cccccc;
   padding: 0 1em 0 1em; }
   .side-nav A {
@@ -62,6 +63,17 @@ A:link, A:visited {
       height: 0; }
   .side-nav .tags {
     margin-left: 0.5em; }
+  @media only screen and (min-device-width: 800px) {
+    .side-nav::-webkit-scrollbar-track {
+      -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2);
+      background-color: transparent; }
+    .side-nav::-webkit-scrollbar {
+      width: 14px;
+      background-color: transparent; }
+    .side-nav::-webkit-scrollbar-thumb {
+      border-radius: 2px;
+      -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, 0.2); } }
 
 .top-nav {
   position: fixed;
@@ -187,6 +199,8 @@ A:link, A:visited {
     .page-container .page IMG, .page-container .post IMG {
       max-width: 100%;
       height: auto; }
+    .page-container .page .wp-caption, .page-container .post .wp-caption {
+      max-width: 100%; }
 
 @media only screen and (max-width: 800px) {
   .page-container {

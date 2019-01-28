@@ -28,7 +28,7 @@ if (typeof(window) === 'object') {
         });
         routeManager.addEventListener('beforechange', (evt) => {
             let route = new Route(routeManager, dataSource);
-            evt.postponeDefault(route.setParameters(evt));
+            evt.postponeDefault(route.setParameters(evt, true));
         });
         routeManager.activate();
         await routeManager.start();
@@ -80,7 +80,7 @@ if (typeof(window) === 'object') {
         });
         routeManager.addEventListener('beforechange', (evt) => {
             let route = new Route(routeManager, dataSource);
-            evt.postponeDefault(route.setParameters(evt));
+            evt.postponeDefault(route.setParameters(evt, false));
         });
         routeManager.activate();
         await routeManager.start(options.path);
