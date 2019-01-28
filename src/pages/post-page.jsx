@@ -7,10 +7,11 @@ import WordPress from 'wordpress';
 
 import Breadcrumb from 'widgets/breadcrumb';
 import PostView from 'widgets/post-view';
+import TagList from 'widgets/tag-list';
 import CommentSection from 'widgets/comment-section';
 
 class PostPage extends AsyncComponent {
-    static displayName = 'AchivePostPage';
+    static displayName = 'PostPage';
 
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
@@ -21,6 +22,8 @@ class PostPage extends AsyncComponent {
         props.categories = await this.findCategoryChain(props.post.categories);
         meanwhile.show(<PostPageSync {...props} />);
         props.author = await wp.fetchOne('/wp/v2/users/', props.post.author);
+        meanwhile.show(<PostPageSync {...props} />);
+        props.tags = await wp.fetchMultiple('/wp/v2/tags/', props.post.tags);
         if (!wp.ssr) {
             meanwhile.show(<PostPageSync {...props} />);
             props.comments = await wp.fetchList(`/wp/v2/comments/?post=${props.post.id}`);
@@ -91,7 +94,7 @@ class PostPageSync extends PureComponent {
     static displayName = 'PostPageSync';
 
     render() {
-        let { route, categories, post, author, comments } = this.props;
+        let { route, categories, post, author, tags, comments } = this.props;
         let trail = [ { label: 'Categories' } ];
         for (let c of categories) {
             let label = _.get(c, 'name', '');
@@ -102,6 +105,7 @@ class PostPageSync extends PureComponent {
             <div className="page">
                 <Breadcrumb trail={trail} />
                 <PostView post={post} author={author} transform={route.transformNode} />
+                <TagList route={route} tags={tags} />
                 <CommentSection comments={comments} />
             </div>
         );
@@ -117,6 +121,7 @@ if (process.env.NODE_ENV !== 'production') {
     };
     PostPageSync.propTypes = {
         categories: PropTypes.arrayOf(PropTypes.object),
+        tags: PropTypes.arrayOf(PropTypes.object),
         post: PropTypes.object,
         author: PropTypes.object,
         comments: PropTypes.arrayOf(PropTypes.object),

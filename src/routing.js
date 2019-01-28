@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Wordpress from './wordpress';
 import { RelaksRouteManagerError } from 'relaks-route-manager';
 
 class Route {
@@ -30,12 +31,14 @@ class Route {
 
     getObjectURL(object) {
         let { siteURL } = this.params;
-        let url = object.link;
-        if (!_.startsWith(url, siteURL)) {
+        let link = object.link;
+        if (!_.startsWith(link, siteURL)) {
             throw new Error(`Object URL does not match site URL`);
         }
-        let path = url.substr(siteURL.length);
-        return this.composeURL({ path });
+        let path = link.substr(siteURL.length);
+        let url = this.composeURL({ path });
+        this.preloadPage(url);
+        return url;
     }
 
     composeURL(urlParts) {
@@ -68,7 +71,9 @@ class Route {
     async getParameters(path, query, fallbackToRoot) {
         // get the site URL and see what the page's URL would be if it
         // were on WordPress itself
-        let siteURL = await this.getSiteURL();
+        let wp = new Wordpress(this.dataSource);
+        let site = await wp.fetchOne('/');
+        let siteURL = _.trimEnd(site.url, '/');
         let link = _.trimEnd(siteURL + path, '/');
         let matchLink = (obj) => {
             return _.trimEnd(obj.link, '/') === link;
@@ -94,44 +99,51 @@ class Route {
         // see if it's pointing to a post by ID
         let postID = findPostID(path);
         if (postID) {
-            let post = await this.dataSource.fetchOne('/wp/v2/posts/', postID);
+            let post = await wp.fetchOne('/wp/v2/posts/', postID);
             if (post) {
                 return { pageType: 'post', postSlug: post.slug, siteURL };
             }
         }
 
         // see if it's pointing to a page
-        let allPages = await this.dataSource.fetchList('/wp/v2/pages/', { minimum: '100%' });
+        let allPages = await wp.fetchList('/wp/v2/pages/', { minimum: '100%' });
         let page = _.find(allPages, matchLink);
         if (page) {
             return { pageType: 'page', pageSlug: page.slug, siteURL };
         }
 
         // see if it's pointing to a category
-        let allCategories = await this.dataSource.fetchList('/wp/v2/categories/', { minimum: '100%' });
+        let allCategories = await wp.fetchList('/wp/v2/categories/', { minimum: '100%' });
         let category = _.find(allCategories, matchLink);
         if (category) {
             return { pageType: 'category', categorySlug: category.slug, siteURL };
         }
 
-        // see if it's pointing to a tag
-        let allTags = await this.dataSource.fetchList('/wp/v2/tags/', { minimum: '100%' });
-        let tag = _.find(allTags, matchLink);
+        // see if it's pointing to a popular tag
+        let topTags = await wp.fetchList('/wp/v2/tags/?orderby=count&order=desc');
+        let tag = _.find(topTags, matchLink);
         if (tag) {
             return { pageType: 'tag', tagSlug: tag.slug, siteURL };
         }
 
+        // see if it's pointing to a non-so popular tag
+        let slugs = _.filter(_.split(path, '/'));
+        if (slugs.length >= 2 && _.includes(slugs, 'tag')) {
+            let tagSlug = _.last(slugs);
+            let tag = await wp.fetchOne('/wp/v2/tags/', tagSlug);
+            return { pageType: 'tag', tagSlug: tag.slug, siteURL };
+        }
+
         // see if it's pointing to a post
-        let postSlug = _.last(_.filter(_.split(path, '/')));
-        let post = await this.dataSource.fetchOne('/wp/v2/posts/', postSlug);
+        let postSlug = _.last(slugs);
+        if (/^\d+\-/.test(postSlug)) {
+            // delete post ID in front of slug
+            postSlug = postSlug.replace(/^\d+\-/, '');
+        }
+        let post = await wp.fetchOne('/wp/v2/posts/', postSlug);
         if (post) {
             return { pageType: 'post', postSlug, siteURL };
         }
-    }
-
-    async getSiteURL() {
-        let site = await this.dataSource.fetchOne('/');
-        return _.trimEnd(site.url, '/');
     }
 
     async preloadPage(url) {
@@ -139,11 +151,19 @@ class Route {
             let urlParts = this.routeManager.parse(url);
             let params = await this.getParameters(urlParts.path, urlParts.query);
             if (params) {
+                let wp = new Wordpress(this.dataSource);
                 if (params.postSlug) {
-                    await this.dataSource.fetchOne('/wp/v2/posts/', params.postSlug);
+                    await wp.fetchOne('/wp/v2/posts/', params.postSlug);
+                } else if (params.tagSlug) {
+                    let tag = await wp.fetchOne('/wp/v2/tags/', params.tagSlug);
+                    await wp.fetchList(`/wp/v2/posts/?tags=${tag.id}`);
+                } else if (params.categorySlug) {
+                    let category = await wp.fetchOne('/wp/v2/categories/', params.categorySlug);
+                    await wp.fetchList(`/wp/v2/posts/?categories=${category.id}`);
                 }
             }
         } catch (err) {
+            console.log(err);
         }
     }
 

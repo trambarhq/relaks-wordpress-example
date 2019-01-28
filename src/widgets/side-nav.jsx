@@ -26,17 +26,21 @@ class SideNav extends AsyncComponent {
         };
         meanwhile.delay(50, 50);
         meanwhile.show(<SideNavSync {...props} />);
+
+        // get all categories
         props.categories = await wp.fetchList('/wp/v2/categories/', { minimum: '100%' });
         meanwhile.show(<SideNavSync {...props} />);
 
-        // get the latest post and the earliest post
+        // get top tags
+        props.tags = await wp.fetchList('/wp/v2/tags/?orderby=count&order=desc');
+        meanwhile.show(<SideNavSync {...props} />);
+
+        // get the latest post and the earliest post and build the list of archives
         let latestPosts =  await wp.fetchList('/wp/v2/posts/');
         let latestPost = _.first(latestPosts);
         let earliestPosts = await wp.fetchList(`/wp/v2/posts/?order=asc&per_page=1`)
         let earliestPost = _.first(earliestPosts);
-
-        // build the archive tree
-        props.archive = [];
+        props.archives = [];
         if (latestPost && earliestPost) {
             let lastPostDate = Moment(latestPost.date_gmt);
             let firstPostDate = Moment(earliestPost.date_gmt);
@@ -49,7 +53,7 @@ class SideNav extends AsyncComponent {
                     label: Moment(`${y}-01-01`).format('YYYY'),
                     months: []
                 };
-                props.archive.push(yearEntry);
+                props.archives.push(yearEntry);
 
                 // loop through the months
                 let lastMonth = (y === lastYear) ? lastPostDate.month() : 11;
@@ -72,46 +76,39 @@ class SideNav extends AsyncComponent {
                 }
             }
             meanwhile.show(<SideNavSync {...props} />);
+        }
 
-            if (!wp.ssr) {
-                // load the posts of the selected year
-                for (let yearEntry of props.archive) {
+        if (!wp.ssr) {
+            props.postLists = [];
+            try {
+                // load the posts of each month of the selected year
+                for (let yearEntry of props.archives) {
                     if (yearEntry.year === selectedYear) {
                         for (let monthEntry of yearEntry.months) {
                             let after = monthEntry.start.toISOString();
                             let before = monthEntry.end.toISOString();
-                            monthEntry.posts = await wp.fetchList(`/wp/v2/posts/?after=${after}&before=${before}`);
-
-                            // force prop change
-                            props.archive = _.clone(props.archive);
+                            let posts = await wp.fetchList(`/wp/v2/posts/?after=${after}&before=${before}`);
+                            props.postLists = _.concat(props.postLists, { monthEntry, posts });
                             meanwhile.show(<SideNavSync {...props} />);
                         }
                     }
                 }
-            }
-        }
 
-        props.tags = await wp.fetchList('/wp/v2/tags/', { minimum: '100%' });
-        meanwhile.show(<SideNavSync {...props} />);
-
-        if (!wp.ssr) {
-            // load the posts of each category
-            try {
+                // load the posts of each category
                 for (let category of props.categories) {
                     if (category.count > 0) {
-                        let url = `/wp/v2/posts/?categories=${category.id}`;
-                        await wp.fetchList(url);
+                        let posts = await wp.fetchList(`/wp/v2/posts/?categories=${category.id}`);
+                        props.postLists = _.concat(props.postLists, { category, posts });
+                        meanwhile.show(<SideNavSync {...props} />);
                     }
                 }
-            } catch (err) {
-            }
 
-            // load the posts of each tag
-            try {
+                // load the posts of each tag
                 for (let tag of props.tags) {
                     if (tag.count > 0) {
-                        let url = `/wp/v2/posts/?tags=${tag.id}`;
-                        await wp.fetchList(url);
+                        let posts = await wp.fetchList(`/wp/v2/posts/?tags=${tag.id}`);
+                        props.postLists = _.concat(props.postLists, { tag, posts });
+                        meanwhile.show(<SideNavSync {...props} />);
                     }
                 }
             } catch (err) {
@@ -138,8 +135,8 @@ class SideNavSync extends PureComponent {
         return (
             <div className="side-nav">
                 {this.renderCategories()}
-                {this.renderArchive()}
                 {this.renderTags()}
+                {this.renderArchives()}
             </div>
         )
     }
@@ -150,8 +147,7 @@ class SideNavSync extends PureComponent {
         categories = _.filter(categories, { parent: 0 });
         // don't show categories with no post
         categories = _.filter(categories, 'count');
-        // list categories with more posts first
-        categories = _.orderBy(categories, [ 'count', 'name' ], [ 'desc', 'asc' ]);
+        categories = _.orderBy(categories, [ 'name' ], [ 'asc' ]);
         if (_.isEmpty(categories)) {
             return null;
         }
@@ -170,7 +166,7 @@ class SideNavSync extends PureComponent {
     }
 
     renderCategory(category, i) {
-        let { route } = this.props;
+        let { route, postLists } = this.props;
         let { categorySlug } = route.params;
         let name = _.get(category, 'name', '');
         let description = _.get(category, 'description', '');
@@ -178,6 +174,11 @@ class SideNavSync extends PureComponent {
         let className;
         if (category.slug === categorySlug) {
             className = 'selected';
+        } else {
+            let postList = _.find(postLists, { category });
+            if (hasRecentPost(postList, 1)) {
+                className = 'highlighted';
+            }
         }
         return (
             <li key={i}>
@@ -205,13 +206,14 @@ class SideNavSync extends PureComponent {
                         return this.renderTag(tag, i);
                     })
                 }
+                {this.renderMoreTagButton()}
                 </div>
             </div>
         );
     }
 
     renderTag(tag, i) {
-        let { route } = this.props;
+        let { route, postLists } = this.props;
         let { tagSlug } = route.params;
         let name = _.get(tag, 'name', '');
         let description = _.get(tag, 'description', '');
@@ -219,6 +221,11 @@ class SideNavSync extends PureComponent {
         let className;
         if (tag.slug === tagSlug) {
             className = 'selected';
+        } else {
+            let postList = _.find(postLists, { tag });
+            if (hasRecentPost(postList, 1)) {
+                className = 'highlighted';
+            }
         }
         return (
             <span key={i}>
@@ -226,6 +233,17 @@ class SideNavSync extends PureComponent {
                 {' '}
             </span>
         );
+    }
+
+    renderMoreTagButton() {
+        let { tags } = this.props;
+        if (!_.some(tags, 'count')) {
+            return null;
+        }
+        if (!(tags.length < tags.total) || tags.length >= 100) {
+            return null;
+        }
+        return <a className="more" onClick={this.handleMoreTagClick}>... more</a>;
     }
 
     renderSubcategories(category) {
@@ -247,18 +265,18 @@ class SideNavSync extends PureComponent {
         );
     }
 
-    renderArchive() {
-        let { archive } = this.props;
-        if (!archive) {
+    renderArchives() {
+        let { archives } = this.props;
+        if (_.isEmpty(archives)) {
             return null;
         }
         return (
             <div>
                 <h3>Archives</h3>
-                <ul className="archive">
+                <ul className="archives">
                 {
-                    archive.map((entry, i) => {
-                        return this.renderYear(entry, i);
+                    archives.map((yearEntry, i) => {
+                        return this.renderYear(yearEntry, i);
                     })
                 }
                 </ul>
@@ -274,9 +292,9 @@ class SideNavSync extends PureComponent {
         }
         return (
             <li key={i}>
-                <span className="year" data-year={yearEntry.year} onClick={this.handleYearClick}>
+                <a className="year" data-year={yearEntry.year} onClick={this.handleYearClick}>
                     {yearEntry.label}
-                </span>
+                </a>
                 <ul className={listClass}>
                 {
                     yearEntry.months.map((entry, i) => {
@@ -289,10 +307,11 @@ class SideNavSync extends PureComponent {
     }
 
     renderMonth(monthEntry, i) {
-        let { route } = this.props;
+        let { route, postLists } = this.props;
         let { date } = route.params;
         let url = route.getArchiveURL(monthEntry.date);
-        if (_.isEmpty(monthEntry.posts) && !_.isUndefined(monthEntry.posts)) {
+        let postList = _.find(postLists, { monthEntry });
+        if (postList && _.isEmpty(postList.posts)) {
             url = undefined;
         }
         let className;
@@ -317,6 +336,21 @@ class SideNavSync extends PureComponent {
             });
         }
     }
+
+    handleMoreTagClick = (evt) => {
+        let { tags } = this.props;
+        tags.more();
+    }
+}
+
+function hasRecentPost(postList, daysOld) {
+    if (!postList || _.isEmpty(postList.posts)) {
+        return false;
+    }
+    let post = _.first(postList.posts);
+    let limit = Moment().subtract(daysOld, 'day');
+    let publicationDate = Moment(post.date_gmt);
+    return limit < publicationDate;
 }
 
 if (process.env.NODE_ENV !== 'production') {
@@ -329,7 +363,8 @@ if (process.env.NODE_ENV !== 'production') {
     SideNavSync.propTypes = {
         categories: PropTypes.arrayOf(PropTypes.object),
         tags: PropTypes.arrayOf(PropTypes.object),
-        archive: PropTypes.arrayOf(PropTypes.object),
+        archives: PropTypes.arrayOf(PropTypes.object),
+        postLists: PropTypes.arrayOf(PropTypes.object),
         selectedYear: PropTypes.number,
         route: PropTypes.instanceOf(Route),
         onYearSelect: PropTypes.func,

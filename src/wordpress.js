@@ -36,6 +36,19 @@ class Wordpress {
     }
 
     /**
+     * Fetch a page of records from data source
+     *
+     * @param  {String} url
+     * @param  {Number} page
+     * @param  {Object} options
+     *
+     * @return {Promise<Object>}
+     */
+    fetchPage(url, page, options) {
+        return this.dataSource.fetchPage(url, 1, options);
+    }
+
+    /**
      * Fetch multiple objects from data source
      *
      * @param  {String} url

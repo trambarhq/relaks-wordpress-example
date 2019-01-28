@@ -9,7 +9,7 @@ services:
       network:
         ipv4_address: 172.130.0.4
     environment:
-      WORDPRESS_HOST: https://realworldtech.com
+      WORDPRESS_HOST: https://www.extremetech.com
       NGINX_HOST: http://nginx
       NGINX_CACHE: /var/cache/nginx/data
     command: [ node, /opt/example/server/index.js ]
@@ -28,7 +28,6 @@ services:
       - 8000:80
     restart: always
 volumes:
-  db_data:
   web_cache:
 networks:
   network:

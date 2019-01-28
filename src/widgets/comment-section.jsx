@@ -8,7 +8,7 @@ class CommentSection extends PureComponent {
 
     render() {
         let { comments } = this.props;
-        if (!comments || comments.length === 0) {
+        if (_.isEmpty(comments)) {
             return null;
         }
         return (

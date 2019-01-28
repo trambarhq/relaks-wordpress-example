@@ -34,61 +34,62 @@ A {
     padding: 0 1em 0 1em;
 
     A {
-        opacity: 0.5;
+        padding: 0.2em 0.5em 0.17em 0.5em;
+        margin-left: -0.4em;
+        margin-right: -0.4em;
+        text-shadow: 0 0 0 #fff;
+        cursor: pointer;
+        transition: text-shadow 1s, color 1s;
 
         &:link, &:visited {
-            opacity: 1;
             color: #cccccc;
 
-            &:hover {
-                color: #eeccdd;
+            &.selected {
+                border-radius: 0.5em;
+                background-color: #990000;
+                color: #eeeeee;
             }
+        }
+
+        &:hover {
+            color: #eeccdd;
+            opacity: 1 !important;
+        }
+
+        &.disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        &.highlighted {
+            text-shadow: 0 0 3px #ffffff;
+            color: #ffffff;
         }
     }
 
     UL {
         margin-left: -1em;
-    }
 
-    .categories {
         LI {
             margin-top: 0.2em;
             margin-bottom: 0.2em;
-
-            A {
-                padding: 0.2em 0.5em 0.17em 0.5em;
-                margin-left: -0.4em;
-
-                &.selected {
-                    border-radius: 0.5em;
-                    background-color: #990000;
-                    color: #eeeeee;
-                }
-            }
         }
     }
 
-    .archive {
-        LI {
-            margin-top: 0.2em;
-            margin-bottom: 0.2em;
+    .tags {
+        margin-left: 0.5em;
+        line-height: 125%;
 
-            A {
-                padding: 0.2em 0.5em 0.17em 0.5em;
-                margin-left: -0.4em;
-
-                &.selected {
-                    border-radius: 0.5em;
-                    background-color: #990000;
-                    color: #eeeeee;
-                }
-            }
+        A {
+            white-space: nowrap;
         }
 
-        .year {
-            cursor: pointer;
+        .more {
+            opacity: 0.9;
         }
+    }
 
+    .archives {
         .months {
             overflow: hidden;
 
@@ -96,12 +97,6 @@ A {
                 height: 0;
             }
         }
-    }
-
-    .tags {
-        margin-left: 0.5em;
-        line-height: 125%;
-        word-spacing: 0.2em;
     }
 
     // use custom color only on desktop
