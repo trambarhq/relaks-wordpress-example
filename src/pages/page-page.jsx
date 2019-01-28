@@ -47,7 +47,7 @@ class PagePageSync extends PureComponent {
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
-                <PageView page={page} transform={route.transformLink} />
+                <PageView page={page} transform={route.transformNode} />
                 <PageList route={route} pages={childPages} />
             </div>
         );

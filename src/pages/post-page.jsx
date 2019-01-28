@@ -102,7 +102,7 @@ class PostPageSync extends PureComponent {
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
-                <PostView post={post} author={author} transform={route.transformLink} />
+                <PostView post={post} author={author} transform={route.transformNode} />
                 <CommentSection comments={comments} />
             </div>
         );

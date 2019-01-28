@@ -8,8 +8,6 @@ class Route {
         this.history = routeManager.history;
         this.url = routeManager.url;
         this.dataSource = dataSource;
-        this.pageLinkRegExp = null;
-        this.imageLinkRegExp = null;
     }
 
     change(url, options) {
@@ -137,28 +135,13 @@ class Route {
         }
     }
 
-    transformLink = (node) => {
-        if (node.type === 'tag' && node.name === 'a') {
-            if (this.pageLinkRegExp) {
-                let m = this.pageLinkRegExp.exec(node.attribs.href);
-                if (m) {
-                    let categorySlug = m[1];
-                    let postSlug = m[3];
-                    node.attribs.href = `/${categorySlug}/${postSlug}/`;
-                    delete node.attribs.target;
-                    this.preloadPage({ categorySlug, postSlug });
-                    return;
-                }
+    transformNode = (node) => {
+        if (node.type === 'tag') {
+            if (node.name === 'a') {                
             }
-            if (this.imageLinkRegExp) {
-                let m = this.imageLinkRegExp.exec(node.attribs.href);
-                if (m) {
-                    if (!node.attribs.target) {
-                        node.attribs.target = '_blank';
-                    }
-                    return;
-                }
-            }
+        } else if (node.type === 'text') {
+            // trim off leading newline characters
+            node.data = _.trimStart(node.data, '\r\n');
         }
     }
 }
