@@ -58,11 +58,11 @@ let cacheEntryCache = {};
 async function loadCacheEntry(md5) {
     try {
         let path = `${NGINX_CACHE}/${md5}`;
-        let { mtime } = await FS.statAsync(path);
+        let { mtime, size } = await FS.statAsync(path);
         let entry = cacheEntryCache[md5];
         if (!entry || entry.mtime !== mtime) {
             let url = await loadCacheEntryKey(path);
-            entry = cacheEntryCache[md5] = { url, mtime, md5 };
+            entry = cacheEntryCache[md5] = { url, md5, mtime, size };
         }
         return entry;
     } catch (err) {
@@ -98,4 +98,5 @@ async function removeCacheEntry(entry) {
 
 module.exports = {
     purge,
+    read: loadCacheEntries,
 };

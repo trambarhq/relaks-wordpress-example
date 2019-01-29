@@ -1,4 +1,5 @@
 const Bluebird = require('bluebird');
+const Moment = require('moment');
 const FS = Bluebird.promisifyAll(require('fs'));
 const OS = require('os');
 const Express = require('express');
@@ -28,6 +29,7 @@ app.use(Compression())
 app.use(SpiderDetector.middleware());
 app.use(`/`, Express.static(`${__dirname}/www`));
 app.get('/.mtime', handleTimestampRequest);
+app.get('/.cache', handleCacheStatusRequest);
 app.get('/json/*', handleJSONRequest);
 app.get(`/*`, handlePageRequest);
 app.purge(`/*`, handlePurgeRequest);
@@ -42,6 +44,34 @@ async function handleTimestampRequest(req, res, next) {
         let now = new Date;
         let ts = now.toISOString();
         res.type('text').send(ts);
+    } catch (err) {
+        next(err);
+    }
+}
+
+async function handleCacheStatusRequest(req, res, next) {
+    try {
+        res.set({ 'X-Accel-Expires': 0 });
+        res.type('html');
+        res.write(`<html><head><title>Nginx Cache</title></head><body>`);
+        res.write(`<table border="1" cellpadding="2">`);
+        res.write(`<thead><th>URL</th><th>Modified time</th><th>Size</th></thead>`);
+        res.write(`<tbody>`);
+        let entries = await NginxCache.read();
+        let total = 0;
+        for (let entry of _.orderBy(entries, 'mtime', 'desc')) {
+            let { url, mtime, size } = entry;
+            let date = Moment(mtime).format('LLLL');
+            let sizeKB = _.round(size / 1024, 2);
+            res.write(`<tr><td>${url}</td><td>${date}</td><td>${sizeKB}KB</td></tr>`)
+            total += size;
+        }
+        let totalMB = _.round(total / 1024 / 1024, 2);
+        res.write(`<tr><td colspan="2">Total</td><td>${totalMB}MB</td></tr>`)
+        res.write(`</tbody>`);
+        res.write(`</table>`);
+        res.write(`</body></html>`);
+        res.end();
     } catch (err) {
         next(err);
     }
