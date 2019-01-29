@@ -190,6 +190,9 @@ class Route {
                             node.attribs.target = '_blank';
                         }
                     }
+                    if (_.startsWith(node.attribs.href, '/wp-content/')) {
+                        node.attribs.href = siteURL + node.attribs.href;
+                    }
                     if (_.startsWith(node.attribs.href, '/')) {
                         // strip off page number
                         node.attribs.href = node.attribs.href.replace(/\/\d+\/?$/, '');

@@ -47,6 +47,7 @@ class FrontEnd extends PureComponent {
                 <div className="page-container">
                     <PageComponent route={route} wp={wp} key={key} />
                 </div>
+                <div id="overlay" />
             </div>
         );
     }

@@ -320,6 +320,65 @@ A {
     }
 }
 
+.overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.image-dialog {
+    .background, .foreground {
+        position: fixed;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    .background {
+        background-color: #ffffff;
+        opacity: 0.5;
+    }
+
+    .foreground {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+
+        .box {
+            position: relative;
+            pointer-events: auto;
+            background: #66023c;
+            border-color: 1px solid black;
+            padding: 1em 1em 1em 1em;
+            box-shadow: 2px 2px 10px #000000;
+            max-width: 90%;
+            color: #cccccc;
+
+            .image {
+                display: block;
+                border: 1px solid #000000;
+                max-width: 100%;
+                max-height: 80vh;
+                height: auto;
+            }
+
+            .close-button {
+                position: absolute;
+                font-size: 0.75em;
+                padding: 0.25em 0.25em 0.25em 0.25em;
+                margin: -0.25em -0.25em -0.25em -0.25em;
+                right: 0.35em;
+                top: 0.35em;
+                cursor: pointer;
+            }
+        }
+    }
+}
+
 @media only screen and (max-width: 800px) {
     .page-container {
         transition: margin-left 0.3s;

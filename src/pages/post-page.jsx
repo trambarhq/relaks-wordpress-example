@@ -52,14 +52,15 @@ class PostPage extends AsyncComponent {
         }
 
         // see how recently a category was visited
-        let historyIndex = (c) => {
-
-            return _.findLastIndex(route.history, { params: { categorySlug: c.slug }});
+        let historyIndex = (category) => {
+            let predicate = { params: { categorySlug: category.slug }};
+            return _.findLastIndex(route.history, predicate);
         };
         // see how deep a category is
-        let depth = (c) => {
-            if (c.parent) {
-                let parent = _.find(allCategories, { id: c.parent });
+        let depth = (category) => {
+            if (category.parent) {
+                let predicate = { id: category.parent };
+                let parent = _.find(allCategories, predicate);
                 if (parent) {
                     return depth(parent) + 1;
                 }
@@ -97,7 +98,7 @@ class PostPageSync extends PureComponent {
         let { route, categories, post, author, tags, comments } = this.props;
         let trail = [ { label: 'Categories' } ];
         for (let category of categories) {
-            let label = _.get(c, 'name', '');
+            let label = _.get(category, 'name', '');
             let url = route.prefetchObjectURL(category);
             trail.push({ label, url });
         }
