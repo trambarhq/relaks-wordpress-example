@@ -10,7 +10,7 @@ class PageListView extends PureComponent {
     render() {
         let { route, page } = this.props;
         let title = _.get(page, 'title.rendered', '');
-        let url = route.getObjectURL(page);
+        let url = route.prefetchObjectURL(page);
         return (
             <div className="page-list-view">
                 <a href={url}><HTML text={title} /></a>

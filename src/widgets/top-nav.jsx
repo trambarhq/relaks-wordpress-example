@@ -77,7 +77,7 @@ class TopNavSync extends PureComponent {
     renderPageLinkButton(page, i) {
         let { route } = this.props;
         let title = _.get(page, 'title.rendered');
-        let url = route.getObjectURL(page);
+        let url = route.prefetchObjectURL(page);
         return (
             <div className="button" key={i}>
                 <a href={url}>{title}</a>

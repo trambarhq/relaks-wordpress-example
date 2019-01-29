@@ -96,9 +96,9 @@ class PostPageSync extends PureComponent {
     render() {
         let { route, categories, post, author, tags, comments } = this.props;
         let trail = [ { label: 'Categories' } ];
-        for (let c of categories) {
+        for (let category of categories) {
             let label = _.get(c, 'name', '');
-            let url = route.getObjectURL(c);
+            let url = route.prefetchObjectURL(category);
             trail.push({ label, url });
         }
         return (

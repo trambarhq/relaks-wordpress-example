@@ -13,7 +13,7 @@ class PostListView extends PureComponent {
         let title = _.get(post, 'title.rendered', '');
         let excerpt = _.get(post, 'excerpt.rendered', '');
         excerpt = cleanExcerpt(excerpt);
-        let url = route.getObjectURL(post);
+        let url = route.prefetchObjectURL(post);
         let date = _.get(post, 'date_gmt');
         if (date) {
             date = Moment(date).format('LL');

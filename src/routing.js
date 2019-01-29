@@ -36,8 +36,12 @@ class Route {
             throw new Error(`Object URL does not match site URL`);
         }
         let path = link.substr(siteURL.length);
-        let url = this.composeURL({ path });
-        this.preloadPage(url);
+        return this.composeURL({ path });
+    }
+
+    prefetchObjectURL(object) {
+        let url = this.getObjectURL(object);
+        this.loadPageData(url);
         return url;
     }
 
@@ -146,7 +150,7 @@ class Route {
         }
     }
 
-    async preloadPage(url) {
+    async loadPageData(url) {
         try {
             let urlParts = this.routeManager.parse(url);
             let params = await this.getParameters(urlParts.path, urlParts.query);
@@ -154,6 +158,8 @@ class Route {
                 let wp = new Wordpress(this.dataSource);
                 if (params.postSlug) {
                     await wp.fetchOne('/wp/v2/posts/', params.postSlug);
+                } else if (params.pageSlug) {
+                    await wp.fetchOne('/wp/v2/pages/', params.pageSlug);
                 } else if (params.tagSlug) {
                     let tag = await wp.fetchOne('/wp/v2/tags/', params.tagSlug);
                     await wp.fetchList(`/wp/v2/posts/?tags=${tag.id}`);
@@ -187,7 +193,7 @@ class Route {
                     if (_.startsWith(node.attribs.href, '/')) {
                         // strip off page number
                         node.attribs.href = node.attribs.href.replace(/\/\d+\/?$/, '');
-                        this.preloadPage(node.attribs.href);
+                        this.loadPageData(node.attribs.href);
                     }
                 }
             } else if (node.name === 'img') {

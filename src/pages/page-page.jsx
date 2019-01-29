@@ -41,7 +41,7 @@ class PagePageSync extends PureComponent {
         let trail = [];
         for (let parentPage of parentPages) {
             let title = _.get(parentPage, 'title.rendered', '');
-            let url = route.getObjectURL(parentPage);
+            let url = route.prefetchObjectURL(parentPage);
             trail.push({ label: <HTML text={title} />, url })
         }
         return (

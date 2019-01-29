@@ -170,7 +170,7 @@ class SideNavSync extends PureComponent {
         let { categorySlug } = route.params;
         let name = _.get(category, 'name', '');
         let description = _.get(category, 'description', '');
-        let url = route.getObjectURL(category);
+        let url = route.prefetchObjectURL(category);
         let className;
         if (category.slug === categorySlug) {
             className = 'selected';
@@ -217,7 +217,7 @@ class SideNavSync extends PureComponent {
         let { tagSlug } = route.params;
         let name = _.get(tag, 'name', '');
         let description = _.get(tag, 'description', '');
-        let url = route.getObjectURL(tag);
+        let url = route.prefetchObjectURL(tag);
         let className;
         if (tag.slug === tagSlug) {
             className = 'selected';

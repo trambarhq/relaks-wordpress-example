@@ -40,7 +40,7 @@ class CategoryPageSync extends PureComponent {
         let categoryLabel = _.get(category, 'name', '');
         for (let parentCategory of parentCategories) {
             let label = _.get(parentCategory, 'name', '');
-            let url = route.getObjectURL(parentCategory);
+            let url = route.prefetchObjectURL(parentCategory);
             trail.push({ label, url });
         }
         trail.push({ label: categoryLabel });

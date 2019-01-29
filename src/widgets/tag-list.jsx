@@ -24,7 +24,7 @@ class TagList extends PureComponent {
     renderTag(tag, i) {
         let { route } = this.props;
         let name = _.get(tag, 'name', '');
-        let url = route.getObjectURL(tag);
+        let url = route.prefetchObjectURL(tag);
         return (
             <span key={i}>
                 <a href={url}>{name}</a>
