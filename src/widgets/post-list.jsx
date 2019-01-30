@@ -31,9 +31,17 @@ class PostList extends PureComponent {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        let { posts, minimum } = this.props;
+        let { posts, minimum, maximum } = this.props;
         if (posts && posts.length < minimum) {
             posts.more();
+        } else {
+            // load more records if we're still near the bottom
+            let { scrollTop, scrollHeight } = document.body.parentNode;
+            if (scrollTop > scrollHeight * 0.75) {
+                if (posts && posts.length < maximum) {
+                    posts.more();
+                }
+            }
         }
     }
 
@@ -44,7 +52,7 @@ class PostList extends PureComponent {
     handleScroll = (evt) => {
         let { posts, maximum } = this.props;
         let { scrollTop, scrollHeight } = document.body.parentNode;
-        if (scrollTop > (scrollHeight / 2)) {
+        if (scrollTop > scrollHeight * 0.5) {
             if (posts && posts.length < maximum) {
                 posts.more();
             }
