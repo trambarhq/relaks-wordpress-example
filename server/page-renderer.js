@@ -33,6 +33,13 @@ async function generate(path, target) {
     return { path, target, sourceURLs, html };
 }
 
+async function prefetch(path) {
+    console.log(`Regenerating page: ${path}`);
+    let url = NGINX_HOST + path;
+    return CrossFetch(url);
+}
+
 module.exports = {
     generate,
+    prefetch,
 };

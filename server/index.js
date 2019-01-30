@@ -28,6 +28,7 @@ app.set('json spaces', 2);
 app.use(Compression())
 app.use(SpiderDetector.middleware());
 app.use(`/`, Express.static(`${__dirname}/www`));
+app.get('/favicon.ico', handleFavIconRequest);
 app.get('/.mtime', handleTimestampRequest);
 app.get('/.cache', handleCacheStatusRequest);
 app.get('/json/*', handleJSONRequest);
@@ -36,8 +37,8 @@ app.purge(`/*`, handlePurgeRequest);
 app.use(handleError);
 app.listen(SERVER_PORT);
 
-// purge cache when starting up
-//NginxCache.purge(/.*/);
+// purge cache when starting up and periodically
+scheduleCachePurge();
 
 async function handleTimestampRequest(req, res, next) {
     try {
@@ -47,6 +48,12 @@ async function handleTimestampRequest(req, res, next) {
     } catch (err) {
         next(err);
     }
+}
+
+async function handleFavIconRequest(req, res, next) {
+    let error = new Error('Not found');
+    error.status = 404;
+    next(err);
 }
 
 async function handleCacheStatusRequest(req, res, next) {
@@ -128,7 +135,6 @@ async function handlePurgeRequest(req, res) {
     } else if (method === 'default') {
         // look for URLs that looks like /wp-json/wp/v2/pages/4/
         let m = /^\/wp\-json\/(\w+\/\w+\/\w+)\/(\d+)\/$/.exec(url);
-        console.log(url, m)
         if (!m) {
             return;
         }
@@ -157,13 +163,30 @@ async function handlePurgeRequest(req, res) {
             }
         }
     }
+    await PageRenderer.prefetch('/');
 }
 
 function handleError(err, req, res, next) {
     if (!res.headersSent) {
-        res.type('text').status(400).send(err.message);
+        let status = err.status || 400;
+        res.type('text').status(status).send(err.message);
     }
     console.error(err);
+}
+
+async function scheduleCachePurge() {
+    for(;;) {
+        try {
+            await NginxCache.purge(/.*/);
+            await PageRenderer.prefetch('/');
+
+            // purge the cache again the next day at 4 AM
+            let tomorrow = Moment().add(1, 'day').startOf('day').add(4, 'hour');
+            await Bluebird.delay(tomorrow - Moment());
+        } catch (err) {
+            await Bluebird.delay(60000);
+        }
+    }
 }
 
 /**
