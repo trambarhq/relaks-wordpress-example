@@ -15,6 +15,12 @@ async function fetch(path) {
         resText = resText.replace(/^[^\{\[]+/, '');
         object = JSON.parse(resText);
     }
+    if (res.status >= 400) {
+        let msg = (object && object.message) ? object.message : 'Unknown error';
+        let err = new Error(msg);
+        err.status = res.status;
+        throw err;
+    }
     let total = parseInt(res.headers.get('X-WP-Total'));
     removeSuperfluousProps(path, object);
     let text = JSON.stringify(object);

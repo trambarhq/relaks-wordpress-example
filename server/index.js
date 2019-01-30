@@ -24,16 +24,16 @@ const WORDPRESS_HOST = process.env.WORDPRESS_HOST;
 
 // start up Express
 let app = Express();
+let root = PageRenderer.basePath;
 app.set('json spaces', 2);
 app.use(Compression())
 app.use(SpiderDetector.middleware());
-app.use(`/`, Express.static(`${__dirname}/www`));
-app.get('/favicon.ico', handleFavIconRequest);
-app.get('/.mtime', handleTimestampRequest);
-app.get('/.cache', handleCacheStatusRequest);
-app.get('/json/*', handleJSONRequest);
-app.get(`/*`, handlePageRequest);
-app.purge(`/*`, handlePurgeRequest);
+app.use(root, Express.static(`${__dirname}/www`));
+app.get(root + '.mtime', handleTimestampRequest);
+app.get(root + '.cache', handleCacheStatusRequest);
+app.get(root + 'json/*', handleJSONRequest);
+app.get(root + '*', handlePageRequest);
+app.purge('*', handlePurgeRequest);
 app.use(handleError);
 app.listen(SERVER_PORT);
 
@@ -48,12 +48,6 @@ async function handleTimestampRequest(req, res, next) {
     } catch (err) {
         next(err);
     }
-}
-
-async function handleFavIconRequest(req, res, next) {
-    let err = new Error('Not found');
-    err.status = 404;
-    next(err);
 }
 
 async function handleCacheStatusRequest(req, res, next) {
@@ -86,7 +80,9 @@ async function handleCacheStatusRequest(req, res, next) {
 
 async function handleJSONRequest(req, res, next) {
     try {
-        let path = `/wp-json/${req.url.substr(6)}`;
+        // exclude asterisk
+        let root = req.route.path.substr(0, req.route.path.length - 1);
+        let path = `/wp-json/${req.url.substr(root.length)}`;
         let json = await JSONRetriever.fetch(path);
         if (json.total) {
             res.set({ 'X-WP-Total': json.total });
@@ -102,6 +98,11 @@ let pageDependencies = {};
 async function handlePageRequest(req, res, next) {
     try {
         let path = req.url;
+        if (path === '/favicon.ico') {
+            let err = new Error('File not found');
+            err.status = 404;
+            throw err;
+        }
         let noJS = (req.query.js === '0');
         let target = (req.isSpider() || noJS) ? 'seo' : 'hydrate';
         let page = await PageRenderer.generate(path, target);

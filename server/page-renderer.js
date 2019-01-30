@@ -9,8 +9,8 @@ const CACHE_SIZE = 500;
 const HTML_TEMPLATE = `${__dirname}/client/index.html`;
 
 async function generate(path, target) {
-    // retrieve cached JSON through Nginx
     console.log(`Regenerating page: ${path}`);
+    // retrieve cached JSON through Nginx
     let host = NGINX_HOST;
     // create a fetch() that remembers the URLs used
     let sourceURLs = [];
@@ -42,4 +42,5 @@ async function prefetch(path) {
 module.exports = {
     generate,
     prefetch,
+    basePath: FrontEnd.basePath
 };

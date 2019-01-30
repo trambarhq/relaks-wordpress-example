@@ -8,22 +8,20 @@ import RouteManager from 'relaks-route-manager';
 import { harvest } from 'relaks-harvest';
 import Relaks, { plant } from 'relaks';
 
-const pageBasePath = '';
-
-if (typeof(window) === 'object') {
+if (process.env.TARGET === 'browser') {
     async function initialize(evt) {
         // create data source
         let host = process.env.DATA_HOST || `${location.protocol}//${location.host}`;
+        let basePath = process.env.BASE_PATH;
         let dataSource = new WordpressDataSource({
-            baseURL: `${host}/json`,
+            baseURL: host + basePath + 'json',
         });
         dataSource.activate();
 
         // create route manager
         let routeManager = new RouteManager({
             routes,
-            basePath: pageBasePath,
-            preloadingDelay: 2000,
+            basePath,
             useHashFallback: (location.host === ''),
         });
         routeManager.addEventListener('beforechange', (evt) => {
@@ -46,7 +44,7 @@ if (typeof(window) === 'object') {
         render(csrElement, container);
 
         // check for changes periodically
-        let mtimeURL = `${host}/.mtime`;
+        let mtimeURL = host + basePath + '.mtime';
         let mtimeLast;
         for (;;) {
             try {
@@ -66,17 +64,18 @@ if (typeof(window) === 'object') {
     }
 
     window.addEventListener('load', initialize);
-} else {
+} else if (process.env.TARGET === 'node') {
     async function serverSideRender(options) {
+        let basePath = process.env.BASE_PATH;
         let dataSource = new WordpressDataSource({
-            baseURL: `${options.host}/json`,
+            baseURL: options.host + basePath + 'json',
             fetchFunc: options.fetch,
         });
         dataSource.activate();
 
         let routeManager = new RouteManager({
             routes,
-            basePath: pageBasePath,
+            basePath,
         });
         routeManager.addEventListener('beforechange', (evt) => {
             let route = new Route(routeManager, dataSource);
@@ -90,4 +89,5 @@ if (typeof(window) === 'object') {
     }
 
     exports.render = serverSideRender;
+    exports.basePath = process.env.BASE_PATH;
 }

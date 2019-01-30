@@ -9,16 +9,19 @@ var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 
-var event = process.env.npm_lifecycle_event;
-var devDataHost = 'http://localhost:8000';
-var cordovaDataHost = process.env.CORDOVA_DATA_HOST;
+var EVENT = process.env.npm_lifecycle_event;
+var BUILD = (EVENT === 'build') ? 'production' : 'development';
+var IS_DEV_SERVER = process.argv.find((arg) => { return arg.includes('webpack-dev-server') });
+var DEV_DATA_HOST = (IS_DEV_SERVER) ? 'http://localhost:8000' : undefined;
+var CORDOVA_DATA_HOST = process.env.CORDOVA_DATA_HOST;
+var BASE_PATH = '/';
 
 var clientConfig = {
     context: Path.resolve('./src'),
     entry: './main',
     output: {
         path: Path.resolve('./server/www'),
-        publicPath: '/',
+        publicPath: BASE_PATH,
         filename: 'front-end.js',
     },
     resolve: {
@@ -65,15 +68,21 @@ var clientConfig = {
         ]
     },
     plugins: [
+        new DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(BUILD),
+            'process.env.TARGET': JSON.stringify('browser'),
+            'process.env.DATA_HOST': JSON.stringify(DEV_DATA_HOST),
+            'process.env.BASE_PATH': JSON.stringify(BASE_PATH),
+        }),
         new NamedChunksPlugin,
         new NamedModulesPlugin,
         new BundleAnalyzerPlugin({
-            analyzerMode: (event === 'build') ? 'static' : 'disabled',
+            analyzerMode: (EVENT === 'build') ? 'static' : 'disabled',
             reportFilename: `report.html`,
         }),
         new ExtractTextPlugin("styles.css"),
     ],
-    devtool: (event === 'build') ? false : 'inline-source-map',
+    devtool: (EVENT === 'build') ? false : 'inline-source-map',
 };
 
 var serverConfig = {
@@ -82,13 +91,19 @@ var serverConfig = {
     target: 'node',
     output: {
         path: Path.resolve('./server/client'),
-        publicPath: '/',
+        publicPath: BASE_PATH,
         filename: 'front-end.js',
         libraryTarget: 'commonjs2',
     },
     resolve: clientConfig.resolve,
     module: clientConfig.module,
     plugins: [
+        new DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(BUILD),
+            'process.env.TARGET': JSON.stringify('node'),
+            'process.env.DATA_HOST': JSON.stringify(undefined),
+            'process.env.BASE_PATH': JSON.stringify(BASE_PATH),
+        }),
         new NamedChunksPlugin,
         new NamedModulesPlugin,
         new HtmlWebpackPlugin({
@@ -111,62 +126,53 @@ var cordovaConfig = {
     resolve: clientConfig.resolve,
     module: clientConfig.module,
     plugins: [
+        new DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(BUILD),
+            'process.env.TARGET': JSON.stringify('browser'),
+            'process.env.DATA_HOST': JSON.stringify(CORDOVA_DATA_HOST),
+            'process.env.BASE_PATH': JSON.stringify(BASE_PATH),
+        }),
         new NamedChunksPlugin,
         new NamedModulesPlugin,
         new HtmlWebpackPlugin({
             template: Path.resolve(`./src/index.html`),
             filename: 'index.html',
             cordova: true,
+            host: CORDOVA_DATA_HOST
         }),
         new ExtractTextPlugin('styles.css'),
     ],
     devtool: clientConfig.devtool,
 };
 
-var configs = module.exports = [ clientConfig, serverConfig ];
+var configs = module.exports = [];
 
-var isDevServer = process.argv.find((arg) => {
-    return arg.includes('webpack-dev-server') ;
-});
-if (isDevServer) {
-    // remove server config
-    configs.pop();
+if (IS_DEV_SERVER) {
     // need HTML page
     clientConfig.plugins.push(new HtmlWebpackPlugin({
         template: Path.resolve(`./src/index.html`),
         filename: 'index.html',
     }));
-    // set data host
-    var constants = {
-        'process.env.DATA_HOST': JSON.stringify(devDataHost),
-    };
-    clientConfig.plugins.unshift(new DefinePlugin(constants));
     // config dev-server to support client-side routing
     clientConfig.devServer = {
         inline: true,
         historyApiFallback: true,
     };
+    configs.push(clientConfig);
+} else {
+    configs.push(clientConfig, serverConfig)
+    if (CORDOVA_DATA_HOST) {
+        configs.push(cordovaConfig);
+        console.log('Building for Cordova: ' + CORDOVA_DATA_HOST);
+    }
 }
 
 var constants = {};
-if (event === 'build') {
-    if (cordovaDataHost) {
-        configs.push(cordovaConfig);
-        console.log('Building for Cordova: ' + cordovaDataHost);
-    }
-
+if (EVENT === 'build') {
     console.log('Optimizing JS code');
     configs.forEach((config) => {
-        // set NODE_ENV to production
-        var dataHost = (config === cordovaConfig) ? cordovaDataHost : undefined;
-        var constants = {
-            'process.env.NODE_ENV': JSON.stringify('production'),
-            'process.env.DATA_HOST': JSON.stringify(dataHost),
-        };
-        config.plugins.unshift(new DefinePlugin(constants));
-
         // use Uglify to remove dead-code
-        config.plugins.unshift(new UglifyJSPlugin({
+        config.plugins.push(new UglifyJSPlugin({
             uglifyOptions: {
                 compress: {
                   drop_console: true,
