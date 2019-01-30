@@ -39,6 +39,12 @@ class Route {
         return this.composeURL({ path });
     }
 
+    prefetchArchiveURL(date) {
+        let url = this.getArchiveURL(date);
+        this.loadPageData(url);
+        return url;
+    }
+
     prefetchObjectURL(object) {
         let url = this.getObjectURL(object);
         this.loadPageData(url);
@@ -76,7 +82,7 @@ class Route {
         // get the site URL and see what the page's URL would be if it
         // were on WordPress itself
         let wp = new Wordpress(this.dataSource);
-        let site = await wp.fetchOne('/');
+        let site = await wp.fetchSite();
         let siteURL = _.trimEnd(site.url, '/');
         let link = _.trimEnd(siteURL + path, '/');
         let matchLink = (obj) => {
@@ -103,38 +109,38 @@ class Route {
         // see if it's pointing to a post by ID
         let postID = findPostID(path);
         if (postID) {
-            let post = await wp.fetchOne('/wp/v2/posts/', postID);
+            let post = await wp.fetchPost(postID);
             if (post) {
                 return { pageType: 'post', postSlug: post.slug, siteURL };
             }
         }
 
         // see if it's pointing to a page
-        let allPages = await wp.fetchList('/wp/v2/pages/', { minimum: '100%' });
+        let allPages = await wp.fetchPages();
         let page = _.find(allPages, matchLink);
         if (page) {
             return { pageType: 'page', pageSlug: page.slug, siteURL };
         }
 
         // see if it's pointing to a category
-        let allCategories = await wp.fetchList('/wp/v2/categories/', { minimum: '100%' });
+        let allCategories = await wp.fetchCategories();
         let category = _.find(allCategories, matchLink);
         if (category) {
             return { pageType: 'category', categorySlug: category.slug, siteURL };
         }
 
         // see if it's pointing to a popular tag
-        let topTags = await wp.fetchList('/wp/v2/tags/?orderby=count&order=desc');
+        let topTags = await wp.fetchTopTags();
         let tag = _.find(topTags, matchLink);
         if (tag) {
             return { pageType: 'tag', tagSlug: tag.slug, siteURL };
         }
 
-        // see if it's pointing to a non-so popular tag
+        // see if it's pointing to a not-so popular tag
         let slugs = _.filter(_.split(path, '/'));
         if (slugs.length >= 2 && _.includes(slugs, 'tag')) {
             let tagSlug = _.last(slugs);
-            let tag = await wp.fetchOne('/wp/v2/tags/', tagSlug);
+            let tag = await wp.fetchTag(tagSlug);
             return { pageType: 'tag', tagSlug: tag.slug, siteURL };
         }
 
@@ -144,7 +150,7 @@ class Route {
             // delete post ID in front of slug
             postSlug = postSlug.replace(/^\d+\-/, '');
         }
-        let post = await wp.fetchOne('/wp/v2/posts/', postSlug);
+        let post = await wp.fetchPost(postSlug);
         if (post) {
             return { pageType: 'post', postSlug, siteURL };
         }
@@ -157,15 +163,17 @@ class Route {
             if (params) {
                 let wp = new Wordpress(this.dataSource);
                 if (params.postSlug) {
-                    await wp.fetchOne('/wp/v2/posts/', params.postSlug);
+                    await wp.fetchPost(params.postSlug);
                 } else if (params.pageSlug) {
-                    await wp.fetchOne('/wp/v2/pages/', params.pageSlug);
+                    await wp.fetchPage(params.pageSlug);
                 } else if (params.tagSlug) {
-                    let tag = await wp.fetchOne('/wp/v2/tags/', params.tagSlug);
-                    await wp.fetchList(`/wp/v2/posts/?tags=${tag.id}`);
+                    let tag = await wp.fetchTag(params.tagSlug);
+                    await wp.fetchPostsWithTag(tag);
                 } else if (params.categorySlug) {
-                    let category = await wp.fetchOne('/wp/v2/categories/', params.categorySlug);
-                    await wp.fetchList(`/wp/v2/posts/?categories=${category.id}`);
+                    let category = await wp.fetchCategory(params.categorySlug);
+                    await wp.fetchPostsInCategory(category);
+                } else if (params.date) {
+                    await wp.fetchPostsInMonth(params.date);
                 }
             }
         } catch (err) {

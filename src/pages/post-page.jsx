@@ -17,23 +17,26 @@ class PostPage extends AsyncComponent {
         let { wp, route } = this.props;
         let { postSlug } = route.params;
         let props = { route };
-        props.post = await wp.fetchOne('/wp/v2/posts/', postSlug);
         meanwhile.show(<PostPageSync {...props} />);
-        props.categories = await this.findCategoryChain(props.post.categories);
+        props.post = await wp.fetchPost(postSlug);
         meanwhile.show(<PostPageSync {...props} />);
-        props.author = await wp.fetchOne('/wp/v2/users/', props.post.author);
+        props.categories = await this.findCategoryChain(props.post);
         meanwhile.show(<PostPageSync {...props} />);
-        props.tags = await wp.fetchMultiple('/wp/v2/tags/', props.post.tags);
+        props.author = await wp.fetchAuthor(props.post);
+        meanwhile.show(<PostPageSync {...props} />);
+        props.tags = await wp.fetchTagsOfPost(props.post);
         if (!wp.ssr) {
             meanwhile.show(<PostPageSync {...props} />);
-            props.comments = await wp.fetchList(`/wp/v2/comments/?post=${props.post.id}`);
+            props.comments = await wp.fetchComments(props.post);
         }
         return <PostPageSync {...props} />;
     }
 
-    async findCategoryChain(ids) {
+    async findCategoryChain(post) {
+        if (!post) return [];
+        let ids = post.categories;
         let { wp, route } = this.props;
-        let allCategories = await wp.fetchList('/wp/v2/categories/', { minimum: '100%' });
+        let allCategories = await wp.fetchCategories();
 
         // add categories, including their parents as well
         let applicable = [];

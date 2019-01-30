@@ -14,19 +14,11 @@ class CategoryPage extends AsyncComponent {
         let { wp, route } = this.props;
         let { categorySlug } = route.params;
         let props = { route };
-        props.category = await wp.fetchOne('/wp/v2/categories/', categorySlug);
-        props.parentCategories = [];
-        let parentID = props.category.parent;
-        while (parentID) {
-            let parentCategory = await wp.fetchOne('/wp/v2/categories/', parentID);
-            if (!parentCategory) {
-                break;
-            }
-            props.parentCategories.push(parentCategory);
-            parentID = parentCategory.parent;
-        }
         meanwhile.show(<CategoryPageSync {...props} />);
-        props.posts = await wp.fetchList(`/wp/v2/posts/?categories=${props.category.id}`);
+        props.category = await wp.fetchCategory(categorySlug);
+        props.parentCategories = await wp.fetchParentCategories(props.category);
+        meanwhile.show(<CategoryPageSync {...props} />);
+        props.posts = await wp.fetchPostsInCategory(props.category);
         return <CategoryPageSync {...props} />;
     }
 }
@@ -38,12 +30,14 @@ class CategoryPageSync extends PureComponent {
         let { route, posts, category, parentCategories } = this.props;
         let trail = [ { label: 'Categories' } ];
         let categoryLabel = _.get(category, 'name', '');
-        for (let parentCategory of parentCategories) {
-            let label = _.get(parentCategory, 'name', '');
-            let url = route.prefetchObjectURL(parentCategory);
-            trail.push({ label, url });
+        if (parentCategories) {
+            for (let parentCategory of parentCategories) {
+                let label = _.get(parentCategory, 'name', '');
+                let url = route.prefetchObjectURL(parentCategory);
+                trail.push({ label, url });
+            }
+            trail.push({ label: categoryLabel });
         }
-        trail.push({ label: categoryLabel });
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />

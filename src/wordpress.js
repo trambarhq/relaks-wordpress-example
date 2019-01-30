@@ -1,3 +1,5 @@
+import Moment from 'moment';
+
 class Wordpress {
     /**
      * Remember the data source
@@ -5,6 +7,260 @@ class Wordpress {
     constructor(dataSource, ssr) {
         this.dataSource = dataSource;
         this.ssr = ssr;
+    }
+
+    /**
+     * Fetch information about the site
+     *
+     * @return {Promise<Object>}
+     */
+    async fetchSite() {
+        return this.fetchOne('/');
+    }
+
+    /**
+     * Fetch a single post
+     *
+     * @param  {Number|String}  id
+     *
+     * @return {Promise<Object>}
+     */
+    async fetchPost(id) {
+        return this.fetchOne('/wp/v2/posts/', id);
+    }
+
+    /**
+     * Fetch all posts, latest first
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchPosts() {
+        return this.fetchList('/wp/v2/posts/');
+    }
+
+    /**
+     * Fetch posts in a category
+     *
+     * @param  {Object}  category
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchPostsInCategory(category) {
+        if (!category) return [];
+        return this.fetchList(`/wp/v2/posts/?categories=${category.id}`);
+    }
+
+    /**
+     * Fetch posts with tag
+     *
+     * @param  {Object}  tag
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchPostsWithTag(tag) {
+        if (!tag) return [];
+        return this.fetchList(`/wp/v2/posts/?tags=${tag.id}`);
+    }
+
+    /**
+     * Fetch posts published in a given month
+     *
+     * @param  {Object}  date
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchPostsInMonth(date) {
+        if (!date) return[];
+        let month = Moment(new Date(date.year, date.month - 1, 1));
+        let after = month.toISOString();
+        let before = month.clone().endOf('month').toISOString();
+        return this.fetchList(`/wp/v2/posts/?after=${after}&before=${before}`);
+    }
+
+    /**
+     * Fetch posts matching search string
+     *
+     * @param  {String}  search
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchMatchingPosts(search) {
+        let s = encodeURIComponent(_.trim(search));
+        if (!s) return [];
+        return this.fetchList(`/wp/v2/posts/?search=${s}`);
+    }
+
+    /**
+     * Get the date of the earlest post and the latest post
+     *
+     * @return {Promise<Object>}
+     */
+    async getPostDateRange() {
+        let latestPosts =  await this.fetchPosts();
+        let latestPost = _.first(latestPosts);
+        let earliestPosts = await this.fetchList(`/wp/v2/posts/?order=asc&per_page=1`)
+        let earliestPost = _.first(earliestPosts);
+        if (latestPost && earliestPost) {
+            let latest = Moment(latestPost.date_gmt);
+            let earliest = Moment(earliestPost.date_gmt);
+            return { latest, earliest };
+        }
+    }
+
+    /**
+     * Fetch a page
+     *
+     * @param  {Number|String}  id
+     *
+     * @return {Promise<Object>}
+     */
+    async fetchPage(id) {
+        return this.fetchOne('/wp/v2/pages/', id);
+    }
+
+    /**
+     * Fetch all pages
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchPages() {
+        return this.fetchList('/wp/v2/pages/', { minimum: '100%' });
+    }
+
+    /**
+     * Fetch a page's parents
+     *
+     * @param  {Object}  page
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchParentPages(page) {
+        if (!page) return [];
+        let parentPages = [];
+        let parentID = page.parent;
+        while (parentID) {
+            let parentPage = await this.fetchPage(parentID);
+            if (!parentPage) {
+                break;
+            }
+            parentPages.push(parentPage);
+            parentID = parentPage.parent;
+        }
+        return parentPages;
+    }
+
+    /**
+     * Fetch a page's children
+     *
+     * @param  {Object}  page
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchChildPages(page) {
+        if (!page) return [];
+        let pages = await this.fetchPages();
+        let childPages = _.filter(pages, { parent: page.id });
+        childPages.more = () => {};
+        childPages.total = childPages.length;
+        return childPages;
+    }
+
+    /**
+     * Fetch a category
+     *
+     * @param  {Number|String}  id
+     *
+     * @return {Promise<Object>}
+     */
+    async fetchCategory(id) {
+        return this.fetchOne(`/wp/v2/categories/`, id);
+    }
+
+    /**
+     * Fetch all categories
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchCategories() {
+        return this.fetchList(`/wp/v2/categories/`, { minimum: '100%' });
+    }
+
+    /**
+     * Fetch parents of a category
+     *
+     * @param  {Object}  category
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchParentCategories(category) {
+        if (!category) return [];
+        let parentCategories = [];
+        let parentID = category.parent;
+        while (parentID) {
+            let parentCategory = await wp.fetchCategory(parentID);
+            if (!parentCategory) {
+                break;
+            }
+            parentCategories.push(parentCategory);
+            parentID = parentCategory.parent;
+        }
+        return parentCategories;
+    }
+
+    /**
+     * Fetch a single tag
+     *
+     * @param  {Number|String}  id
+     *
+     * @return {Promise<Object>}
+     */
+    async fetchTag(id) {
+        return this.fetchOne(`/wp/v2/tags/`, id);
+    }
+
+    /**
+     * Fetch tags, popular ones listed first
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchTopTags() {
+        return this.fetchList(`/wp/v2/tags/?orderby=count&order=desc`);
+    }
+
+    /**
+     * Fetch tags attach to a post
+     *
+     * @param  {Object}  post
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchTagsOfPost(post) {
+        if (!post) return [];
+        return this.fetchMultiple(`/wp/v2/tags/`, post.tags);
+    }
+
+    /**
+     * Fetch author of a post or page
+     *
+     * @param  {Object}  post
+     *
+     * @return {Promise<Object>}
+     */
+    async fetchAuthor(post) {
+        if (!post) return null;
+        return this.fetchOne(`/wp/v2/users/`, post.author);
+    }
+
+    /**
+     * Fetch comments on a post
+     *
+     * @param  {Object}  post
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchComments(post) {
+        if (!post) return [];
+        return this.fetchList(`/wp/v2/comments/?post=${post.id}`);
     }
 
     /**
@@ -16,7 +272,7 @@ class Wordpress {
      *
      * @return {Promise<Object>}
      */
-    fetchOne(url, id, options) {
+    async fetchOne(url, id, options) {
         return this.dataSource.fetchOne(url, id, options);
     }
 
@@ -28,24 +284,11 @@ class Wordpress {
      *
      * @return {Promise<Array>}
      */
-    fetchList(url, options) {
+    async fetchList(url, options) {
         if (this.ssr === 'seo') {
             options = Object.assign({}, options, { minimum: '100%' });
         }
         return this.dataSource.fetchList(url, options);
-    }
-
-    /**
-     * Fetch a page of records from data source
-     *
-     * @param  {String} url
-     * @param  {Number} page
-     * @param  {Object} options
-     *
-     * @return {Promise<Object>}
-     */
-    fetchPage(url, page, options) {
-        return this.dataSource.fetchPage(url, 1, options);
     }
 
     /**
@@ -57,7 +300,7 @@ class Wordpress {
      *
      * @return {Promise<Array>}
      */
-    fetchMultiple(url, ids, options) {
+    async fetchMultiple(url, ids, options) {
         if (this.ssr === 'seo') {
             options = Object.assign({}, options, { minimum: '100%' });
         }

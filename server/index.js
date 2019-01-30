@@ -51,8 +51,8 @@ async function handleTimestampRequest(req, res, next) {
 }
 
 async function handleFavIconRequest(req, res, next) {
-    let error = new Error('Not found');
-    error.status = 404;
+    let err = new Error('Not found');
+    err.status = 404;
     next(err);
 }
 

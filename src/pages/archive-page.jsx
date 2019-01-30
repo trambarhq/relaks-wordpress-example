@@ -13,12 +13,9 @@ class ArchivePage extends AsyncComponent {
     async renderAsync(meanwhile) {
         let { wp, route } = this.props;
         let { date } = route.params;
-        let month = Moment(`${date.year}-${_.padStart(date.month, 2, '0')}`);
-        let props = { route, month };
-        let after = month.toISOString();
-        let before = month.clone().endOf('month').toISOString();
-        let url = `/wp/v2/posts/?after=${after}&before=${before}`;
-        props.posts = await wp.fetchList(url);
+        let props = { route };
+        meanwhile.show(<ArchivePageSync {...props} />);
+        props.posts = await wp.fetchPostsInMonth(date);
         return <ArchivePageSync {...props} />;
     }
 }
@@ -27,7 +24,9 @@ class ArchivePageSync extends PureComponent {
     static displayName = 'ArchivePageSync';
 
     render() {
-        let { route, posts, month } = this.props;
+        let { route, posts } = this.props;
+        let { date } = route.params;
+        let month = Moment(new Date(date.year, date.month, 1));
         let monthLabel = month.format('MMMM YYYY');
         let trail = [ { label: 'Archives' }, { label: monthLabel } ];
         return (

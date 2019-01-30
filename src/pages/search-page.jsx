@@ -13,13 +13,8 @@ class SearchPage extends AsyncComponent {
         let { wp, route } = this.props;
         let { search } = route.params;
         let props = { route };
-        props.categories = await wp.fetchList('/wp/v2/categories/');
-        if (search) {
-            let s = encodeURIComponent(search);
-            props.posts = await wp.fetchList(`/wp/v2/posts/?search=${s}`);
-        } else {
-            props.posts = null;
-        }
+        meanwhile.show(<SearchPageSync {...props} />);
+        props.posts = await fetchMatchingPosts(search);
         return <SearchPageSync {...props} />;
     }
 }
@@ -28,21 +23,23 @@ class SearchPageSync extends PureComponent {
     static displayName = 'SearchPageSync';
 
     render() {
-        let { route, categories, posts } = this.props;
+        let { route, posts } = this.props;
         let { search } = route.params;
         let trail = [ { label: 'Search' } ];
         if (posts) {
             let count = posts.total;
-            let s = (count === 1) ? '' : 's';
-            let msg = `${count} matching article${s}`;
-            trail.push({ label: msg });
-        } else if (search) {
+            if (typeof(count) === 'number') {
+                let s = (count === 1) ? '' : 's';
+                let msg = `${count} matching article${s}`;
+                trail.push({ label: msg });
+            }
+        } else {
             trail.push({ label: '...' });
         }
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
-                <PostList categories={categories} route={route} posts={posts} minimum={40} />
+                <PostList route={route} posts={posts} minimum={40} />
             </div>
         );
     }

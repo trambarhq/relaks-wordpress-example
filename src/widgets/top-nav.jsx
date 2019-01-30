@@ -13,9 +13,9 @@ class TopNav extends AsyncComponent {
             route,
         };
         meanwhile.show(<TopNavSync {...props} />);
-        props.system = await wp.fetchOne('/');
+        props.site = await wp.fetchSite();
         meanwhile.show(<TopNavSync {...props} />);
-        props.pages = await wp.fetchList('/wp/v2/pages/', { minimum: '100%' });
+        props.pages = await wp.fetchPages();
         return <TopNavSync {...props} />;
     }
 }
@@ -43,9 +43,9 @@ class TopNavSync extends PureComponent {
     }
 
     renderTitleBar() {
-        let { route, system } = this.props;
-        let name = _.get(system, 'name', '');
-        let description = _.get(system, 'description', '');
+        let { route, site } = this.props;
+        let name = _.get(site, 'name', '');
+        let description = _.get(site, 'description', '');
         let url = route.getRootURL();
         return (
             <div className="title-bar">
@@ -129,7 +129,7 @@ class TopNavSync extends PureComponent {
 }
 
 TopNavSync.defaultProps = {
-    system: {},
+    site: {},
     pages: [],
     search: '',
 };
@@ -142,7 +142,7 @@ if (process.env.NODE_ENV !== 'production') {
         route: PropTypes.instanceOf(Route).isRequired,
     };
     TopNavSync.propTypes = {
-        system: PropTypes.object,
+        site: PropTypes.object,
         pages: PropTypes.arrayOf(PropTypes.object),
         route: PropTypes.instanceOf(Route).isRequired,
     };

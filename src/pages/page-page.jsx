@@ -16,19 +16,11 @@ class PagePage extends AsyncComponent {
         let { wp, route } = this.props;
         let { pageSlug } = route.params;
         let props = { route };
-        let pages = await wp.fetchList(`/wp/v2/pages/`, { minimum: '100%' });
-        props.page = _.find(pages, { slug: pageSlug });
-        props.parentPages = [];
-        let parentID = props.page.parent;
-        while (parentID) {
-            let parentPage = _.find(pages, { id: parentID });
-            if (!parentPage) {
-                break;
-            }
-            props.parentPages.push(parentPage);
-            parentID = parentPage.parent;
-        }
-        props.childPages = _.find(pages, { parent: props.page.id });
+        meanwhile.show(<PagePageSync {...props} />);
+        props.page = await wp.fetchPage(pageSlug);
+        props.parentPages = await wp.fetchParentPages(props.page);
+        meanwhile.show(<PagePageSync {...props} />);
+        props.childPages = await wp.fetchChildPages(props.page);
         return <PagePageSync {...props} />;
     }
 }
@@ -37,12 +29,14 @@ class PagePageSync extends PureComponent {
     static displayName = 'PagePageSync';
 
     render() {
-        let { route, page, parentPages, childPages, transform } = this.props;
+        let { route, page, parentPages, childPages } = this.props;
         let trail = [];
-        for (let parentPage of parentPages) {
-            let title = _.get(parentPage, 'title.rendered', '');
-            let url = route.prefetchObjectURL(parentPage);
-            trail.push({ label: <HTML text={title} />, url })
+        if (parentPages) {
+            for (let parentPage of parentPages) {
+                let title = _.get(parentPage, 'title.rendered', '');
+                let url = route.prefetchObjectURL(parentPage);
+                trail.push({ label: <HTML text={title} />, url })
+            }
         }
         return (
             <div className="page">

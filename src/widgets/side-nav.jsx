@@ -28,25 +28,21 @@ class SideNav extends AsyncComponent {
         meanwhile.show(<SideNavSync {...props} />);
 
         // get all categories
-        props.categories = await wp.fetchList('/wp/v2/categories/', { minimum: '100%' });
+        props.categories = await wp.fetchCategories();
         meanwhile.show(<SideNavSync {...props} />);
 
         // get top tags
-        props.tags = await wp.fetchList('/wp/v2/tags/?orderby=count&order=desc');
+        props.tags = await wp.fetchTopTags();
         meanwhile.show(<SideNavSync {...props} />);
 
-        // get the latest post and the earliest post and build the list of archives
-        let latestPosts =  await wp.fetchList('/wp/v2/posts/');
-        let latestPost = _.first(latestPosts);
-        let earliestPosts = await wp.fetchList(`/wp/v2/posts/?order=asc&per_page=1`)
-        let earliestPost = _.first(earliestPosts);
+        // get the date range of posts and use that to build the list of
+        // years and months
+        let range = await wp.getPostDateRange();
         props.archives = [];
-        if (latestPost && earliestPost) {
-            let lastPostDate = Moment(latestPost.date_gmt);
-            let firstPostDate = Moment(earliestPost.date_gmt);
+        if (range) {
             // loop through the years
-            let lastYear = lastPostDate.year();
-            let firstYear = firstPostDate.year();
+            let lastYear = range.latest.year();
+            let firstYear = range.earliest.year();
             for (let y = lastYear; y >= firstYear; y--) {
                 let yearEntry = {
                     year: y,
@@ -56,21 +52,15 @@ class SideNav extends AsyncComponent {
                 props.archives.push(yearEntry);
 
                 // loop through the months
-                let lastMonth = (y === lastYear) ? lastPostDate.month() : 11;
-                let firstMonth = (y === firstYear) ? firstPostDate.month() : 0;
+                let lastMonth = (y === lastYear) ? range.latest.month() : 11;
+                let firstMonth = (y === firstYear) ? range.earliest.month() : 0;
                 for (let m = lastMonth; m >= firstMonth; m--) {
                     let start = Moment(new Date(y, m, 1));
                     let end = start.clone().endOf('month');
                     let monthEntry = {
+                        year: y,
                         month: m + 1,
                         label: start.format('MMMM'),
-                        date: {
-                            year: start.year(),
-                            month: start.month() + 1,
-                        },
-                        post: undefined,
-                        start,
-                        end,
                     };
                     yearEntry.months.push(monthEntry);
                 }
@@ -85,9 +75,7 @@ class SideNav extends AsyncComponent {
                 for (let yearEntry of props.archives) {
                     if (yearEntry.year === selectedYear) {
                         for (let monthEntry of yearEntry.months) {
-                            let after = monthEntry.start.toISOString();
-                            let before = monthEntry.end.toISOString();
-                            let posts = await wp.fetchList(`/wp/v2/posts/?after=${after}&before=${before}`);
+                            let posts = await wp.fetchPostsInMonth(monthEntry);
                             props.postLists = _.concat(props.postLists, { monthEntry, posts });
                             meanwhile.show(<SideNavSync {...props} />);
                         }
@@ -97,7 +85,7 @@ class SideNav extends AsyncComponent {
                 // load the posts of each category
                 for (let category of props.categories) {
                     if (category.count > 0) {
-                        let posts = await wp.fetchList(`/wp/v2/posts/?categories=${category.id}`);
+                        let posts = await wp.fetchPostsInCategory(category);
                         props.postLists = _.concat(props.postLists, { category, posts });
                         meanwhile.show(<SideNavSync {...props} />);
                     }
@@ -106,7 +94,7 @@ class SideNav extends AsyncComponent {
                 // load the posts of each tag
                 for (let tag of props.tags) {
                     if (tag.count > 0) {
-                        let posts = await wp.fetchList(`/wp/v2/posts/?tags=${tag.id}`);
+                        let posts = await wp.fetchPostsWithTag(tag);
                         props.postLists = _.concat(props.postLists, { tag, posts });
                         meanwhile.show(<SideNavSync {...props} />);
                     }
@@ -307,16 +295,18 @@ class SideNavSync extends PureComponent {
     }
 
     renderMonth(monthEntry, i) {
-        let { route, postLists } = this.props;
+        let { route, postLists, selectedYear } = this.props;
         let { date } = route.params;
-        let url = route.getArchiveURL(monthEntry.date);
-        let postList = _.find(postLists, { monthEntry });
-        if (postList && _.isEmpty(postList.posts)) {
-            url = undefined;
-        }
-        let className;
-        if (_.isEqual(monthEntry.date, date)) {
-            className = 'selected';
+        let className, url;
+        if (monthEntry.year === selectedYear) {
+            let postList = _.find(postLists, { monthEntry });
+            if (!postList || !_.isEmpty(postList.posts)) {
+                url = route.prefetchArchiveURL(monthEntry);
+            }
+
+            if (date && monthEntry.month === date.month) {
+                className = 'selected';
+            }
         }
         return (
             <li key={i}>
