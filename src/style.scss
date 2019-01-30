@@ -277,12 +277,48 @@ A {
         }
 
         .post-list-view {
-            .date {
-                float: right;
-                margin-left: 1em;
+            margin-top: 1em;
+
+            .headline {
+                display: flex;
+                margin-bottom: 0.35em;
+
+                .title {
+                    flex: 1 1 auto;
+                    margin-top: 0;
+                    margin-bottom: 0;
+                }
+
+                .date {
+                    flex: 0 0 6em;
+                    text-align: right;
+                }
             }
+
             .excerpt {
-                margin-top: -0.7em;
+                P {
+                    margin-top: 0;
+                    margin-bottom: 0;
+                }
+            }
+
+            &.with-media {
+                display: flex;
+
+                .media {
+                    flex: 0 0 110px;
+
+                    IMG {
+                        border: 1px solid #333333;
+                        box-sizing: content-box;
+                        width: 100px;
+                        height: 100px;
+                    }
+                }
+
+                .text {
+                    flex: 1 1 auto;
+                }
             }
         }
 
@@ -379,6 +415,14 @@ A {
     }
 }
 
+.error-boundary {
+    color: red;
+    font-size: 2em;
+    border: 3px double red;
+    text-align: center;
+    padding: 0.5em;
+}
+
 @media only screen and (max-width: 800px) {
     .page-container {
         transition: margin-left 0.3s;
@@ -440,7 +484,56 @@ A {
         .side-collapsed & {
             margin-right: 0;
         }
+
+        .page, .post {
+            max-width: none;
+
+            .meta {
+                float: none;
+                text-align: left;
+                margin-left: 0;
+                margin-top: 0;
+                overflow: hidden;
+
+                .date {
+                    float: left;
+                }
+
+                .author {
+                    float: right;
+                    margin-top: 0;
+                }
+            }
+
+            .post-list-view {
+                .headline {
+                    display: block;
+
+                    .date {
+                        text-align: left;
+                        margin-top: 0.5em;
+                    }
+                }
+
+                &.with-media {
+                    display: block;
+
+                    .media {
+                        display: none;
+                    }
+
+                    .text {
+                        flex: 1 1 auto;
+                    }
+                }
+            }
+        }
     }
+}
+
+IFRAME {
+    max-width: 100%;
+    height: auto;
 }
 
 @media only screen and (max-width: 400px) {

@@ -14,7 +14,7 @@ class SearchPage extends AsyncComponent {
         let { search } = route.params;
         let props = { route };
         meanwhile.show(<SearchPageSync {...props} />);
-        props.posts = await fetchMatchingPosts(search);
+        props.posts = await wp.fetchMatchingPosts(search);
         return <SearchPageSync {...props} />;
     }
 }
@@ -39,7 +39,7 @@ class SearchPageSync extends PureComponent {
         return (
             <div className="page">
                 <Breadcrumb trail={trail} />
-                <PostList route={route} posts={posts} minimum={40} />
+                <PostList route={route} posts={posts} minimum={40} maximum={1000} />
             </div>
         );
     }

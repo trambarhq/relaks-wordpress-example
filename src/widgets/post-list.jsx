@@ -9,7 +9,7 @@ class PostList extends PureComponent {
     static displayName = 'PostList'
 
     render() {
-        let { route, posts } = this.props;
+        let { route, posts, medias } = this.props;
         if (!posts) {
             return null;
         }
@@ -17,11 +17,12 @@ class PostList extends PureComponent {
             <div className="posts">
             {
                 posts.map((post) => {
-                    return <PostListView route={route} post={post} key={post.id} />
+                    let media = _.find(medias, { id: post.featured_media });
+                    return <PostListView route={route} post={post} media={media} key={post.id} />
                 })
             }
             </div>
-        )
+        );
     }
 
     componentDidMount() {
@@ -53,7 +54,7 @@ class PostList extends PureComponent {
 
 PostList.defaultProps = {
     minimum: 20,
-    maximum: 5000,
+    maximum: 500,
 };
 
 if (process.env.NODE_ENV !== 'production') {
@@ -61,6 +62,7 @@ if (process.env.NODE_ENV !== 'production') {
 
     PostList.propTypes = {
         posts: PropTypes.arrayOf(PropTypes.object),
+        medias: PropTypes.arrayOf(PropTypes.object),
         route: PropTypes.instanceOf(Route),
         minimum: PropTypes.number,
         maximum: PropTypes.number,

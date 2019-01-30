@@ -264,6 +264,27 @@ class Wordpress {
     }
 
     /**
+     * Fetch featured media of posts
+     *
+     * @param  {Array<Object>}  ids
+     * @param  {Number} count
+     *
+     * @return {Promise<Array<Object>>}
+     */
+    async fetchFeaturedMedias(posts, count) {
+        let ids = [];
+        for (let post of posts) {
+            if (post.featured_media) {
+                ids.push(post.featured_media);
+                if (ids.length >= count) {
+                    break;
+                }
+            }
+        }
+        return this.fetchMultiple(`/wp/v2/media`, ids);
+    }
+
+    /**
      * Fetch one object from data source
      *
      * @param  {String} url

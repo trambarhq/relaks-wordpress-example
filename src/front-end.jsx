@@ -1,12 +1,14 @@
 import React, { PureComponent } from 'react';
 import Wordpress from 'wordpress';
 import { Route } from 'routing';
-import SideNav from 'widgets/side-nav';
-import TopNav from 'widgets/top-nav';
 import 'style.scss';
 import '@fortawesome/fontawesome-free/scss/fontawesome.scss';
 import '@fortawesome/fontawesome-free/scss/regular.scss';
 import '@fortawesome/fontawesome-free/scss/solid.scss';
+
+import SideNav from 'widgets/side-nav';
+import TopNav from 'widgets/top-nav';
+import ErrorBoundary from 'widgets/error-boundary';
 
 class FrontEnd extends PureComponent {
     static displayName = 'FrontEnd';
@@ -42,11 +44,13 @@ class FrontEnd extends PureComponent {
         let key = route.url;
         return (
             <div className={classNames.join(' ')}>
-                <SideNav route={route} wp={wp} />
-                <TopNav route={route} wp={wp} />
-                <div className="page-container">
-                    <PageComponent route={route} wp={wp} key={key} />
-                </div>
+                <ErrorBoundary>
+                    <SideNav route={route} wp={wp} />
+                    <TopNav route={route} wp={wp} />
+                    <div className="page-container">
+                        <PageComponent route={route} wp={wp} key={key} />
+                    </div>
+                </ErrorBoundary>
                 <div id="overlay" />
             </div>
         );

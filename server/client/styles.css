@@ -182,11 +182,32 @@ A:link, A:visited {
       margin-top: 0.4em; }
       .page-container .page .meta .author, .page-container .post .meta .author {
         margin-top: 0.25em; }
-    .page-container .page .post-list-view .date, .page-container .post .post-list-view .date {
-      float: right;
-      margin-left: 1em; }
-    .page-container .page .post-list-view .excerpt, .page-container .post .post-list-view .excerpt {
-      margin-top: -0.7em; }
+    .page-container .page .post-list-view, .page-container .post .post-list-view {
+      margin-top: 1em; }
+      .page-container .page .post-list-view .headline, .page-container .post .post-list-view .headline {
+        display: flex;
+        margin-bottom: 0.35em; }
+        .page-container .page .post-list-view .headline .title, .page-container .post .post-list-view .headline .title {
+          flex: 1 1 auto;
+          margin-top: 0;
+          margin-bottom: 0; }
+        .page-container .page .post-list-view .headline .date, .page-container .post .post-list-view .headline .date {
+          flex: 0 0 6em;
+          text-align: right; }
+      .page-container .page .post-list-view .excerpt P, .page-container .post .post-list-view .excerpt P {
+        margin-top: 0;
+        margin-bottom: 0; }
+      .page-container .page .post-list-view.with-media, .page-container .post .post-list-view.with-media {
+        display: flex; }
+        .page-container .page .post-list-view.with-media .media, .page-container .post .post-list-view.with-media .media {
+          flex: 0 0 110px; }
+          .page-container .page .post-list-view.with-media .media IMG, .page-container .post .post-list-view.with-media .media IMG {
+            border: 1px solid #333333;
+            box-sizing: content-box;
+            width: 100px;
+            height: 100px; }
+        .page-container .page .post-list-view.with-media .text, .page-container .post .post-list-view.with-media .text {
+          flex: 1 1 auto; }
     .page-container .page .comments, .page-container .post .comments {
       font-size: 0.9em;
       padding-left: 1.5em; }
@@ -253,6 +274,13 @@ A:link, A:visited {
       top: 0.35em;
       cursor: pointer; }
 
+.error-boundary {
+  color: red;
+  font-size: 2em;
+  border: 3px double red;
+  text-align: center;
+  padding: 0.5em; }
+
 @media only screen and (max-width: 800px) {
   .page-container {
     transition: margin-left 0.3s;
@@ -287,7 +315,35 @@ A:link, A:visited {
     width: calc(100% - 1em);
     max-width: none; }
     .side-collapsed .page-container {
-      margin-right: 0; } }
+      margin-right: 0; }
+    .page-container .page, .page-container .post {
+      max-width: none; }
+      .page-container .page .meta, .page-container .post .meta {
+        float: none;
+        text-align: left;
+        margin-left: 0;
+        margin-top: 0;
+        overflow: hidden; }
+        .page-container .page .meta .date, .page-container .post .meta .date {
+          float: left; }
+        .page-container .page .meta .author, .page-container .post .meta .author {
+          float: right;
+          margin-top: 0; }
+      .page-container .page .post-list-view .headline, .page-container .post .post-list-view .headline {
+        display: block; }
+        .page-container .page .post-list-view .headline .date, .page-container .post .post-list-view .headline .date {
+          text-align: left;
+          margin-top: 0.5em; }
+      .page-container .page .post-list-view.with-media, .page-container .post .post-list-view.with-media {
+        display: block; }
+        .page-container .page .post-list-view.with-media .media, .page-container .post .post-list-view.with-media .media {
+          display: none; }
+        .page-container .page .post-list-view.with-media .text, .page-container .post .post-list-view.with-media .text {
+          flex: 1 1 auto; } }
+
+IFRAME {
+  max-width: 100%;
+  height: auto; }
 
 @media only screen and (max-width: 400px) {
   .top-nav .search-bar {

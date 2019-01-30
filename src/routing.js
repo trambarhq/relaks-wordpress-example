@@ -41,13 +41,13 @@ class Route {
 
     prefetchArchiveURL(date) {
         let url = this.getArchiveURL(date);
-        this.loadPageData(url);
+        setTimeout(() => { this.loadPageData(url) }, 50);
         return url;
     }
 
     prefetchObjectURL(object) {
         let url = this.getObjectURL(object);
-        this.loadPageData(url);
+        setTimeout(() => { this.loadPageData(url) }, 50);
         return url;
     }
 
@@ -141,7 +141,9 @@ class Route {
         if (slugs.length >= 2 && _.includes(slugs, 'tag')) {
             let tagSlug = _.last(slugs);
             let tag = await wp.fetchTag(tagSlug);
-            return { pageType: 'tag', tagSlug: tag.slug, siteURL };
+            if (tag) {
+                return { pageType: 'tag', tagSlug: tag.slug, siteURL };
+            }
         }
 
         // see if it's pointing to a post
