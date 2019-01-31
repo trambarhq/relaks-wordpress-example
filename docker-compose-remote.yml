@@ -19,7 +19,7 @@ services:
       - node
     image: nginx:latest
     volumes:
-      - ./server/nginx-ext:/etc/nginx/conf.d
+      - ./server/nginx-remote:/etc/nginx/conf.d
       - web_cache:/var/cache/nginx
     networks:
       network:

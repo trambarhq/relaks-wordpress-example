@@ -52,14 +52,10 @@ class Route {
     }
 
     composeURL(urlParts) {
-        let context = _.clone(this.routeManager.context);
+        let context = this.routeManager.context;
         this.routeManager.rewrite('to', urlParts, context);
         let url = this.routeManager.compose(urlParts);
-        if (this.routeManager.options.useHashFallback) {
-            if (url != undefined) {
-                url = '#' + url;
-            }
-        }
+        url = this.routeManager.applyFallback(url);
         return url;
     }
 
@@ -161,6 +157,8 @@ class Route {
     async loadPageData(url) {
         try {
             let urlParts = this.routeManager.parse(url);
+            let context = {};
+            this.routeManager.rewrite('from', urlParts, context);
             let params = await this.getParameters(urlParts.path, urlParts.query);
             if (params) {
                 let wp = new Wordpress(this.dataSource);

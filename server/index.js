@@ -70,7 +70,7 @@ async function handleCacheStatusRequest(req, res, next) {
             total += size;
         }
         let totalMB = _.round(total / 1024 / 1024, 2);
-        res.write(`<tr><td colspan="2">Total</td><td>${totalMB}MB</td></tr>`)
+        res.write(`<tr><td colspan="3">Total</td><td>${totalMB}MB</td></tr>`)
         res.write(`</tbody>`);
         res.write(`</table>`);
         res.write(`</body></html>`);
