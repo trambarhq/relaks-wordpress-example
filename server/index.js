@@ -21,6 +21,7 @@ let dnsCache = Bluebird.promisifyAll(DNSCache({
 
 const SERVER_PORT = 80;
 const WORDPRESS_HOST = process.env.WORDPRESS_HOST;
+const CACHE_CONTROL = 'public,s-maxage=604800';
 
 // start up Express
 let app = Express();
@@ -44,6 +45,7 @@ async function handleTimestampRequest(req, res, next) {
     try {
         let now = new Date;
         let ts = now.toISOString();
+        res.set({ 'Cache-Control': CACHE_CONTROL });
         res.type('text').send(ts);
     } catch (err) {
         next(err);
@@ -56,15 +58,15 @@ async function handleCacheStatusRequest(req, res, next) {
         res.type('html');
         res.write(`<html><head><title>Nginx Cache</title></head><body>`);
         res.write(`<table border="1" cellpadding="2">`);
-        res.write(`<thead><th>URL</th><th>Modified time</th><th>Size</th></thead>`);
+        res.write(`<thead><th>URL</th><th>MD5</th><th>Modified time</th><th>Size</th></thead>`);
         res.write(`<tbody>`);
         let entries = await NginxCache.read();
         let total = 0;
         for (let entry of _.orderBy(entries, 'mtime', 'desc')) {
-            let { url, mtime, size } = entry;
-            let date = Moment(mtime).format('LLLL');
+            let { url, md5, mtime, size } = entry;
+            let date = Moment(mtime).format('LLL');
             let sizeKB = _.round(size / 1024, 2);
-            res.write(`<tr><td>${url}</td><td>${date}</td><td>${sizeKB}KB</td></tr>`)
+            res.write(`<tr><td>${url}</td><td>${md5}</td><td>${date}</td><td>${sizeKB}KB</td></tr>`)
             total += size;
         }
         let totalMB = _.round(total / 1024 / 1024, 2);
@@ -87,6 +89,7 @@ async function handleJSONRequest(req, res, next) {
         if (json.total) {
             res.set({ 'X-WP-Total': json.total });
         }
+        res.set({ 'Cache-Control': CACHE_CONTROL });
         res.send(json.text);
     } catch (err) {
         next(err);
@@ -110,6 +113,8 @@ async function handlePageRequest(req, res, next) {
             // not caching content generated for SEO
             res.set({ 'X-Accel-Expires': 0 });
         } else {
+            res.set({ 'Cache-Control': CACHE_CONTROL });
+
             // remember the URLs used by the page
             pageDependencies[path] = page.sourceURLs.map(addTrailingSlash);
         }

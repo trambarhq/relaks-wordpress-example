@@ -12,11 +12,13 @@ async function fetch(path) {
         object = JSON.parse(resText);
     } catch (err) {
         // remove any error msg that got dumped into the output stream
-        resText = resText.replace(/^[^\{\[]+/, '');
-        object = JSON.parse(resText);
+        if (res.status === 200) {
+            resText = resText.replace(/^[^\{\[]+/, '');
+            object = JSON.parse(resText);
+        }
     }
     if (res.status >= 400) {
-        let msg = (object && object.message) ? object.message : 'Unknown error';
+        let msg = (object && object.message) ? object.message : resText;
         let err = new Error(msg);
         err.status = res.status;
         throw err;
