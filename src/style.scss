@@ -39,7 +39,8 @@ A {
         margin-right: -0.4em;
         text-shadow: 0 0 0 #fff;
         cursor: pointer;
-        transition: text-shadow 1s, color 1s;
+        transition: text-shadow 1s, color 1s, opacity 0.5s;
+        color: #cccccc;
 
         &:link, &:visited {
             color: #cccccc;
@@ -59,6 +60,10 @@ A {
         &.disabled {
             opacity: 0.5;
             cursor: default;
+
+            &:hover {
+                opacity: 0.5 !important;
+            }
         }
 
         &.highlighted {

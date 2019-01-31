@@ -152,6 +152,13 @@ class Route {
         if (post) {
             return { pageType: 'post', postSlug, siteURL };
         }
+
+        // see if it's pointing to a tag when no prefix is used
+        let tagSlug = _.last(slugs);
+        tag = await wp.fetchTag(tagSlug);
+        if (tag) {
+            return { pageType: 'tag', tagSlug: tag.slug, siteURL };
+        }
     }
 
     async loadPageData(url) {
@@ -186,6 +193,7 @@ class Route {
             let { siteURL } = this.params;
             let siteURLInsecure = 'http:' + siteURL.substr(6);
             if (node.name === 'a') {
+                node.attribs.href = _.trim(node.attribs.href);
                 if (node.attribs.href) {
                     if (!_.startsWith(node.attribs.href, '/')) {
                         if (_.startsWith(node.attribs.href, siteURL)) {

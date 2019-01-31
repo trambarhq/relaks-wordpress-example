@@ -9,7 +9,7 @@ class MediaView extends PureComponent {
         let { media, size } = this.props;
         let info = _.get(media, [ 'media_details', 'sizes', size ]);
         if (!info) {
-            return;
+            info = media;
         }
         let props = {
             src: info.source_url,
