@@ -6,9 +6,7 @@ services:
       - db_data:/var/lib/mysql
     networks:
       network:
-        ipv4_address: 172.129.0.2
-    ports:
-      - 3306:3306
+        ipv4_address: 172.130.0.2
     environment:
       MYSQL_ROOT_PASSWORD: somewordpress
       MYSQL_DATABASE: wordpress
@@ -21,13 +19,13 @@ services:
     image: wordpress:latest
     networks:
       network:
-        ipv4_address: 172.129.0.3
+        ipv4_address: 172.130.0.3
     environment:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
     restart: always
-  node:
+  node_pfj:
     depends_on:
       - wordpress
     image: node:8
@@ -36,26 +34,59 @@ services:
       - web_cache:/var/cache/nginx
     networks:
       network:
-        ipv4_address: 172.129.0.4
+        ipv4_address: 172.130.0.4
     environment:
       WORDPRESS_HOST: http://wordpress
       NGINX_HOST: http://nginx
-      NGINX_CACHE: /var/cache/nginx/data
+      NGINX_CACHE: /var/cache/nginx/data_pfj
+      EXTERNAL_HOST: http://pfj.trambar.io
+    command: [ node, /opt/example/server/index.js ]
+    restart: always
+  node_et:
+    image: node:8
+    volumes:
+      - .:/opt/example
+      - web_cache:/var/cache/nginx
+    networks:
+      network:
+        ipv4_address: 172.130.0.5
+    environment:
+      WORDPRESS_HOST: https://www.extremetech.com
+      NGINX_HOST: http://nginx
+      NGINX_CACHE: /var/cache/nginx/data_et
+      EXTERNAL_HOST: http://et.trambar.io
+    command: [ node, /opt/example/server/index.js ]
+    restart: always
+  node_rwt:
+    image: node:8
+    volumes:
+      - .:/opt/example
+      - web_cache:/var/cache/nginx
+    networks:
+      network:
+        ipv4_address: 172.130.0.6
+    environment:
+      WORDPRESS_HOST: https://realworldtech.com
+      NGINX_HOST: http://nginx
+      NGINX_CACHE: /var/cache/nginx/data_rwt
+      EXTERNAL_HOST: http://rwt.trambar.io
     command: [ node, /opt/example/server/index.js ]
     restart: always
   nginx:
     depends_on:
       - wordpress
-      - node
+      - node_pfj
+      - node_et
+      - node_rwt
     image: nginx:latest
     volumes:
       - ./server/nginx:/etc/nginx/conf.d
       - web_cache:/var/cache/nginx
     networks:
       network:
-        ipv4_address: 172.129.0.5
+        ipv4_address: 172.130.0.10
     ports:
-      - 8000:80
+      - 80:80
     restart: always
 volumes:
   db_data:
@@ -65,5 +96,5 @@ networks:
     driver: bridge
     ipam:
      config:
-       - subnet: 172.129.0.0/16
-         gateway: 172.129.0.1
+       - subnet: 172.130.0.0/16
+         gateway: 172.130.0.1

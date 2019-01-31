@@ -9,9 +9,6 @@
     "start-server": "docker-compose -p example -f docker-compose.yml up -d",
     "stop-server": "docker-compose -p example -f docker-compose.yml down",
     "remove-server": "docker-compose -p example -f docker-compose.yml down -v",
-    "start-server-remote": "docker-compose -p remote -f docker-compose-remote.yml up -d",
-    "stop-server-remote": "docker-compose -p remote -f docker-compose-remote.yml down",
-    "remove-server-remote": "docker-compose -p remote -f docker-compose-remote.yml down -v",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
