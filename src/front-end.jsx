@@ -82,7 +82,11 @@ class FrontEnd extends PureComponent {
         if (prevState.route !== route) {
             if (!(prevState.route.history.length < route.history.length)) {
                 // not going backward
-                document.body.parentElement.scrollTop = 0;
+                if (document.body.parentElement.scrollTop > 0) {
+                    document.body.parentElement.scrollTop = 0;
+                } else if (document.body.scrollTop > 0) {
+                    document.body.scrollTop = 0;
+                }
             }
         }
     }

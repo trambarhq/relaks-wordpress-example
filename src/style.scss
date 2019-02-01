@@ -136,7 +136,7 @@ A {
         align-items: center;
         color: #ffffff;
         background-color: #990000;
-        height: 8em;
+        height: 4em;
         transition: height 0.5s;
 
         A:link, A:visited {
@@ -149,7 +149,7 @@ A {
 
         .title {
             .fa {
-                font-size: 4em;
+                font-size: 2em;
                 transition: font-size 0.5s, margin-left 0.5s, margin-right 0.5s;
                 margin-left: 0.5em;
                 margin-right: 0.5em;
@@ -229,7 +229,7 @@ A {
                 font-size: 1em;
                 max-width: 20em;
                 width: 100%;
-                padding-left: 1.4em;
+                padding-left: 1.5em;
                 border: 1px solid #660000;
                 border-radius: 0;
             }
@@ -237,7 +237,7 @@ A {
             .fa-search {
                 position: absolute;
                 left: 0.4em;
-                top: 0.5em;
+                top: 0.4em;
                 font-size: 0.8em;
                 color: transparentize(#660000, 0.75);
                 pointer-events: none;
@@ -251,7 +251,7 @@ A {
 }
 
 .page-container {
-    padding-top: 11.5em;
+    padding-top: 7.5em;
     padding-bottom: 1em;
     padding-left: 1em;
     padding-right: 1em;
@@ -543,6 +543,9 @@ IFRAME {
 
 @media only screen and (max-width: 400px) {
     .top-nav {
+        .page-bar {
+        }
+
         .search-bar {
             padding-right: 0;
 
@@ -550,6 +553,9 @@ IFRAME {
                 width: 100%;
 
                 INPUT {
+                    font-size: 0.9em;
+                    padding-top: 0.1em;
+                    padding-bottom: 0.1em;
                     border: 0;
                     width: 100%;
                     max-width: none;
