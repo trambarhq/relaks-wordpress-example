@@ -1,12 +1,40 @@
 version: "2"
 services:
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./server/nginx:/etc/nginx/conf.d
+      - web_cache:/var/cache/nginx
+    networks:
+      network:
+        ipv4_address: 172.129.0.2
+    ports:
+      - 8000:80
+    restart: always
+  node:
+    depends_on:
+      - wordpress
+      - nginx
+    image: node:8
+    volumes:
+      - .:/opt/example
+      - web_cache:/var/cache/nginx
+    networks:
+      network:
+        ipv4_address: 172.129.0.3
+    environment:
+      WORDPRESS_HOST: http://wordpress
+      NGINX_HOST: http://nginx
+      NGINX_CACHE: /var/cache/nginx/data
+    command: [ node, /opt/example/server/index.js ]
+    restart: always
   db:
     image: mariadb:10
     volumes:
       - db_data:/var/lib/mysql
     networks:
       network:
-        ipv4_address: 172.129.0.2
+        ipv4_address: 172.129.0.4
     ports:
       - 3306:3306
     environment:
@@ -21,41 +49,11 @@ services:
     image: wordpress:latest
     networks:
       network:
-        ipv4_address: 172.129.0.3
+        ipv4_address: 172.129.0.5
     environment:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
-    restart: always
-  node:
-    depends_on:
-      - wordpress
-    image: node:8
-    volumes:
-      - .:/opt/example
-      - web_cache:/var/cache/nginx
-    networks:
-      network:
-        ipv4_address: 172.129.0.4
-    environment:
-      WORDPRESS_HOST: http://wordpress
-      NGINX_HOST: http://nginx
-      NGINX_CACHE: /var/cache/nginx/data
-    command: [ node, /opt/example/server/index.js ]
-    restart: always
-  nginx:
-    depends_on:
-      - wordpress
-      - node
-    image: nginx:latest
-    volumes:
-      - ./server/nginx:/etc/nginx/conf.d
-      - web_cache:/var/cache/nginx
-    networks:
-      network:
-        ipv4_address: 172.129.0.5
-    ports:
-      - 8000:80
     restart: always
 volumes:
   db_data:

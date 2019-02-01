@@ -1,6 +1,19 @@
 version: "2"
 services:
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./server/nginx-remote:/etc/nginx/conf.d
+      - web_cache:/var/cache/nginx
+    networks:
+      network:
+        ipv4_address: 172.130.0.5
+    ports:
+      - 8000:80
+    restart: always
   node:
+    depends_on:
+      - nginx
     image: node:8
     volumes:
       - .:/opt/example
@@ -13,19 +26,6 @@ services:
       NGINX_HOST: http://nginx
       NGINX_CACHE: /var/cache/nginx/data
     command: [ node, /opt/example/server/index.js ]
-    restart: always
-  nginx:
-    depends_on:
-      - node
-    image: nginx:latest
-    volumes:
-      - ./server/nginx-remote:/etc/nginx/conf.d
-      - web_cache:/var/cache/nginx
-    networks:
-      network:
-        ipv4_address: 172.130.0.5
-    ports:
-      - 8000:80
     restart: always
 volumes:
   web_cache:

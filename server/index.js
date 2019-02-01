@@ -181,6 +181,7 @@ function handleError(err, req, res, next) {
 }
 
 async function scheduleCachePurge() {
+    await Bluebird.delay(1000);
     for(;;) {
         try {
             await NginxCache.purge(/.*/);
