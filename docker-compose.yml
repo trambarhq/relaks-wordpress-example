@@ -82,11 +82,14 @@ services:
     volumes:
       - ./server/nginx:/etc/nginx/conf.d
       - web_cache:/var/cache/nginx
+      - /var/www/certbot:/var/www/certbot
+      - /etc/letsencrypt:/etc/letsencrypt
     networks:
       network:
         ipv4_address: 172.130.0.10
     ports:
       - 80:80
+      - 443:443
     restart: always
 volumes:
   db_data:
