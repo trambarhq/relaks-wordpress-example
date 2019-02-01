@@ -26,7 +26,7 @@ class ArchivePageSync extends PureComponent {
     render() {
         let { route, posts } = this.props;
         let { date } = route.params;
-        let month = Moment(new Date(date.year, date.month, 1));
+        let month = Moment(new Date(date.year, date.month - 1, 1));
         let monthLabel = month.format('MMMM YYYY');
         let trail = [ { label: 'Archives' }, { label: monthLabel } ];
         return (

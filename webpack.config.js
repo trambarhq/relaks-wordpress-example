@@ -12,7 +12,7 @@ var ExtractTextPlugin = require("extract-text-webpack-plugin");
 var EVENT = process.env.npm_lifecycle_event;
 var BUILD = (EVENT === 'build') ? 'production' : 'development';
 var IS_DEV_SERVER = process.argv.find((arg) => { return arg.includes('webpack-dev-server') });
-var DEV_DATA_HOST = (IS_DEV_SERVER) ? 'http://localhost:8000' : undefined;
+var DEV_DATA_HOST = (IS_DEV_SERVER) ? 'http://192.168.0.56:8000' : undefined;
 var CORDOVA_DATA_HOST = process.env.CORDOVA_DATA_HOST;
 var BASE_PATH = '/';
 
