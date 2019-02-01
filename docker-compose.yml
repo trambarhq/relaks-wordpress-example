@@ -1,7 +1,7 @@
 version: "2"
 services:
   db:
-    image: mariadb:5
+    image: mariadb:10
     volumes:
       - db_data:/var/lib/mysql
     networks:
