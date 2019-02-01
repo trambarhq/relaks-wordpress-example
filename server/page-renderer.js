@@ -39,7 +39,7 @@ async function prefetch(path) {
     console.log(`Regenerating page: ${path}`);
     let url = NGINX_HOST + path;
     let options = addHostHeader({});
-    return CrossFetch(url);
+    return CrossFetch(url, options);
 }
 
 function addHostHeader(options) {
