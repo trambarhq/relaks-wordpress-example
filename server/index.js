@@ -29,7 +29,7 @@ let root = PageRenderer.basePath;
 app.set('json spaces', 2);
 app.use(Compression())
 app.use(SpiderDetector.middleware());
-app.use(root, Express.static(`${__dirname}/www`));
+app.use(root, Express.static(`${__dirname}/www`, { maxAge: 3600000 }));
 app.get(root + '.mtime', handleTimestampRequest);
 app.get(root + '.cache', handleCacheStatusRequest);
 app.get(root + 'json/*', handleJSONRequest);
