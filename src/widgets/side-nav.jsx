@@ -299,7 +299,7 @@ class SideNavSync extends PureComponent {
         let { date } = route.params;
         let className, url;
         if (monthEntry.year === selectedYear) {
-            if (date && monthEntry.month === date.month) {
+            if (date && monthEntry.year === date.year && monthEntry.month === date.month) {
                 className = 'selected';
             }
 
