@@ -212,7 +212,7 @@ A:link, A:visited {
         .page-container .page .post-list-view.with-media .text, .page-container .post .post-list-view.with-media .text {
           flex: 1 1 auto; }
     .page-container .page .comments, .page-container .post .comments {
-      font-size: 0.9em;
+      font-size: 0.9rem;
       padding-left: 1.5em; }
       .page-container .page .comments .commenter .avatar, .page-container .post .comments .commenter .avatar {
         width: 1.5em;

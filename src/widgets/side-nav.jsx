@@ -157,7 +157,7 @@ class SideNavSync extends PureComponent {
         let { route, postLists } = this.props;
         let { categorySlug } = route.params;
         let name = _.get(category, 'name', '');
-        let description = _.get(category, 'description', '');
+        let description = _.unescape(_.get(category, 'description', '').replace(/&#039;/g, "'"));
         let url = route.prefetchObjectURL(category);
         let className;
         if (category.slug === categorySlug) {
@@ -204,7 +204,7 @@ class SideNavSync extends PureComponent {
         let { route, postLists } = this.props;
         let { tagSlug } = route.params;
         let name = _.get(tag, 'name', '');
-        let description = _.get(tag, 'description', '');
+        let description = _.unescape(_.get(tag, 'description', '').replace(/&#039;/g, "'"));
         let url = route.prefetchObjectURL(tag);
         let className;
         if (tag.slug === tagSlug) {
@@ -299,7 +299,7 @@ class SideNavSync extends PureComponent {
         let { date } = route.params;
         let className, url;
         if (monthEntry.year === selectedYear) {
-            if (date && monthEntry.month === date.month) {
+            if (date && monthEntry.year === date.year && monthEntry.month === date.month) {
                 className = 'selected';
             }
 

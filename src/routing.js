@@ -84,6 +84,7 @@ class Route {
         let matchLink = (obj) => {
             return _.trimEnd(obj.link, '/') === link;
         };
+        let slugs = _.filter(_.split(path, '/'));
 
         // see if it's a search
         let search = query.s;
@@ -97,14 +98,23 @@ class Route {
         }
 
         // see if it's pointing to an archive
-        let date = findDate(path);
-        if (date) {
+        if (slugs[0] === 'date' && /^\d+$/.test(slugs[1]) && /^\d+$/.test(slugs[2]) && slugs.length == 3) {
+            let date = {
+                year: parseInt(slugs[1]),
+                month: parseInt(slugs[2]),
+            };
+            return { pageType: 'archive', date, siteURL };
+        } else if (/^\d+$/.test(slugs[0]) && /^\d+$/.test(slugs[1]) && slugs.length == 2) {
+            let date = {
+                year: parseInt(slugs[0]),
+                month: parseInt(slugs[1]),
+            };
             return { pageType: 'archive', date, siteURL };
         }
 
         // see if it's pointing to a post by ID
-        let postID = findPostID(path);
-        if (postID) {
+        if (slugs[0] === 'archives' && /^\d+$/.test(slugs[1])) {
+            let postID = parseInt(slugs[1]);
             let post = await wp.fetchPost(postID);
             if (post) {
                 return { pageType: 'post', postSlug: post.slug, siteURL };
@@ -127,16 +137,14 @@ class Route {
 
         // see if it's pointing to a popular tag
         let topTags = await wp.fetchTopTags();
-        let tag = _.find(topTags, matchLink);
-        if (tag) {
-            return { pageType: 'tag', tagSlug: tag.slug, siteURL };
+        let topTag = _.find(topTags, matchLink);
+        if (topTag) {
+            return { pageType: 'tag', tagSlug: topTag.slug, siteURL };
         }
 
         // see if it's pointing to a not-so popular tag
-        let slugs = _.filter(_.split(path, '/'));
-        if (slugs.length >= 2 && _.includes(slugs, 'tag')) {
-            let tagSlug = _.last(slugs);
-            let tag = await wp.fetchTag(tagSlug);
+        if (slugs[0] === 'tag' && slugs.length === 2) {
+            let tag = await wp.fetchTag(slugs[1]);
             if (tag) {
                 return { pageType: 'tag', tagSlug: tag.slug, siteURL };
             }
@@ -155,7 +163,7 @@ class Route {
 
         // see if it's pointing to a tag when no prefix is used
         let tagSlug = _.last(slugs);
-        tag = await wp.fetchTag(tagSlug);
+        let tag = await wp.fetchTag(tagSlug);
         if (tag) {
             return { pageType: 'tag', tagSlug: tag.slug, siteURL };
         }
@@ -224,28 +232,6 @@ class Route {
         } else if (node.type === 'text') {
             // trim off leading newline characters
             node.data = _.trimStart(node.data, '\r\n');
-        }
-    }
-}
-
-function findDate(path) {
-    if (_.startsWith(path, '/date/')) {
-        path = path.substr(5);
-    }
-    let m = /^\/(\d{4})\/(\d+)\/?/.exec(path);
-    if (m) {
-        return {
-            year: parseInt(m[1]),
-            month: parseInt(m[2]),
-        };
-    }
-}
-
-function findPostID(path) {
-    if (_.startsWith(path, '/archives/')) {
-        let id = parseInt(path.substr(10));
-        if (id === id) {
-            return id;
         }
     }
 }

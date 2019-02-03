@@ -197,7 +197,7 @@ class Wordpress {
         let parentCategories = [];
         let parentID = category.parent;
         while (parentID) {
-            let parentCategory = await wp.fetchCategory(parentID);
+            let parentCategory = await this.fetchCategory(parentID);
             if (!parentCategory) {
                 break;
             }
