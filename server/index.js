@@ -128,14 +128,14 @@ async function handlePurgeRequest(req, res) {
     // verify that require is coming from WordPress
     let remoteIP = req.connection.remoteAddress;
     res.end();
-    let wordpressIP = await dnsCache.lookupAsync(WORDPRESS_HOST.replace(/^https?:\/\//));
+    let wordpressIP = await dnsCache.lookupAsync(WORDPRESS_HOST.replace(/^https?:\/\//, ''));
     if (remoteIP !== `::ffff:${wordpressIP}`) {
         return;
     }
 
     let url = req.url;
     let method = req.headers['x-purge-method'];
-    if (method === 'regex' && url === '.*') {
+    if (method === 'regex' && url === '/.*') {
         pageDependencies = {};
         await NginxCache.purge(/.*/);
     } else if (method === 'default') {
