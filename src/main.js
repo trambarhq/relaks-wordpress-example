@@ -59,7 +59,7 @@ if (process.env.TARGET === 'browser') {
             } catch (err) {
 
             }
-            await delay(10 * 1000);
+            await delay(30 * 1000);
         }
     }
 
