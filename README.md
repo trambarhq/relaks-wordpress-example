@@ -1,6 +1,8 @@
 Zero-latency WordPress Front-end
 ================================
-In this example, we're going to build a Zero-latency front-end for WordPress. When a visitor clicks on a link, a story will instantly appear. No hourglass. No spinner. No blank page. We'll accomplish this by aggressively prefetching data in our client-side code. At the same time, we're going to employ server-side rendering (SSR) to minimize time-to-first-impression.
+In this example, we're going to build a Zero-latency front-end for WordPress. When a visitor clicks on a link, a story will instantly appear. No hourglass. No spinner. No blank page. We'll accomplish this by aggressively prefetching data in our client-side code. At the same time, we're going to employ server-side rendering (SSR) to minimize time to first impression. The page should appear within a fraction of a second after the visitor enters the URL.
+
+Combined with aggressive caching, what we'll end up with is a web site that feels very fast and is very cheap to host.
 
 This is a complex example with many moving parts. It's definitely not for beginners. You should already be familiar with technologies involved: [React](https://reactjs.org/), [Nginx caching](https://www.nginx.com/blog/nginx-caching-guide/), and of course [WordPress](https://wordpress.org/) itself.
 
@@ -20,7 +22,19 @@ This is a complex example with many moving parts. It's definitely not for beginn
 
 ## Live demo
 
-**TODO**
+For the purpose of demonstrating what the example code can do, I've prepared three web sites:
+
+* [pfj.trambar.io](https://pfj.trambar.io)
+* [et.trambar.io](https://et.trambar.io)
+* [rwt.trambar.io](https://rwt.trambar.io)
+
+All three are hosted on the same AWS [AI medium instance](https://aws.amazon.com/ec2/instance-types/a1/), powered by a single core of an [Graviton CPU](https://www.phoronix.com/scan.php?page=article&item=ec2-graviton-performance&num=1) and backed by 2G of RAM. In terms of computational resources we have roughly one fourth that of a phone. Not much. For our system though, it's more than enough. Most requests will result in cache hits. Nginx will spend most of its time sending data already in memory. We'll be IO-bound long before we'll reach maximum CPU usage.
+
+[pfj.trambar.io](https://pfj.trambar.io) obtains its data from a test WordPress instance running on the same server. It's populated with random lorem ipsum text. You can log into the [WordPress admin page](https://pfj.trambar.io/wp-admin/) and post a article using the account `bdickus` (password: `incontinentia`). Publication of a new article will trigger a cache purge. The article should appear in the front page automatically after 30 seconds or so.
+
+You can see a list of what's in the Nginx cache [here](https://pfj.trambar.io/.cache/).
+
+[et.trambar.io](https://et.trambar.io) and [rwt.trambar.io](https://rwt.trambar.io) obtain their data from [ExtremeTech](https://www.extremetech.com/) and [Real World Tech](https://www.realworldtech.com/) respectively. They are meant to give you a better sense of how the example code fares with real-world contents. Our server does not receive cache purge commands from these WordPress instances so the contents could be out of date. Cache misses will also lead to slightly longer pauses.
 
 ## Server-side rendering
 
