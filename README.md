@@ -11,7 +11,7 @@ This is a complex example with many moving parts. It's definitely not for beginn
 * [Back-end services](#back-end-services)
 * [Uncached page access](#uncached-page-access)
 * [Cached page access](#cached-page-access)
-* [Cache invalidation](#cache-invalidation)
+* [Cache purging](#cache-purging)
 * [Getting started](#getting-started)
 * [Docker Compose configuration](#docker-compose-configuration)
 * [Nginx configuration](#nginx-configuration)
@@ -68,23 +68,15 @@ The following animation shows how page requests are handled once contents (both 
 
 [![Cached page access](docs/img/cached.gif)](docs/cached.md)
 
-## Cache invalidation
+## Cache purging
 
-**TODO**
+The following animation depicts what happens when a new article is published on WordPress.
+
+[![Cached cache purging](docs/img/purge.gif)](docs/purge.md)
 
 ## Getting started
 
-1. Run docker-compose up -d
-2. Go to http://localhost:8000/wp-admin/
-3. Enter site info
-4. Log in
-5. Go to Settings > Permalinks
-6. Select a scheme other than "Plain" (to enable clean JSON URLs)
-7. Go to Plugins page
-8. Search for, install, and activate "Proxy Cache Purge" plugin
-9. Search for, install, and activate "FakerPress" plugin
-
-docker exec server_wordpress_1 php -r "echo gethostbyname('node');"
+**TODO**
 
 ## Docker Compose configuration
 
