@@ -76,7 +76,13 @@ The following animation depicts what happens when a new article is published on 
 
 ## Getting started
 
-**TODO**
+This example is delivered as a Docker app. Please install Docker and Docker Compose if they aren't already installed on your computer. On Windows and OSX, you might need to enable port forwarding for port 8000.
+
+In the command line, run `npm install` or `npm ci`. Once all libraries have been downloaded, run `npm run start-server`. Docker will proceed to download four official images from Docker Hub: [WordPress](https://hub.docker.com/_/wordpress/), [MariaDB](https://hub.docker.com/_/mariadb), [Nginx](https://hub.docker.com/_/nginx), and [Node.js](https://hub.docker.com/_/node/).
+
+Once the services are up and running, go to `http://localhost:8000/wp-json/`. You should be greeted by WordPress's installation page. Enter some information about your test site and create the admin account. Log in and go to **Settings** > **Permalinks**. Choose one of the URL schemas.
+
+Next, go to **Settings** > **Plugins** > **Add New**. Search for `Proxy Cache Purge`. Install and activate the plug-in. A new **Proxy Cache** item will appear in the side navigation bar. Click on it. At the bottom of the page, set the **Custom IP** to 172.129.0.3. This is the address of our Node.js service.
 
 ## Docker Compose configuration
 
