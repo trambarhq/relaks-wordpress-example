@@ -80,13 +80,23 @@ This example is delivered as a Docker app. Please install Docker and Docker Comp
 
 In the command line, run `npm install` or `npm ci`. Once all libraries have been downloaded, run `npm run start-server`. Docker will proceed to download four official images from Docker Hub: [WordPress](https://hub.docker.com/_/wordpress/), [MariaDB](https://hub.docker.com/_/mariadb), [Nginx](https://hub.docker.com/_/nginx), and [Node.js](https://hub.docker.com/_/node/).
 
-Once the services are up and running, go to `http://localhost:8000/wp-json/`. You should be greeted by WordPress's installation page. Enter some information about your test site and create the admin account. Log in and go to **Settings** > **Permalinks**. Choose one of the URL schemas.
+Once the services are up and running, go to `http://localhost:8000/wp-admin/`. You should be greeted by WordPress's installation page. Enter some information about your test site and create the admin account. Log in and go to **Settings** > **Permalinks**. Choose one of the URL schemas.
 
-Next, go to **Settings** > **Plugins** > **Add New**. Search for `Proxy Cache Purge`. Install and activate the plug-in. A new **Proxy Cache** item will appear in the side navigation bar. Click on it. At the bottom of the page, set the **Custom IP** to 172.129.0.3. This is the address of our Node.js service.
+Next, go to **Plugins** > **Add New**. Search for `Proxy Cache Purge`. Install and activate the plugin. A new **Proxy Cache** item will appear in the side navigation bar. Click on it. At the bottom of the page, set the **Custom IP** to 172.129.0.3. This is the address of our Node.js service.
 
-## Docker Compose configuration
+In a different browser tab, go to `http://localhost:8000/`. You should see the front page with just a sample post:
 
-**TODO**
+![Welcome page](docs/img/front-page-initial.png)
+
+Now return to the WordPress admin page and publish another test post. After 30 seconds or so, the post should automatically appear in the front page:
+
+![Welcome page](docs/img/front-page-new-story.png)
+
+To see the code running in debug mode, run `npm run watch`. The client-side code will be rebuilt whenever changes occurs.
+
+To shut down the test server, run `npm run stop-server`. To remove Docker volumes used by the example, run `npm run remove-server`.
+
+If you have a production web site running WordPress, you can see how its contents look in the example front-end (provided that the REST interface is exposed and permalinks are enabled). Open `docker-compose-remote.yml` and change the environment variable `WORDPRESS_HOST` to the address of the site. Then run `npm run start-server-remote`.
 
 ## Nginx configuration
 
