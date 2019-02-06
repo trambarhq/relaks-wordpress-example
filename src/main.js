@@ -22,7 +22,7 @@ if (process.env.TARGET === 'browser') {
         let routeManager = new RouteManager({
             routes,
             basePath,
-            useHashFallback: (location.protocol !== 'http' && location.protocol !== 'https'),
+            useHashFallback: (location.protocol !== 'http:' && location.protocol !== 'https:'),
         });
         routeManager.addEventListener('beforechange', (evt) => {
             let route = new Route(routeManager, dataSource);

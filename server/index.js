@@ -102,6 +102,9 @@ async function handlePageRequest(req, res, next) {
     try {
         let path = req.url;
         if (path === '/favicon.ico') {
+            // while the HTML template contains a link tag that suppress the
+            // loading of favicon.ico, the browser could ask for it still if
+            // the page fails to load
             let err = new Error('File not found');
             err.status = 404;
             throw err;
