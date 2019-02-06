@@ -90,14 +90,14 @@ A:link, A:visited {
     align-items: center;
     color: #ffffff;
     background-color: #990000;
-    height: 8em;
+    height: 4em;
     transition: height 0.5s; }
     .top-nav .title-bar A:link, .top-nav .title-bar A:visited {
       color: #ffffff; }
       .top-nav .title-bar A:link:hover, .top-nav .title-bar A:visited:hover {
         color: #ffdddd; }
     .top-nav .title-bar .title .fa {
-      font-size: 4em;
+      font-size: 2em;
       transition: font-size 0.5s, margin-left 0.5s, margin-right 0.5s;
       margin-left: 0.5em;
       margin-right: 0.5em;
@@ -151,13 +151,13 @@ A:link, A:visited {
         font-size: 1em;
         max-width: 20em;
         width: 100%;
-        padding-left: 1.4em;
+        padding-left: 1.5em;
         border: 1px solid #660000;
         border-radius: 0; }
       .top-nav .search-bar .input-container .fa-search {
         position: absolute;
         left: 0.4em;
-        top: 0.5em;
+        top: 0.4em;
         font-size: 0.8em;
         color: rgba(102, 0, 0, 0.25);
         pointer-events: none; }
@@ -165,7 +165,7 @@ A:link, A:visited {
       height: 0; }
 
 .page-container {
-  padding-top: 11.5em;
+  padding-top: 7.5em;
   padding-bottom: 1em;
   padding-left: 1em;
   padding-right: 1em;
@@ -212,7 +212,7 @@ A:link, A:visited {
         .page-container .page .post-list-view.with-media .text, .page-container .post .post-list-view.with-media .text {
           flex: 1 1 auto; }
     .page-container .page .comments, .page-container .post .comments {
-      font-size: 0.9em;
+      font-size: 0.9rem;
       padding-left: 1.5em; }
       .page-container .page .comments .commenter .avatar, .page-container .post .comments .commenter .avatar {
         width: 1.5em;
@@ -354,6 +354,9 @@ IFRAME {
     .top-nav .search-bar .input-container {
       width: 100%; }
       .top-nav .search-bar .input-container INPUT {
+        font-size: 0.9em;
+        padding-top: 0.1em;
+        padding-bottom: 0.1em;
         border: 0;
         width: 100%;
         max-width: none; } }

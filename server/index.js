@@ -116,7 +116,7 @@ async function handlePageRequest(req, res, next) {
             res.set({ 'Cache-Control': CACHE_CONTROL });
 
             // remember the URLs used by the page
-            pageDependencies[path] = page.sourceURLs.map(addTrailingSlash);
+            pageDependencies[path] = page.sourceURLs;
         }
         res.type('html').send(page.html);
     } catch (err) {
@@ -194,25 +194,6 @@ async function scheduleCachePurge() {
             await Bluebird.delay(60000);
         }
     }
-}
-
-/**
- * Add trailing slash to URL
- *
- * @param  {String} url
- *
- * @return {String}
- */
-function addTrailingSlash(url) {
-    let qi = url.indexOf('?');
-    if (qi === -1) {
-        qi = url.length;
-    }
-    let lc = url.charAt(qi - 1);
-    if (lc !== '/') {
-        url = url.substr(0, qi) + '/' + url.substr(qi);
-    }
-    return url;
 }
 
 // restart process when a source file changes
