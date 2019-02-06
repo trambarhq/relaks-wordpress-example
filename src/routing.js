@@ -201,32 +201,36 @@ class Route {
             let { siteURL } = this.params;
             let siteURLInsecure = 'http:' + siteURL.substr(6);
             if (node.name === 'a') {
-                node.attribs.href = _.trim(node.attribs.href);
-                if (node.attribs.href) {
-                    if (!_.startsWith(node.attribs.href, '/')) {
-                        if (_.startsWith(node.attribs.href, siteURL)) {
-                            node.attribs.href = node.attribs.href.substr(siteURL.length);
-                            delete node.attribs.target;
-                        } else if (_.startsWith(node.attribs.href, siteURLInsecure)) {
-                            node.attribs.href = node.attribs.href.substr(siteURLInsecure.length);
-                            delete node.attribs.target;
+                let url = _.trim(node.attribs.href);
+                let target;
+                if (url) {
+                    if (!_.startsWith(url, '/')) {
+                        if (_.startsWith(url, siteURL)) {
+                            url = url.substr(siteURL.length);
+                        } else if (_.startsWith(url, siteURLInsecure)) {
+                            url = url.substr(siteURLInsecure.length);
                         } else {
-                            node.attribs.target = '_blank';
+                            target = '_blank';
                         }
                     }
-                    if (_.startsWith(node.attribs.href, '/wp-content/')) {
-                        node.attribs.href = siteURL + node.attribs.href;
+                    if (_.startsWith(url, '/wp-content/')) {
+                        url = siteURL + url;
                     }
-                    if (_.startsWith(node.attribs.href, '/')) {
+                    if (_.startsWith(url, '/')) {
                         // strip off page number
-                        node.attribs.href = node.attribs.href.replace(/\/\d+\/?$/, '');
-                        this.loadPageData(node.attribs.href);
+                        url = url.replace(/\/\d+\/?$/, '');
+                        url = this.routeManager.applyFallback(url);
+                        this.loadPageData(url);
                     }
+                    node.attribs.href = url;
+                    node.attribs.target = target;
                 }
             } else if (node.name === 'img') {
                 // prepend image URL with site URL
-                if (node.attribs.src && !/^https?:/.test(node.attribs.src)) {
-                    node.attribs.src = siteURL + node.attribs.src;
+                let url = _.trim(node.attribs.src);
+                if (url && !/^https?:/.test(url)) {
+                    url = siteURL + url;
+                    node.attributes.src = url;
                 }
             }
         } else if (node.type === 'text') {

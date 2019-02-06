@@ -102,6 +102,9 @@ async function handlePageRequest(req, res, next) {
     try {
         let path = req.url;
         if (path === '/favicon.ico') {
+            // while the HTML template contains a link tag that suppress the
+            // loading of favicon.ico, the browser could ask for it still if
+            // the page fails to load
             let err = new Error('File not found');
             err.status = 404;
             throw err;
@@ -116,7 +119,7 @@ async function handlePageRequest(req, res, next) {
             res.set({ 'Cache-Control': CACHE_CONTROL });
 
             // remember the URLs used by the page
-            pageDependencies[path] = page.sourceURLs.map(addTrailingSlash);
+            pageDependencies[path] = page.sourceURLs;
         }
         res.type('html').send(page.html);
     } catch (err) {
@@ -138,6 +141,7 @@ async function handlePurgeRequest(req, res) {
     if (method === 'regex' && url === '/.*') {
         pageDependencies = {};
         await NginxCache.purge(/.*/);
+        await PageRenderer.prefetch('/');
     } else if (method === 'default') {
         // look for URLs that looks like /wp-json/wp/v2/pages/4/
         let m = /^\/wp\-json\/(\w+\/\w+\/\w+)\/(\d+)\/$/.exec(url);
@@ -148,11 +152,7 @@ async function handlePurgeRequest(req, res) {
         // purge matching JSON files
         let folderPath = m[1];
         let pattern = new RegExp(`^/json/${folderPath}.*`);
-        let purgedURLs = await NginxCache.purge(pattern);
-        if (purgedURLs.length === 0) {
-            return;
-        }
-        purgedURLs = purgedURLs.map(addTrailingSlash);
+        await NginxCache.purge(pattern);
 
         // purge the timestamp so CSR code knows something has changed
         await NginxCache.purge('/.mtime');
@@ -160,16 +160,19 @@ async function handlePurgeRequest(req, res) {
         // look for pages that made use of the purged JSONs
         for (let [ path, sourceURLs ] of Object.entries(pageDependencies)) {
             let affected = sourceURLs.some((sourceURL) => {
-                return purgedURLs.indexOf(sourceURL) !== -1;
+                return pattern.test(sourceURL);
             });
             if (affected) {
                 // purge the cached page
                 await NginxCache.purge(path);
                 delete pageDependencies[path];
+
+                if (path === '/') {
+                    await PageRenderer.prefetch('/');
+                }
             }
         }
     }
-    await PageRenderer.prefetch('/');
 }
 
 function handleError(err, req, res, next) {
@@ -194,25 +197,6 @@ async function scheduleCachePurge() {
             await Bluebird.delay(60000);
         }
     }
-}
-
-/**
- * Add trailing slash to URL
- *
- * @param  {String} url
- *
- * @return {String}
- */
-function addTrailingSlash(url) {
-    let qi = url.indexOf('?');
-    if (qi === -1) {
-        qi = url.length;
-    }
-    let lc = url.charAt(qi - 1);
-    if (lc !== '/') {
-        url = url.substr(0, qi) + '/' + url.substr(qi);
-    }
-    return url;
 }
 
 // restart process when a source file changes
