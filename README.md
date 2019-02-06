@@ -162,18 +162,12 @@ The first two headers we add are there to enable [CORS](https://developer.mozill
 
 ### HTML page generation
 
+The following Express handler ([index.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/index.js#L101)) is invoked when Nginx asks for an HTML page. It detects whether the remote agent is a search-engine spider and handle the request accordingly.
+
 ```javascript
 async function handlePageRequest(req, res, next) {
     try {
         let path = req.url;
-        if (path === '/favicon.ico') {
-            // while the HTML template contains a link tag that suppress the
-            // loading of favicon.ico, the browser could ask for it still if
-            // the page fails to load
-            let err = new Error('File not found');
-            err.status = 404;
-            throw err;
-        }
         let noJS = (req.query.js === '0');
         let target = (req.isSpider() || noJS) ? 'seo' : 'hydrate';
         let page = await PageRenderer.generate(path, target);
@@ -192,6 +186,8 @@ async function handlePageRequest(req, res, next) {
     }
 }
 ```
+
+`PageRenderer.generate()` ([page-renderer.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/page-renderer.js#L12)) uses our isomorphic front-end React code to generate the page. Since the fetch API doesn't exist on Node.js, we need to supply a compatible function to the data source. We use this opportunity to capture the list of URLs that the front-end accesses. Later, we'll use this list to determine whether a cached page has become out-of-date.
 
 ```javascript
 async function generate(path, target) {
@@ -220,6 +216,10 @@ async function generate(path, target) {
     return { path, target, sourceURLs, html };
 }
 ```
+
+`FrontEnd.render()` returns a ReactElement containing just plain HTML child elements. We use React DOM Server to convert that to actual HTML text. Then we stick it into our [HTML template](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/index.html), where a HTML comment sits inside the element that would host the root React component.
+
+`FrontEnd.render()` is a function exported by our front-end's [bootstrap code](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/main.js#L68):
 
 ```javascript
 async function serverSideRender(options) {
@@ -250,6 +250,8 @@ exports.render = serverSideRender;
 
 ### JSON data retrieval
 
+The following handler is invoked when Nginx requests a JSON file (i.e. when a cache miss occurs). It's quite simple. All it does is change the URL prefix from `/json/` to `/wp-json/` and set a couple HTTP headers:
+
 ```javascript
 async function handleJSONRequest(req, res, next) {
     try {
@@ -267,6 +269,8 @@ async function handleJSONRequest(req, res, next) {
     }
 }
 ```
+
+`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/json-retriever.js#L5)) is also relatively simple aside from the error correction code made necessary by certain WordPress plugins' nasty habit of dumping debug messages into the output stream.  
 
 ```javascript
 async function fetch(path) {
