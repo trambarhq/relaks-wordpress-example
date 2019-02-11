@@ -57,7 +57,6 @@ if (process.env.TARGET === 'browser') {
                     mtimeLast = mtime;
                 }
             } catch (err) {
-
             }
             await delay(30 * 1000);
         }
