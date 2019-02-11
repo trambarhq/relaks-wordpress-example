@@ -248,6 +248,12 @@ async function serverSideRender(options) {
 exports.render = serverSideRender;
 ```
 
+The code initiates the data source and the route manager. Using these as props, it creates the root React element `<FrontEnd />`. The function `harvest()` then recursively renders the component tree, util all we have are plain HTML elements:
+
+![Component tree conversion](docs/img/harvest.png)
+
+Our front-end is built with the help of [Relaks](https://github.com/trambarhq/relaks), a library that let us make asynchronous calls within a React component's render method. Data retrievals are done as part of the rendering cycle. This model makes SSR very straight forward. To render a page, we just the render methods of all its components and wait for them to finish.
+
 ### JSON data retrieval
 
 The following handler is invoked when Nginx requests a JSON file (i.e. when a cache miss occurs). It's quite simple. All it does is change the URL prefix from `/json/` to `/wp-json/` and set a couple HTTP headers:
@@ -270,7 +276,7 @@ async function handleJSONRequest(req, res, next) {
 }
 ```
 
-`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/json-retriever.js#L5)) is also relatively simple aside from the error correction code made necessary by certain WordPress plugins' nasty habit of dumping debug messages into the output stream.  
+`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/json-retriever.js#L5)) downloads JSON data from WordPress, performing certain error correction to deal with rogue plugins:
 
 ```javascript
 async function fetch(path) {
@@ -301,7 +307,11 @@ async function fetch(path) {
 }
 ```
 
+Fields that aren't needed are stripped out before the JSON object is stringified again.
+
 ### Purge request Handling
+
+The [Proxy Cache Purge](https://wordpress.org/plugins/varnish-http-purge/) sends out `PURGE` requests whenever a new article is published on WordPress. We configure our system so that Node receives these requests. Before we carry out a request, we need to check if it really is coming from WordPress. It may provide either an URL to purge or a wildcard expression. We watch for two specific scenarios: when the plugin wants to purge the whole cache and when it wants to purge a single JSON object. In the latter case, we proceed to purge all queries that might be affected.
 
 ```javascript
 async function handlePurgeRequest(req, res) {
@@ -353,7 +363,17 @@ async function handlePurgeRequest(req, res) {
 }
 ```
 
+For example, when we receive `PURGE /wp-json/wp/v2/posts/100/`, we perform a purge of `/json/wp/v2/posts.*`. The approach is pretty conservative. Often cache entries will get purged when there's no need. This isn't terrible since the data can be reloaded fairly quickly. Since e-tags are based on contents, when no change has actually occurred we would end up with the same e-tag. Nginx will still send `304 Not Modified` to the browsers despite a cache miss.
+
+After purging JSON data, we purge the `/.mtime` timestamp file. This act as a signal to the web browser that it's time to rerun data queries.
+
+Then we purge HTML files generated earlier that made use of the purged data. Recall how we had saved the list of source URLs in `handlePageRequest()`.
+
+Only Nginx Plus (i.e. paid version of Nginx) supports cache purging. `NginxCache.purge()` ([nginx-cache.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/nginx-cache.js#L7)) is basically a workaround for that fact. The code is not terribly efficient but does the job. Hopefully cache purging will be available in the free version of Nginx in the future.
+
 ### Timestamp handling
+
+The handle for timestamp requests is extremely simple:
 
 ```javascript
 async function handleTimestampRequest(req, res, next) {
