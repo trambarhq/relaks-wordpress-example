@@ -147,7 +147,7 @@ location / {
 
 We select the cache zone we defined earlier with the [`proxy_cache`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache) directive. We set the cache key using [`proxy_cache_key`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_key). The MD5 hash of the path plus the query string will be the name used to save each cached server response. With the [`proxy_cache_min_uses`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_min_uses) directive we tell Nginx to start caching on the very first request. With the [`proxy_cache_valid`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) directive we ask Nginx to cache error responses for one minute.
 
-As we're going to add the `Cache-Control` header, we want strip off the one from Node.js first using [`proxy_hide_header`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header). The [`proxy_ignore_headers`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ignore_headers) directive, meanwhile, is there to keep Nginx from creating separate cache entries when requests to the same URL have different `Accept-Encoding` headers (additional compression scheme, for example).
+As we're going to add the `Cache-Control` header, we want to strip off the one from Node.js first using [`proxy_hide_header`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header). The [`proxy_ignore_headers`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ignore_headers) directive, meanwhile, is there to keep Nginx from creating separate cache entries when requests to the same URL have different `Accept-Encoding` headers (additional compression scheme, for example).
 
 The first two headers we add are there to enable [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). The last two `X-Cache-*` headers are there for debugging purpose. They let us figure out whether a request has resulted in a cache hit when we examine it using the browser's development tools:
 
@@ -390,7 +390,235 @@ async function handleTimestampRequest(req, res, next) {
 
 ## Front-end JavaScript
 
-**TODO**
+* [DOM hydration](#dom-hydration)
+* [Routing](#routing)
+* [WelcomePage](#welcomepage)
+* [PostList](#postlist)
+
+### DOM hydration
+
+The following function ([main.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/main.js#L12)) is responsible for bootstrapping the front-end:
+
+```javascript
+async function initialize(evt) {
+    // create data source
+    let host = process.env.DATA_HOST || `${location.protocol}//${location.host}`;
+    let basePath = process.env.BASE_PATH;
+    let dataSource = new WordpressDataSource({
+        baseURL: host + basePath + 'json',
+    });
+    dataSource.activate();
+
+    // create route manager
+    let routeManager = new RouteManager({
+        routes,
+        basePath,
+        useHashFallback: (location.protocol !== 'http:' && location.protocol !== 'https:'),
+    });
+    routeManager.addEventListener('beforechange', (evt) => {
+        let route = new Route(routeManager, dataSource);
+        evt.postponeDefault(route.setParameters(evt, true));
+    });
+    routeManager.activate();
+    await routeManager.start();
+
+    let container = document.getElementById('react-container');
+    if (!process.env.DATA_HOST) {
+        // there is SSR support when we're fetching data from the same host
+        // as the HTML page
+        let ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: 'hydrate' });
+        let seeds = await harvest(ssrElement, { seeds: true });
+        plant(seeds);
+        hydrate(ssrElement, container);
+    }
+    let csrElement = createElement(FrontEnd, { dataSource, routeManager });
+    render(csrElement, container);
+
+    // check for changes periodically
+    let mtimeURL = host + basePath + '.mtime';
+    let mtimeLast;
+    for (;;) {
+        try {
+            let res = await fetch(mtimeURL);
+            let mtime = await res.text();
+            if (mtime !== mtimeLast) {
+                if (mtimeLast) {
+                    dataSource.invalidate();
+                }
+                mtimeLast = mtime;
+            }
+        } catch (err) {
+        }
+        await delay(30 * 1000);
+    }
+}
+```
+
+The code creates the data source and the route manager. When SSR is employed, we ["hydrate"](https://reactjs.org/docs/react-dom.html#hydrate) the DOM elements that are already in the page. We first perform the exact same action that was done on the server. Doing so pulls in data that will be needed for CSR later (while the visitor is still looking at the SSR contents). Passing `{ seeds: true }` to `harvest()` directs it to return the contents of asynchronous Relaks components in a list. These "seeds" are then planted into Relaks, so that our asynchronous components can return their initial appearance synchronously. Without this step, the small delays required by asynchronous rendering would lead to mismatches during the hydration process.
+
+Once the DOM is hydrated, we complete the transition to CSR by rendering a second `<FrontEnd />` element, this time without the prop `ssr`.
+
+Then we enter an endless loop that polls the server for content update every 30 seconds.
+
+### Routing
+
+We want our front-end to handle WordPress permalinks correctly. This makes page routing somewhat tricky since we cannot rely on simple pattern matching. The URL `/hello-world/` could potentially point to either a page, a post, or a list of posts with a given tag. It all depends on slug assignment. We always need information from the server in order to find the right route.
+
+[`relaks-route-manager`](https://github.com/trambarhq/relaks-route-manager) was not designed with this usage scenario in mind. It does provide a mean, however, to perform asynchronous operations prior to a route change. When it emits a `beforechange` event, we can call `evt.postponeDefault()` to defer the default action (permitting the change) until a promise fulfills:
+
+```javascript
+routeManager.addEventListener('beforechange', (evt) => {
+    let route = new Route(routeManager, dataSource);
+    evt.postponeDefault(route.setParameters(evt, true));
+});
+```
+
+`route.setParameters()` ([routing.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/routing.js#L62)) basically displaces the default parameter extraction mechanism. Our routing table is reduced to the following:
+
+```javascript
+let routes = {
+    'page': { path: '*' },
+};
+```
+
+Which simply matches any URL.
+
+`route.setParameters()` itself calls `route.getParameters()` to obtain the parameters:
+
+```javascript
+async setParameters(evt, fallbackToRoot) {
+    let params = await this.getParameters(evt.path, evt.query);
+    if (params) {
+        params.module = require(`pages/${params.pageType}-page`);
+        _.assign(evt.params, params);
+    } else {
+        if (fallbackToRoot) {
+            await this.routeManager.change('/');
+            return false;
+        } else {
+            throw new RelaksRouteManagerError(404, 'Route not found');
+        }
+    }
+}
+```
+
+The key parameter is `pageType`, which is used to load one of the [page components](https://github.com/chung-leong/relaks-wordpress-example/tree/master/src/pages).
+
+As a glance `route.getParameters()` ([routing.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/routing.js#L77)) might seem like incredibly inefficient. To see if a URL points to a page, it fetches all pages and see if one of them has that URL:
+
+```javascript
+let allPages = await wp.fetchPages();
+let page = _.find(allPages, matchLink);
+if (page) {
+   return { pageType: 'page', pageSlug: page.slug, siteURL };
+}
+```
+
+It does the same check on categories:
+
+```javascript
+let allCategories = await wp.fetchCategories();
+let category = _.find(allCategories, matchLink);
+if (category) {
+    return { pageType: 'category', categorySlug: category.slug, siteURL };
+}
+```
+
+Most of the time, however, the data in question would be cached already. The top nav loads the pages, while the side nav loads the categories (and also top tags). Resolving the route wouldn't require actual data transfer. On cold start the process would be somewhat slow. Our SSR mechanism would mask this delay, however. A visitor wouldn't find it too noticeable. Of course, since we have all pages at hand, a page will pop up instantly when the visitor clicks on the nav bar.
+
+`route.getObjectURL()` ([routing.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/routing.js#L32)) is used to obtain the URL to an object (post, page, category, etc.). The method basically just remove the site URL from the object's WP permalink:
+
+```javascript
+getObjectURL(object) {
+    let { siteURL } = this.params;
+    let link = object.link;
+    if (!_.startsWith(link, siteURL)) {
+        throw new Error(`Object URL does not match site URL`);
+    }
+    let path = link.substr(siteURL.length);
+    return this.composeURL({ path });
+}
+```
+
+In order to link to a post, we must download the post beforehand. Clicking on an article will nearly always bring it up instantly.
+
+For links to categories and tags, we perform explicit prefetching:
+
+```javascript
+prefetchObjectURL(object) {
+    let url = this.getObjectURL(object);
+    setTimeout(() => { this.loadPageData(url) }, 50);
+    return url;
+}
+```
+
+The first ten posts are always fetched so the visitor sees something immediately after clicking.
+
+### WelcomePage
+
+`WelcomePage` (welcome-page.jsx)[https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/pages/welcome-page.jsx] is an asynchronous component. Its `renderAsync()` method fetches a list of posts as well as featured medias and passes them to `WelcomePageSync` for actual rendering of the user interface:
+
+```javascript
+async renderAsync(meanwhile) {
+    let { wp, route } = this.props;
+    let props = { route };
+    meanwhile.show(<WelcomePageSync {...props} />)
+    props.posts = await wp.fetchPosts();
+    meanwhile.show(<WelcomePageSync {...props} />)
+    props.medias = await wp.fetchFeaturedMedias(props.posts, 10);
+    return <WelcomePageSync {...props} />;
+}
+```
+
+`WelcomePageSync`, meanwhile, delegate the task of rendering the list of posts to `PostList`:
+
+```javascript
+render() {
+    let { route, posts, medias } = this.props;
+    return (
+        <div className="page">
+            <PostList route={route} posts={posts} medias={medias} minimum={40} />
+        </div>
+    );
+}
+```
+
+### PostList
+
+The render method of `PostList` (post-list.jsx)[https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/widgets/post-list.jsx] doesn't do anything special:
+
+```javascript
+render() {
+    let { route, posts, medias } = this.props;
+    if (!posts) {
+        return null;
+    }
+    return (
+        <div className="posts">
+        {
+            posts.map((post) => {
+                let media = _.find(medias, { id: post.featured_media });
+                return <PostListView route={route} post={post} media={media} key={post.id} />
+            })
+        }
+        </div>
+    );
+}
+```
+
+The only thing noteworthy about the component is that it perform data load on scroll:
+
+```javascript
+handleScroll = (evt) => {
+    let { posts, maximum } = this.props;
+    let { scrollTop, scrollHeight } = document.body.parentNode;
+    if (scrollTop > scrollHeight * 0.5) {
+        if (posts && posts.length < maximum) {
+            posts.more();
+        }
+    }
+}
+```
 
 ## Cordova deployment
 
