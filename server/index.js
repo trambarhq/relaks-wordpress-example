@@ -21,7 +21,7 @@ let dnsCache = Bluebird.promisifyAll(DNSCache({
 
 const SERVER_PORT = 80;
 const WORDPRESS_HOST = process.env.WORDPRESS_HOST;
-const CACHE_CONTROL = 'public,s-maxage=604800';
+const CACHE_CONTROL = 'public,max-age=0,s-maxage=604800';
 
 // start up Express
 let app = Express();
