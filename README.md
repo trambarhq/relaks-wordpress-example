@@ -1,8 +1,8 @@
 Zero-latency WordPress Front-end
 ================================
-In this example, we're going to build a Zero-latency front-end for WordPress. When a visitor clicks on a link, a story will instantly appear. No hourglass. No spinner. No blank page. We'll accomplish this by aggressively prefetching data in our client-side code. At the same time, we're going to employ server-side rendering (SSR) to minimize time to first impression. The page should appear within a fraction of a second after the visitor enters the URL.
+In this example, we're going to build a zero-latency front-end for WordPress. When a visitor clicks on a link, a story will instantly appear. No hourglass. No spinner. No blank page. We'll accomplish this by aggressively prefetching data in our client-side code. At the same time, we're going to employ server-side rendering (SSR) to minimize time to first impression. The page should appear within a fraction of a second after the visitor enters the URL.
 
-Combined with aggressive back-end caching, what we'll end up with a web site that feels very fast and is cheap to host.
+Combined with aggressive back-end caching, we'll end up with a web site that feels very fast and is cheap to host.
 
 This is a complex example with many moving parts. It's definitely not for beginners. You should already be familiar with technologies involved: [React](https://reactjs.org/), [Nginx caching](https://www.nginx.com/blog/nginx-caching-guide/), and of course [WordPress](https://wordpress.org/) itself.
 
@@ -93,6 +93,8 @@ Now return to the WordPress admin page and publish another test post. After 30 s
 ![Welcome page](docs/img/front-page-new-story.png)
 
 To see the code running in debug mode, run `npm run watch`. The client-side code will be rebuilt whenever changes occurs.
+
+To populate your test site with dummy data, install the [FakerPress plugin](https://wordpress.org/plugins/fakerpress/).
 
 To shut down the test server, run `npm run stop-server`. To remove Docker volumes used by the example, run `npm run remove-server`.
 
