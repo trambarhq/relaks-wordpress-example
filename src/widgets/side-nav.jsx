@@ -298,17 +298,17 @@ class SideNavSync extends PureComponent {
         let { route, postLists, selectedYear } = this.props;
         let { date } = route.params;
         let className, url;
-        if (monthEntry.year === selectedYear) {
-            if (date && monthEntry.year === date.year && monthEntry.month === date.month) {
-                className = 'selected';
-            }
-
-            let postList = _.find(postLists, { monthEntry });
-            if (!postList || !_.isEmpty(postList.posts)) {
-                url = route.prefetchArchiveURL(monthEntry);
-            } else {
-                className = 'disabled';
-            }
+        if (monthEntry.year !== selectedYear) {
+            return null;
+        }
+        if (date && monthEntry.year === date.year && monthEntry.month === date.month) {
+            className = 'selected';
+        }
+        let postList = _.find(postLists, { monthEntry });
+        if (!postList || !_.isEmpty(postList.posts)) {
+            url = route.prefetchArchiveURL(monthEntry);
+        } else {
+            className = 'disabled';
         }
         return (
             <li key={i}>

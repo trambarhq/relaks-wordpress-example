@@ -230,7 +230,7 @@ class Route {
                 let url = _.trim(node.attribs.src);
                 if (url && !/^https?:/.test(url)) {
                     url = siteURL + url;
-                    node.attributes.src = url;
+                    node.attribs.src = url;
                 }
             }
         } else if (node.type === 'text') {
