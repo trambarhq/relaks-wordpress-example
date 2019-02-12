@@ -2,7 +2,7 @@ Zero-latency WordPress Front-end
 ================================
 In this example, we're going to build a Zero-latency front-end for WordPress. When a visitor clicks on a link, a story will instantly appear. No hourglass. No spinner. No blank page. We'll accomplish this by aggressively prefetching data in our client-side code. At the same time, we're going to employ server-side rendering (SSR) to minimize time to first impression. The page should appear within a fraction of a second after the visitor enters the URL.
 
-Combined with aggressive caching, what we'll end up with is a web site that feels very fast and is very cheap to host.
+Combined with aggressive back-end caching, what we'll end up with a web site that feels very fast and is cheap to host.
 
 This is a complex example with many moving parts. It's definitely not for beginners. You should already be familiar with technologies involved: [React](https://reactjs.org/), [Nginx caching](https://www.nginx.com/blog/nginx-caching-guide/), and of course [WordPress](https://wordpress.org/) itself.
 
@@ -28,23 +28,23 @@ For the purpose of demonstrating what the example code can do, I've prepared thr
 * [et.trambar.io](https://et.trambar.io)
 * [rwt.trambar.io](https://rwt.trambar.io)
 
-All three are hosted on the same AWS [AI medium instance](https://aws.amazon.com/ec2/instance-types/a1/), powered by a single core of an [Graviton CPU](https://www.phoronix.com/scan.php?page=article&item=ec2-graviton-performance&num=1) and backed by 2G of RAM. In terms of computational resources we have roughly one fourth that of a phone. Not much. For our system though, it's more than enough. Most requests will result in cache hits. Nginx will spend most of its time sending data already in memory. We'll be IO-bound long before we'll reach maximum CPU usage.
+All three are hosted on the same AWS [A1 medium instance](https://aws.amazon.com/ec2/instance-types/a1/). It's powered by a single core of a [Graviton CPU](https://www.phoronix.com/scan.php?page=article&item=ec2-graviton-performance&num=1) and backed by 2G of RAM. In terms of computational resources, we have roughly one fourth that of a phone. Not much. For our system though, it's more than enough. Most requests will result in cache hits. Nginx will spend most of its time sending data already in memory. We'll be IO-bound long before we're CPU-bound.
 
-[pfj.trambar.io](https://pfj.trambar.io) obtains its data from a test WordPress instance running on the same server. It's populated with random lorem ipsum text. You can log into the [WordPress admin page](https://pfj.trambar.io/wp-admin/) and post a article using the account `bdickus` (password: `incontinentia`). Publication of a new article will trigger a cache purge. The article should appear in the front page automatically after 30 seconds or so.
+[pfj.trambar.io](https://pfj.trambar.io) obtains its data from a test WordPress instance running on the same server. It's populated with random lorem ipsum text. You can log into the [WordPress admin page](https://pfj.trambar.io/wp-admin/) and post a article using the account `bdickus` (password: `incontinentia`). Publication of a new article will trigger a cache purge. The article should appear in the front page automatically after 30 seconds or so (no need to hit refresh button).
 
-You can see a list of what's in the Nginx cache [here](https://pfj.trambar.io/.cache/).
+You can see a list of what's in the Nginx cache [here](https://pfj.trambar.io/.cache).
 
-[et.trambar.io](https://et.trambar.io) and [rwt.trambar.io](https://rwt.trambar.io) obtain their data from [ExtremeTech](https://www.extremetech.com/) and [Real World Tech](https://www.realworldtech.com/) respectively. They are meant to give you a better sense of how the example code fares with real-world contents. Our server does not receive cache purge commands from these WordPress instances so the contents could be out of date. Cache misses will also lead to slightly longer pauses.
+[et.trambar.io](https://et.trambar.io) and [rwt.trambar.io](https://rwt.trambar.io) obtain their data from [ExtremeTech](https://www.extremetech.com/) and [Real World Tech](https://www.realworldtech.com/) respectively. They are meant to give you a better sense of how the example code fares with real-world contents. Both sites have close to two decades' worth of articles. Our server does not receive cache purge commands from these WordPress instances so the contents could be out of date. Cache misses will also lead to slightly longer pauses.
 
 ## Server-side rendering
 
-Isomorphic React components are capable of rendering on a web server as well as in a web browser. A primary purpose of server-side rendering (SSR) is search engine optimization. Another is to mask JavaScript loading time. Rather than displaying a spinner or progress bar, we render the front-end on the server and send that to the browser. Effectively, we're using the front-end's own appearance as its loading screen.
+Isomorphic React components are capable of rendering on a web server as well as in a web browser. One primary purpose of server-side rendering (SSR) is search engine optimization. Another is to mask JavaScript loading time. Rather than displaying a spinner or progress bar, we render the front-end on the server and send the HTML to the browser. Effectively, we're using the front-end's own appearance as its loading screen.
 
 The following animation depicts how an SSR-augmented single-page web-site works. Click on it if you wish to view it as separate images.
 
 [![Server-side rendering](docs/img/ssr.gif)](docs/ssr.md)
 
-While the SSR HTML is not backed by JavaScript, it does have functional hyperlinks. If the visitor clicks on a link before the JavaScript bundle is loaded, he'll end up at another SSR page. As the server has immediate access to both code and data, it can generate this page very quickly. It's also possible that the page exists in the server-side cache, in which case it'll be sent even sooner.
+While the SSR HTML is not backed by JavaScript, it does have functional hyperlinks. If the visitor clicks on a link before the JavaScript bundle is done loading, he'll end up at another SSR page. As the server has immediate access to both code and data, it can generate this page very quickly. It's also possible that the page exists already in the server-side cache, in which case it'll be sent even sooner.
 
 ## Back-end services
 
@@ -54,7 +54,7 @@ Our back-end consists of three services: WordPress itself, Nginx, and Node.js. T
 
 Note how Nginx does not fetch JSON data directly from WordPress. Instead, data goes through Node first. This detour is due mainly to WordPress not attaching [e-tags](https://en.wikipedia.org/wiki/HTTP_ETag) to JSON responses. Without e-tags the browser cannot perform cache validation (i.e. conditional request ￫ 304 not modified). Passing the data through Node also gives us a chance to strip out unnecessary fields. Finally, it lets us compress the data prior to sending it to Nginx. Size reduction means more contents will fit in the cache. It also saves Nginx from having to gzip the same data over and over again.
 
-Node will request JSON data from Nginx when it runs the front-end code. If the data isn't found in the cache, Node will end up serving its own request. This round-trip will result in Nginx caching the JSON data. We want that to happen since the browser will soon be requesting the same data (since it's running the same front-end code).
+Node will request JSON data from Nginx when it runs the front-end code. If the data isn't found in the cache, Node will end up serving its own request. This round-trip will result in Nginx caching the JSON data. We want that to happen since the browser will soon be requesting the same data (since it'll be running the same front-end code).
 
 ## Uncached page access
 
@@ -78,7 +78,7 @@ The following animation depicts what happens when a new article is published on 
 
 This example is delivered as a Docker app. Please install Docker and Docker Compose if they aren't already installed on your computer. On Windows and OSX, you might need to enable port forwarding for port 8000.
 
-In the command line, run `npm install` or `npm ci`. Once all libraries have been downloaded, run `npm run start-server`. Docker will proceed to download four official images from Docker Hub: [WordPress](https://hub.docker.com/_/wordpress/), [MariaDB](https://hub.docker.com/_/mariadb), [Nginx](https://hub.docker.com/_/nginx), and [Node.js](https://hub.docker.com/_/node/).
+In a command-line prompt, run `npm install` or `npm ci`. Once all libraries have been downloaded, run `npm run start-server`. Docker will proceed to download four official images from Docker Hub: [WordPress](https://hub.docker.com/_/wordpress/), [MariaDB](https://hub.docker.com/_/mariadb), [Nginx](https://hub.docker.com/_/nginx), and [Node.js](https://hub.docker.com/_/node/).
 
 Once the services are up and running, go to `http://localhost:8000/wp-admin/`. You should be greeted by WordPress's installation page. Enter some information about your test site and create the admin account. Log in and go to **Settings** > **Permalinks**. Choose one of the URL schemas.
 
@@ -100,14 +100,14 @@ If you have a production web site running WordPress, you can see how its content
 
 ## Nginx configuration
 
-Let us look at the [Nginx configuration file](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/nginx/default.conf). The first two lines tell Nginx where to place cached responses, how large the cache should be (1 GB), and for how long inactive entries are kept until they're deleted (7 days):
+Let us look at the [Nginx configuration file](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/nginx/default.conf). The first two lines tell Nginx where to place cached responses, how large the cache should be (1 GB), and for how long to keep inactive entries (7 days):
 
 ```
 proxy_cache_path /var/cache/nginx/data keys_zone=data:10m max_size=1g inactive=7d;
 proxy_temp_path /var/cache/nginx/tmp;
 ```
 
-[`proxy_cache_path`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_path) is specified without `levels` so that files are stored in a flat directory structure. This makes it easier to scan the cache. [`proxy_temp_path`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_temp_path) is set to the a location on the same volume as the cache so Nginx can move files into it with a move operation.
+[`proxy_cache_path`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_path) is specified without `levels` so that files are stored in a flat directory structure. This makes it easier to scan the cache. [`proxy_temp_path`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_temp_path) is set to a location on the same volume as the cache so Nginx can move files into it with a rename operation.
 
 The following section configures reverse-proxying for the WordPress admin page:
 
@@ -147,7 +147,7 @@ We select the cache zone we defined earlier with the [`proxy_cache`](http://ngin
 
 The [`proxy_ignore_headers`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ignore_headers) directive is there to keep Nginx from creating separate cache entries when requests to the same URL have different `Accept-Encoding` headers (additional compression methods, for example).
 
-The first two headers added using [add_header](http://nginx.org/en/docs/http/ngx_http_headers_module.html#add_header) are there to enable [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). The last two `X-Cache-*` headers for debugging purpose. They let us figure out whether a request has resulted in a cache hit when we examine it using the browser's development tools:
+The first two headers added using [add_header](http://nginx.org/en/docs/http/ngx_http_headers_module.html#add_header) are there to enable [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). The last two `X-Cache-*` headers are for debugging purpose. They let us figure out whether a request has resulted in a cache hit when we examine it using the browser's development tools:
 
 ![Chrome Dev Tools](docs/img/dev-tool-x-cache.png)
 
@@ -160,7 +160,9 @@ The first two headers added using [add_header](http://nginx.org/en/docs/http/ngx
 
 ### HTML page generation
 
-The following Express handler ([index.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/index.js#L101)) is invoked when Nginx asks for an HTML page. It detects whether the remote agent is a search-engine spider and handle the request accordingly.
+The following Express handler ([index.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/index.js#L101)) is invoked when Nginx asks for an HTML page. This should happen infrequently as page navigation is handled client-side. Most visitors will enter the site through the root page and that's inevitably cached.
+
+The handler detects whether the remote agent is a search-engine spider and handle the request accordingly.
 
 ```javascript
 async function handlePageRequest(req, res, next) {
@@ -185,7 +187,7 @@ async function handlePageRequest(req, res, next) {
 }
 ```
 
-`PageRenderer.generate()` ([page-renderer.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/page-renderer.js#L12)) uses our isomorphic front-end React code to generate the page. Since the fetch API doesn't exist on Node.js, we need to supply a compatible function to the data source. We use this opportunity to capture the list of URLs that the front-end accesses. Later, we'll use this list to determine whether a cached page has become out-of-date.
+`PageRenderer.generate()` ([page-renderer.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/page-renderer.js#L12)) uses our isomorphic React code to generate the page. Since the fetch API doesn't exist on Node.js, we need to supply a compatible function to the data source. We use this opportunity to capture the list of URLs that the front-end accesses. Later, we'll use this list to determine whether a cached page has become out-of-date.
 
 ```javascript
 async function generate(path, target) {
@@ -215,9 +217,9 @@ async function generate(path, target) {
 }
 ```
 
-`FrontEnd.render()` returns a ReactElement containing just plain HTML child elements. We use React DOM Server to convert that to actual HTML text. Then we stick it into our [HTML template](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/index.html), where a HTML comment sits inside the element that would host the root React component.
+`FrontEnd.render()` returns a ReactElement containing plain HTML child elements. We use [React DOM Server](https://reactjs.org/docs/react-dom-server.html#rendertostring) to convert that to actual HTML text. Then we stick it into our [HTML template](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/index.html), where a HTML comment sits inside the element that would host the root React component.
 
-`FrontEnd.render()` is a function exported by our front-end's [bootstrap code](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/main.js#L68):
+`FrontEnd.render()` is a function exported by our front-end's [bootstrap code](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/main.js#L67):
 
 ```javascript
 async function serverSideRender(options) {
@@ -246,11 +248,11 @@ async function serverSideRender(options) {
 exports.render = serverSideRender;
 ```
 
-The code initiates the data source and the route manager. Using these as props, it creates the root React element `<FrontEnd />`. The function `harvest()` then recursively renders the component tree, util all we have are plain HTML elements:
+The code initiates the data source and the route manager. Using these as props, it creates the root React element `<FrontEnd />`. The function `harvest()` (from [relaks-harvest](https://github.com/trambarhq/relaks-harvest)) then recursively renders the component tree until all we have are plain HTML elements:
 
 ![Component tree conversion](docs/img/harvest.png)
 
-Our front-end is built with the help of [Relaks](https://github.com/trambarhq/relaks), a library that let us make asynchronous calls within a React component's render method. Data retrievals are done as part of the rendering cycle. This model makes SSR very straight forward. To render a page, we just the render methods of all its components and wait for them to finish.
+Our front-end is built with the help of [Relaks](https://github.com/trambarhq/relaks), a library that let us make asynchronous calls within a React component's render method. Data retrievals are done as part of the rendering cycle. This model makes SSR very straight forward. To render a page, we just call the render methods of all its components and wait for them to finish.
 
 ### JSON data retrieval
 
@@ -274,7 +276,7 @@ async function handleJSONRequest(req, res, next) {
 }
 ```
 
-`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/json-retriever.js#L5)) downloads JSON data from WordPress, performing certain error correction to deal with rogue plugins:
+`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/json-retriever.js#L5)) downloads JSON data from WordPress and performs error correction to deal with rogue plugins:
 
 ```javascript
 async function fetch(path) {
@@ -309,7 +311,7 @@ Fields that aren't needed are stripped out before the JSON object is stringified
 
 ### Purge request Handling
 
-The [Proxy Cache Purge](https://wordpress.org/plugins/varnish-http-purge/) sends out `PURGE` requests whenever a new article is published on WordPress. We configure our system so that Node receives these requests. Before we carry out a request, we need to check if it really is coming from WordPress. It may provide either an URL to purge or a wildcard expression. We watch for two specific scenarios: when the plugin wants to purge the whole cache and when it wants to purge a single JSON object. In the latter case, we proceed to purge all queries that might be affected.
+The [Proxy Cache Purge](https://wordpress.org/plugins/varnish-http-purge/) sends out `PURGE` requests whenever a new article is published on WordPress. We configured our system so that Node would receive these requests. Before we carry out the purge, we check if the request really is from WordPress. It may give us either an URL or a wildcard expression. We watch for two specific scenarios: when the plugin wants to purge the whole cache and when it wants to purge a single JSON object. In the latter case, we proceed to purge all queries that might be affected.
 
 ```javascript
 async function handlePurgeRequest(req, res) {
@@ -361,11 +363,11 @@ async function handlePurgeRequest(req, res) {
 }
 ```
 
-For example, when we receive `PURGE /wp-json/wp/v2/posts/100/`, we perform a purge of `/json/wp/v2/posts.*`. The approach is pretty conservative. Often cache entries will get purged when there's no need. This isn't terrible since the data can be reloaded fairly quickly. Since e-tags are based on contents, when no change has actually occurred we would end up with the same e-tag. Nginx will still send `304 Not Modified` to the browsers despite a cache miss.
+For example, when we receive `PURGE /wp-json/wp/v2/posts/100/`, we perform a purge of `/json/wp/v2/posts.*`. The approach is pretty conservative. Entries will often get purged when there's no need. This isn't terrible since the data can be reloaded fairly quickly. Since e-tags are based on contents, when no change has actually occurred we would end up with the same e-tag. Nginx will still send `304 not modified` to the browser despite a back-end cache miss.
 
-After purging JSON data, we purge the `/.mtime` timestamp file. This act as a signal to the web browser that it's time to rerun data queries.
+After purging JSON data, we purge the `/.mtime` timestamp file. This act as a signal to the browser that it's time to rerun data queries.
 
-Then we purge HTML files generated earlier that made use of the purged data. Recall how we had saved the list of source URLs in `handlePageRequest()`.
+Then we purge HTML files generated earlier that made use of the purged data. Recall how in `handlePageRequest()` we had saved the list of source URLs.
 
 Only Nginx Plus (i.e. paid version of Nginx) supports cache purging. `NginxCache.purge()` ([nginx-cache.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/nginx-cache.js#L7)) is basically a workaround for that fact. The code is not terribly efficient but does the job. Hopefully cache purging will be available in the free version of Nginx in the future.
 
@@ -452,7 +454,7 @@ async function initialize(evt) {
 }
 ```
 
-The code creates the data source and the route manager. When SSR is employed, we ["hydrate"](https://reactjs.org/docs/react-dom.html#hydrate) the DOM elements that are already in the page. We first perform the exact same action that was done on the server. Doing so pulls in data that will be needed for CSR later (while the visitor is still looking at the SSR contents). Passing `{ seeds: true }` to `harvest()` directs it to return the contents of asynchronous Relaks components in a list. These "seeds" are then planted into Relaks, so that our asynchronous components can return their initial appearance synchronously. Without this step, the small delays required by asynchronous rendering would lead to mismatches during the hydration process.
+The code creates the data source and the route manager. When SSR is employed, we ["hydrate"](https://reactjs.org/docs/react-dom.html#hydrate) DOM elements that are already in the page. We first perform the same sequence of actions that was done on the server. Doing so pulls in data that will be needed for CSR later (while the visitor is still looking at the SSR HTML). Passing `{ seeds: true }` to `harvest()` tells it to return the contents of asynchronous Relaks components in a list. These "seeds" are then planted into Relaks, so that asynchronous components can return their initial appearances synchronously. Without this step, the small delays required by asynchronous rendering would lead to mismatches during the hydration process.
 
 Once the DOM is hydrated, we complete the transition to CSR by rendering a second `<FrontEnd />` element, this time without the prop `ssr`.
 
@@ -502,7 +504,7 @@ async setParameters(evt, fallbackToRoot) {
 
 The key parameter is `pageType`, which is used to load one of the [page components](https://github.com/trambarhq/relaks-wordpress-example/tree/master/src/pages).
 
-As a glance `route.getParameters()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L77)) might seem like incredibly inefficient. To see if a URL points to a page, it fetches all pages and see if one of them has that URL:
+As a glance `route.getParameters()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L77)) might seem  incredibly inefficient. To see if a URL points to a page, it fetches all pages and see if one of them has that URL:
 
 ```javascript
 let allPages = await wp.fetchPages();
@@ -522,9 +524,9 @@ if (category) {
 }
 ```
 
-Most of the time, however, the data in question would be cached already. The top nav loads the pages, while the side nav loads the categories (and also top tags). Resolving the route wouldn't require actual data transfer. On cold start the process would be somewhat slow. Our SSR mechanism would mask this delay, however. A visitor wouldn't find it too noticeable. Of course, since we have all pages at hand, a page will pop up instantly when the visitor clicks on the nav bar.
+Most of the time, the data in question would be cached already. The top nav loads the pages, while the side nav loads the categories (and also top tags). Resolving the route wouldn't require actual data transfer. On cold start the process would be somewhat slow. Our SSR mechanism would mask this delay, however. A visitor wouldn't find it too noticeable. Of course, since we have all pages at hand, a page will pop up instantly when the visitor clicks on the nav bar.
 
-`route.getObjectURL()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L32)) is used to obtain the URL to an object (post, page, category, etc.). The method basically just remove the site URL from the object's WP permalink:
+`route.getObjectURL()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L32)) is used to obtain the URL to an object (post, page, category, etc.). The method just remove the site URL from the object's WP permalink:
 
 ```javascript
 getObjectURL(object) {
@@ -554,7 +556,7 @@ The first ten posts are always fetched so the visitor sees something immediately
 
 ### WelcomePage
 
-`WelcomePage` (welcome-page.jsx)[https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/pages/welcome-page.jsx] is an asynchronous component. Its `renderAsync()` method fetches a list of posts as well as featured medias and passes them to `WelcomePageSync` for actual rendering of the user interface:
+`WelcomePage` (welcome-page.jsx)[https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/pages/welcome-page.jsx] is an asynchronous component. Its `renderAsync()` method fetches a list of posts and passes them to `WelcomePageSync` for actual rendering of the user interface:
 
 ```javascript
 async renderAsync(meanwhile) {
@@ -626,4 +628,6 @@ The Cordova code in the repo retrieves data from `https://et.trambar.io`. To cha
 
 ## Final words
 
-**TODO**
+I hope this example lend you some new inspirations. While WordPress is old software, with a bit of clever coding we can greatly enhance the end-user experience. Our demo system feels fast on initial load. It feels fast during subsequent navigation. More importantly perhaps, the system is cheap to operate.
+
+The concepts demonstrated here aren't specific to WordPress. Server-side rendering (SSR) in particular is a very useful technique for any single-page web app. It lets us festoon our project with JavaScript libraries without having to worry too much about the negative impact on load time. For instance, no effort was made to optimize the example code. And as you can see in the [WebPart build report](http://pfj.trambar.io/report.html), our front-end takes up a whopping 850KB (242KB gzipped). Yet thanks to SSR, the garbage has no discernible impact.
