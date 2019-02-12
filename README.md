@@ -100,7 +100,7 @@ If you have a production web site running WordPress, you can see how its content
 
 ## Nginx configuration
 
-Let us look at the [Nginx configuration file](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/nginx/default.conf). The first two lines tell Nginx where to place cached responses, how large the cache should be (1 GB), and for how long inactive entries are kept until they're deleted (7 days):
+Let us look at the [Nginx configuration file](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/nginx/default.conf). The first two lines tell Nginx where to place cached responses, how large the cache should be (1 GB), and for how long inactive entries are kept until they're deleted (7 days):
 
 ```
 proxy_cache_path /var/cache/nginx/data keys_zone=data:10m max_size=1g inactive=7d;
@@ -134,12 +134,10 @@ location / {
     proxy_cache_key $uri$is_args$args;
     proxy_cache_min_uses 1;
     proxy_cache_valid 400 404 1m;
-    proxy_hide_header Cache-Control;
     proxy_ignore_headers Vary;
 
     add_header Access-Control-Allow-Origin *;
     add_header Access-Control-Expose-Headers X-WP-Total;
-    add_header Cache-Control "public,max-age=0";
     add_header X-Cache-Date $upstream_http_date;
     add_header X-Cache-Status $upstream_cache_status;
 }
@@ -147,9 +145,9 @@ location / {
 
 We select the cache zone we defined earlier with the [`proxy_cache`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache) directive. We set the cache key using [`proxy_cache_key`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_key). The MD5 hash of the path plus the query string will be the name used to save each cached server response. With the [`proxy_cache_min_uses`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_min_uses) directive we tell Nginx to start caching on the very first request. With the [`proxy_cache_valid`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) directive we ask Nginx to cache error responses for one minute.
 
-As we're going to add the `Cache-Control` header, we want to strip off the one from Node.js first using [`proxy_hide_header`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header). The [`proxy_ignore_headers`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ignore_headers) directive, meanwhile, is there to keep Nginx from creating separate cache entries when requests to the same URL have different `Accept-Encoding` headers (additional compression scheme, for example).
+The [`proxy_ignore_headers`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ignore_headers) directive is there to keep Nginx from creating separate cache entries when requests to the same URL have different `Accept-Encoding` headers (additional compression methods, for example).
 
-The first two headers we add are there to enable [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). The last two `X-Cache-*` headers are there for debugging purpose. They let us figure out whether a request has resulted in a cache hit when we examine it using the browser's development tools:
+The first two headers added using [add_header](http://nginx.org/en/docs/http/ngx_http_headers_module.html#add_header) are there to enable [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). The last two `X-Cache-*` headers for debugging purpose. They let us figure out whether a request has resulted in a cache hit when we examine it using the browser's development tools:
 
 ![Chrome Dev Tools](docs/img/dev-tool-x-cache.png)
 
@@ -162,7 +160,7 @@ The first two headers we add are there to enable [CORS](https://developer.mozill
 
 ### HTML page generation
 
-The following Express handler ([index.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/index.js#L101)) is invoked when Nginx asks for an HTML page. It detects whether the remote agent is a search-engine spider and handle the request accordingly.
+The following Express handler ([index.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/index.js#L101)) is invoked when Nginx asks for an HTML page. It detects whether the remote agent is a search-engine spider and handle the request accordingly.
 
 ```javascript
 async function handlePageRequest(req, res, next) {
@@ -187,7 +185,7 @@ async function handlePageRequest(req, res, next) {
 }
 ```
 
-`PageRenderer.generate()` ([page-renderer.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/page-renderer.js#L12)) uses our isomorphic front-end React code to generate the page. Since the fetch API doesn't exist on Node.js, we need to supply a compatible function to the data source. We use this opportunity to capture the list of URLs that the front-end accesses. Later, we'll use this list to determine whether a cached page has become out-of-date.
+`PageRenderer.generate()` ([page-renderer.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/page-renderer.js#L12)) uses our isomorphic front-end React code to generate the page. Since the fetch API doesn't exist on Node.js, we need to supply a compatible function to the data source. We use this opportunity to capture the list of URLs that the front-end accesses. Later, we'll use this list to determine whether a cached page has become out-of-date.
 
 ```javascript
 async function generate(path, target) {
@@ -217,9 +215,9 @@ async function generate(path, target) {
 }
 ```
 
-`FrontEnd.render()` returns a ReactElement containing just plain HTML child elements. We use React DOM Server to convert that to actual HTML text. Then we stick it into our [HTML template](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/index.html), where a HTML comment sits inside the element that would host the root React component.
+`FrontEnd.render()` returns a ReactElement containing just plain HTML child elements. We use React DOM Server to convert that to actual HTML text. Then we stick it into our [HTML template](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/index.html), where a HTML comment sits inside the element that would host the root React component.
 
-`FrontEnd.render()` is a function exported by our front-end's [bootstrap code](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/main.js#L68):
+`FrontEnd.render()` is a function exported by our front-end's [bootstrap code](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/main.js#L68):
 
 ```javascript
 async function serverSideRender(options) {
@@ -276,7 +274,7 @@ async function handleJSONRequest(req, res, next) {
 }
 ```
 
-`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/json-retriever.js#L5)) downloads JSON data from WordPress, performing certain error correction to deal with rogue plugins:
+`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/json-retriever.js#L5)) downloads JSON data from WordPress, performing certain error correction to deal with rogue plugins:
 
 ```javascript
 async function fetch(path) {
@@ -369,7 +367,7 @@ After purging JSON data, we purge the `/.mtime` timestamp file. This act as a si
 
 Then we purge HTML files generated earlier that made use of the purged data. Recall how we had saved the list of source URLs in `handlePageRequest()`.
 
-Only Nginx Plus (i.e. paid version of Nginx) supports cache purging. `NginxCache.purge()` ([nginx-cache.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/server/nginx-cache.js#L7)) is basically a workaround for that fact. The code is not terribly efficient but does the job. Hopefully cache purging will be available in the free version of Nginx in the future.
+Only Nginx Plus (i.e. paid version of Nginx) supports cache purging. `NginxCache.purge()` ([nginx-cache.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/nginx-cache.js#L7)) is basically a workaround for that fact. The code is not terribly efficient but does the job. Hopefully cache purging will be available in the free version of Nginx in the future.
 
 ### Timestamp handling
 
@@ -397,7 +395,7 @@ async function handleTimestampRequest(req, res, next) {
 
 ### DOM hydration
 
-The following function ([main.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/main.js#L12)) is responsible for bootstrapping the front-end:
+The following function ([main.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/main.js#L12)) is responsible for bootstrapping the front-end:
 
 ```javascript
 async function initialize(evt) {
@@ -473,7 +471,7 @@ routeManager.addEventListener('beforechange', (evt) => {
 });
 ```
 
-`route.setParameters()` ([routing.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/routing.js#L62)) basically displaces the default parameter extraction mechanism. Our routing table is reduced to the following:
+`route.setParameters()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L62)) basically displaces the default parameter extraction mechanism. Our routing table is reduced to the following:
 
 ```javascript
 let routes = {
@@ -502,9 +500,9 @@ async setParameters(evt, fallbackToRoot) {
 }
 ```
 
-The key parameter is `pageType`, which is used to load one of the [page components](https://github.com/chung-leong/relaks-wordpress-example/tree/master/src/pages).
+The key parameter is `pageType`, which is used to load one of the [page components](https://github.com/trambarhq/relaks-wordpress-example/tree/master/src/pages).
 
-As a glance `route.getParameters()` ([routing.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/routing.js#L77)) might seem like incredibly inefficient. To see if a URL points to a page, it fetches all pages and see if one of them has that URL:
+As a glance `route.getParameters()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L77)) might seem like incredibly inefficient. To see if a URL points to a page, it fetches all pages and see if one of them has that URL:
 
 ```javascript
 let allPages = await wp.fetchPages();
@@ -526,7 +524,7 @@ if (category) {
 
 Most of the time, however, the data in question would be cached already. The top nav loads the pages, while the side nav loads the categories (and also top tags). Resolving the route wouldn't require actual data transfer. On cold start the process would be somewhat slow. Our SSR mechanism would mask this delay, however. A visitor wouldn't find it too noticeable. Of course, since we have all pages at hand, a page will pop up instantly when the visitor clicks on the nav bar.
 
-`route.getObjectURL()` ([routing.js](https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/routing.js#L32)) is used to obtain the URL to an object (post, page, category, etc.). The method basically just remove the site URL from the object's WP permalink:
+`route.getObjectURL()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L32)) is used to obtain the URL to an object (post, page, category, etc.). The method basically just remove the site URL from the object's WP permalink:
 
 ```javascript
 getObjectURL(object) {
@@ -556,7 +554,7 @@ The first ten posts are always fetched so the visitor sees something immediately
 
 ### WelcomePage
 
-`WelcomePage` (welcome-page.jsx)[https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/pages/welcome-page.jsx] is an asynchronous component. Its `renderAsync()` method fetches a list of posts as well as featured medias and passes them to `WelcomePageSync` for actual rendering of the user interface:
+`WelcomePage` (welcome-page.jsx)[https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/pages/welcome-page.jsx] is an asynchronous component. Its `renderAsync()` method fetches a list of posts as well as featured medias and passes them to `WelcomePageSync` for actual rendering of the user interface:
 
 ```javascript
 async renderAsync(meanwhile) {
@@ -585,7 +583,7 @@ render() {
 
 ### PostList
 
-The render method of `PostList` (post-list.jsx)[https://github.com/chung-leong/relaks-wordpress-example/blob/master/src/widgets/post-list.jsx] doesn't do anything special:
+The render method of `PostList` (post-list.jsx)[https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/widgets/post-list.jsx] doesn't do anything special:
 
 ```javascript
 render() {
