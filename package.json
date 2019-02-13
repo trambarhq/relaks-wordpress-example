@@ -48,7 +48,7 @@
     "relaks": "^1.1.9",
     "relaks-harvest": "^0.0.3",
     "relaks-route-manager": "^0.0.21",
-    "relaks-wordpress-data-source": "^0.0.4",
+    "relaks-wordpress-data-source": "^0.0.5",
     "sass-loader": "^6.0.5",
     "uglifyjs-webpack-plugin": "^0.4.6",
     "webpack": "^3.1.0",
