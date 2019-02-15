@@ -72,9 +72,13 @@ async function loadCacheEntry(md5) {
 }
 
 async function loadCacheEntryKey(path) {
-    let fd = await FS.openAsync(path, 'r');
     let buf = Buffer.alloc(1024);
-    let bytesRead = await FS.readAsync(fd, buf, 0, 1024, 0);
+    let fd = await FS.openAsync(path, 'r');
+    try {
+        await FS.readAsync(fd, buf, 0, 1024, 0);
+    } finally {
+        FS.closeAsync(fd);
+    }
     let si = buf.indexOf('KEY:');
     let ei = buf.indexOf('\n', si);
     if (si !== -1 && ei !== -1) {
