@@ -306,9 +306,6 @@ class Wordpress {
      * @return {Promise<Array>}
      */
     async fetchList(url, options) {
-        if (this.ssr === 'seo') {
-            options = Object.assign({}, options, { minimum: '100%' });
-        }
         return this.dataSource.fetchList(url, options);
     }
 
