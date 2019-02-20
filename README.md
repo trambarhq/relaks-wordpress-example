@@ -558,7 +558,7 @@ The first ten posts are always fetched so the visitor sees something immediately
 
 ### WelcomePage
 
-`WelcomePage` (welcome-page.jsx)[https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/pages/welcome-page.jsx] is an asynchronous component. Its `renderAsync()` method fetches a list of posts and passes them to `WelcomePageSync` for actual rendering of the user interface:
+`WelcomePage` [welcome-page.jsx](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/pages/welcome-page.jsx) is an asynchronous component. Its `renderAsync()` method fetches a list of posts and passes them to `WelcomePageSync` for actual rendering of the user interface:
 
 ```javascript
 async renderAsync(meanwhile) {
@@ -587,7 +587,7 @@ render() {
 
 ### PostList
 
-The render method of `PostList` (post-list.jsx)[https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/widgets/post-list.jsx] doesn't do anything special:
+The render method of `PostList` [post-list.jsx](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/widgets/post-list.jsx) doesn't do anything special:
 
 ```javascript
 render() {
