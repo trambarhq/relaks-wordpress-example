@@ -1,6 +1,7 @@
 const Bluebird = require('bluebird');
 const FS = Bluebird.promisifyAll(require('fs'));
 const ReactDOMServer = require('react-dom/server');
+const HTTP = require('http');
 const CrossFetch = require('cross-fetch');
 const FrontEnd = require('./client/front-end');
 
@@ -15,10 +16,12 @@ async function generate(path, target) {
     let host = NGINX_HOST;
     // create a fetch() that remembers the URLs used
     let sourceURLs = [];
+    let agent = new HTTP.Agent({ keepAlive: true });
     let fetch = (url, options) => {
         if (url.startsWith(host)) {
             sourceURLs.push(url.substr(host.length));
             options = addHostHeader(options);
+            options.agent = agent;
         }
         return CrossFetch(url, options);
     };
