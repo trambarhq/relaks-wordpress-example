@@ -4,10 +4,8 @@ var Webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var DefinePlugin = Webpack.DefinePlugin;
 var NamedChunksPlugin = Webpack.NamedChunksPlugin;
-var NamedModulesPlugin = Webpack.NamedModulesPlugin;
-var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
+var MiniCSSExtractPlugin = require("mini-css-extract-plugin");
 
 var EVENT = process.env.npm_lifecycle_event;
 var BUILD = (EVENT === 'build') ? 'production' : 'development';
@@ -17,6 +15,7 @@ var CORDOVA_DATA_HOST = process.env.CORDOVA_DATA_HOST;
 var BASE_PATH = '/';
 
 var clientConfig = {
+    mode: BUILD,
     context: Path.resolve('./src'),
     entry: './main',
     output: {
@@ -50,9 +49,11 @@ var clientConfig = {
             },
             {
                 test: /\.scss$/,
-                use: ExtractTextPlugin.extract({
-                    use: 'css-loader!sass-loader',
-                })
+                use: [ 
+                    MiniCSSExtractPlugin.loader, 
+                    'css-loader', 
+                    'sass-loader' 
+                ],
             },
             {
                 test: /fonts.*\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
@@ -75,17 +76,19 @@ var clientConfig = {
             'process.env.BASE_PATH': JSON.stringify(BASE_PATH),
         }),
         new NamedChunksPlugin,
-        new NamedModulesPlugin,
         new BundleAnalyzerPlugin({
             analyzerMode: (EVENT === 'build') ? 'static' : 'disabled',
             reportFilename: `report.html`,
         }),
-        new ExtractTextPlugin("styles.css"),
+        new MiniCSSExtractPlugin({
+            filename: "[name].css",
+            chunkFilename: "[id].css"
+        }),
     ],
-    devtool: (EVENT === 'build') ? false : 'inline-source-map',
 };
 
 var serverConfig = {
+    mode: clientConfig.mode,
     context: clientConfig.context,
     entry: clientConfig.entry,
     target: 'node',
@@ -105,12 +108,14 @@ var serverConfig = {
             'process.env.BASE_PATH': JSON.stringify(BASE_PATH),
         }),
         new NamedChunksPlugin,
-        new NamedModulesPlugin,
         new HtmlWebpackPlugin({
             template: Path.resolve(`./src/index.html`),
             filename: 'index.html',
         }),
-        new ExtractTextPlugin('styles.css'),
+        new MiniCSSExtractPlugin({
+            filename: "[name].css",
+            chunkFilename: "[id].css"
+        }),
     ],
     devtool: clientConfig.devtool,
 };
@@ -133,16 +138,17 @@ var cordovaConfig = {
             'process.env.BASE_PATH': JSON.stringify(BASE_PATH),
         }),
         new NamedChunksPlugin,
-        new NamedModulesPlugin,
         new HtmlWebpackPlugin({
             template: Path.resolve(`./src/index.html`),
             filename: 'index.html',
             cordova: true,
             host: CORDOVA_DATA_HOST
         }),
-        new ExtractTextPlugin('styles.css'),
+        new MiniCSSExtractPlugin({
+            filename: "[name].css",
+            chunkFilename: "[id].css"
+        }),
     ],
-    devtool: clientConfig.devtool,
 };
 
 var configs = module.exports = [];
@@ -165,21 +171,6 @@ if (IS_DEV_SERVER) {
         configs.push(cordovaConfig);
         console.log('Building for Cordova: ' + CORDOVA_DATA_HOST);
     }
-}
-
-var constants = {};
-if (EVENT === 'build') {
-    console.log('Optimizing JS code');
-    configs.forEach((config) => {
-        // use Uglify to remove dead-code
-        config.plugins.push(new UglifyJSPlugin({
-            uglifyOptions: {
-                compress: {
-                  drop_console: true,
-                }
-            }
-        }));
-    })
 }
 
 // copy webpack.resolve.js into webpack.debug.js to resolve Babel presets
