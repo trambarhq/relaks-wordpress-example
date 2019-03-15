@@ -85,6 +85,7 @@ var clientConfig = {
             chunkFilename: "[id].css"
         }),
     ],
+    devtool: (EVENT === 'build') ? 'source-map' : 'inline-source-map',
 };
 
 var serverConfig = {
