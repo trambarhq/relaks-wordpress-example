@@ -26,7 +26,7 @@ services:
       WORDPRESS_HOST: http://wordpress
       NGINX_HOST: http://nginx
       NGINX_CACHE: /var/cache/nginx/data
-    command: [ node, /opt/example/server/index.js ]
+    command: [node, /opt/example/server/index.js]
     restart: always
   db:
     image: mariadb:10
@@ -47,6 +47,8 @@ services:
     depends_on:
       - db
     image: wordpress:latest
+    volumes:
+      - ./server/wordpress/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
     networks:
       network:
         ipv4_address: 172.129.0.5
@@ -62,6 +64,6 @@ networks:
   network:
     driver: bridge
     ipam:
-     config:
-       - subnet: 172.129.0.0/16
-         gateway: 172.129.0.1
+      config:
+        - subnet: 172.129.0.0/16
+          gateway: 172.129.0.1
