@@ -1,52 +1,46 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import { Route } from 'routing';
-import WordPress from 'wordpress';
+import React from 'react';
+import Relaks, { useProgress, useSaveBuffer } from 'relaks/hooks';
 
-class TopNav extends AsyncComponent {
-    static displayName = 'TopNav';
+async function TopNav(props) {
+    const { wp, route } = props;
+    const [ show ] = useProgress();
+    const [ search, setSearch ] = useSaveBuffer(route.params.search, {
+        delay: 500,
+        save: (newSearch) => {
+            const url = route.getSearchURL(newSearch);
+            const options = {
+                replace: (route.params.pageType === 'search')
+            };
+            route.change(url);
+        },
+    });
 
-    async renderAsync(meanwhile) {
-        let { wp, route } = this.props;
-        let props = {
-            route,
-        };
-        meanwhile.show(<TopNavSync {...props} />);
-        props.site = await wp.fetchSite();
-        meanwhile.show(<TopNavSync {...props} />);
-        props.pages = await wp.fetchPages();
-        return <TopNavSync {...props} />;
-    }
-}
+    const handleSearchChange = (evt) => {
+        setSearch(evt.target.value);
+    };
 
-class TopNavSync extends PureComponent {
-    static displayName = 'TopNavSync';
+    render();
+    const site = await wp.fetchSite();
+    render();
+    const pages = await wp.fetchPages();
+    render();
 
-    constructor(props) {
-        super(props);
-        let { route } = props;
-        let { search } = route.params;
-        this.searchTimeout = 0;
-        this.state = { search };
-    }
-
-    render() {
-        let { onMouseOver, onMouseOut } = this.props;
-        return (
-            <div className="top-nav" onMouseOver={onMouseOver} onMouseOut={onMouseOut}>
-                {this.renderTitleBar()}
-                {this.renderPageLinkBar()}
-                {this.renderSearchBar()}
+    function render() {
+        show(
+            <div className="top-nav">
+                {renderTitleBar()}
+                {renderPageLinkBar()}
+                {renderSearchBar()}
             </div>
         );
     }
 
-    renderTitleBar() {
-        let { route, site } = this.props;
-        let name = _.get(site, 'name', '');
-        let description = _.unescape(_.get(site, 'description', '').replace(/&#039;/g, "'"));
-        let url = route.getRootURL();
+    function renderTitleBar() {
+        const name = _.get(site, 'name', '');
+        const descriptionHTML = _.get(site, 'description', '');
+        const description = _.unescape(descriptionHTML.replace(/&#039;/g, "'"));
+        const url = route.getRootURL();
         return (
             <div className="title-bar">
                 <div className="title" title={description}>
@@ -59,25 +53,19 @@ class TopNavSync extends PureComponent {
         );
     }
 
-    renderPageLinkBar() {
-        let { pages } = this.props;
-        pages = _.filter(pages, { parent: 0 });
-        pages = _.sortBy(pages, 'menu_order');
+    function renderPageLinkBar() {
+        let filtered = _.filter(pages, { parent: 0 });
+        let ordered = _.sortBy(filtered, 'menu_order');
         return (
             <div className="page-bar">
-            {
-                pages.map((page, i) => {
-                    return this.renderPageLinkButton(page, i);
-                })
-            }
+                {ordered.map(renderPageLinkButton)}
             </div>
         );
     }
 
-    renderPageLinkButton(page, i) {
-        let { route } = this.props;
-        let title = _.get(page, 'title.rendered');
-        let url = route.prefetchObjectURL(page);
+    function renderPageLinkButton(page, i) {
+        const title = _.get(page, 'title.rendered');
+        const url = route.prefetchObjectURL(page);
         return (
             <div className="button" key={i}>
                 <a href={url}>{title}</a>
@@ -85,71 +73,21 @@ class TopNavSync extends PureComponent {
         );
     }
 
-    renderSearchBar() {
-        let { route } = this.props;
-        let { search } = this.state;
+    function renderSearchBar() {
         return (
             <div className="search-bar">
                 <span className="input-container">
-                    <input type="text" value={search || ''} onChange={this.handleSearchChange} />
+                    <input type="text" value={search || ''} onChange={handleSearchChange} />
                     <i className="fa fa-search" />
                 </span>
             </div>
         );
     }
-
-    performSearch = (evt) => {
-        let { search } = this.state;
-        let { route } = this.props;
-        let url = route.getSearchURL(search);
-        let options = {
-            replace: (route.params.pageType === 'search')
-        };
-        route.change(url);
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        let { route } = this.props;
-        if (prevProps.route !== route) {
-            let { search } = route.params;
-            this.setState({ search });
-        }
-    }
-
-    componentWillUnmount() {
-        clearTimeout(this.searchTimeout);
-    }
-
-    handleSearchChange = (evt) => {
-        let search = evt.target.value;
-        this.setState({ search });
-        clearTimeout(this.searchTimeout);
-        this.searchTimeout = setTimeout(this.performSearch, 500);
-    }
 }
 
-TopNavSync.defaultProps = {
-    site: {},
-    pages: [],
-    search: '',
-};
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    TopNav.propTypes = {
-        wp: PropTypes.instanceOf(WordPress).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-    };
-    TopNavSync.propTypes = {
-        site: PropTypes.object,
-        pages: PropTypes.arrayOf(PropTypes.object),
-        route: PropTypes.instanceOf(Route).isRequired,
-    };
-}
+const component = Relaks(TopNav);
 
 export {
-    TopNav as default,
-    TopNav,
-    TopNavSync,
+    component as default,
+    component as TopNav,
 };

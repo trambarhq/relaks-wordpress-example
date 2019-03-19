@@ -1,30 +1,20 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React from 'react';
 
-class TagList extends PureComponent {
-    static displayName = 'TagList';
-
-    render() {
-        let { tags } = this.props;
-        if (_.isEmpty(tags)) {
-            return null;
-        }
-        return (
-            <div className="tag-list">
-                <b>Tags: </b>
-                {
-                    tags.map((tag, i) => {
-                        return this.renderTag(tag, i);
-                    })
-                }
-            </div>
-        );
+function TagList(props) {
+    const { route, tags } = props;
+    if (_.isEmpty(tags)) {
+        return null;
     }
+    return (
+        <div className="tag-list">
+            <b>Tags: </b> {tags.map(renderTag)}
+        </div>
+    );
 
-    renderTag(tag, i) {
-        let { route } = this.props;
-        let name = _.get(tag, 'name', '');
-        let url = route.prefetchObjectURL(tag);
+    function renderTag(tag, i) {
+        const name = _.get(tag, 'name', '');
+        const url = route.prefetchObjectURL(tag);
         return (
             <span key={i}>
                 <a href={url}>{name}</a>
@@ -32,14 +22,6 @@ class TagList extends PureComponent {
             </span>
         );
     }
-}
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    TagList.propTypes = {
-        tags: PropTypes.arrayOf(PropTypes.object),
-    };
 }
 
 export {

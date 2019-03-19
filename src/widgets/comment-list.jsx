@@ -1,33 +1,21 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 import CommentListView from 'widgets/comment-list-view';
 
-class CommentList extends PureComponent {
-    static displayName = 'CommentList'
+function CommentList(props) {
+    const { allComments, parentCommentID } = props;
+    const comments = _.filter(allComments, { parent: parentCommentID });
 
-    render() {
-        let { allComments, parentCommentID } = this.props;
-        let comments = _.filter(allComments, { parent: parentCommentID });
-        return (
-            <div className="comments">
-            {
-                _.map(comments, (comment) => {
-                    return <CommentListView comment={comment} allComments={allComments} key={comment.id} />;
-                })
-            }
-            </div>
-        )
+    return (
+        <div className="comments">
+            {comments.map(renderComment)}
+        </div>
+    );
+
+    function renderComment(comment, i) {
+        return <CommentListView comment={comment} allComments={allComments} key={comment.id} />;
     }
-}
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    CommentList.propTypes = {
-        allComments: PropTypes.arrayOf(PropTypes.object),
-        parentCommentID: PropTypes.number,
-    };
 }
 
 export {

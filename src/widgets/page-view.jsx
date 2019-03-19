@@ -1,41 +1,27 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 import HTML from 'widgets/html';
 
-class PageView extends PureComponent {
-    static displayName = 'PageView';
+function PageView(props) {
+    const { page, transform } = props;
+    const title = _.get(page, 'title.rendered', '');
+    const content = _.get(page, 'content.rendered', '');
+    const modified = _.get(page, 'modified_gmt');
+    const date = (modified) ? Moment(modified).format('LL') : '';
 
-    render() {
-        let { page, transform } = this.props;
-        let title = _.get(page, 'title.rendered', '');
-        let content = _.get(page, 'content.rendered', '');
-        let date = _.get(page, 'modified_gmt');
-        if (date) {
-            date = Moment(date).format('LL');
-        }
-        return (
-            <div className="page">
-                <div className="meta">
-                    <div className="date">{date}</div>
-                </div>
-                <h1><HTML text={title} /></h1>
-                <div className="content">
-                    <HTML text={content} transform={transform}/>
-                </div>
+    return (
+        <div className="page">
+            <div className="meta">
+                <div className="date">{date}</div>
             </div>
-        );
-    }
-}
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    PageView.propTypes = {
-        page: PropTypes.object,
-        transform: PropTypes.func,
-    };
+            <h1><HTML text={title} /></h1>
+            <div className="content">
+                <HTML text={content} transform={transform}/>
+            </div>
+        </div>
+    );
 }
 
 export {

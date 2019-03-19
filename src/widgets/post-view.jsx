@@ -1,52 +1,17 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
+import React, { useState } from 'react';
 
 import HTML from 'widgets/html';
 import ImageDialog from 'widgets/image-dialog';
 
-class PostView extends PureComponent {
-    static displayName = 'PostView';
+function PostView(props) {
+    const { post, author, transform } = props;
+    const [ imageURL, setImageURL ] = useState(null);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            imageURL: null,
-        };
-    }
-
-    render() {
-        let { post, author, transform } = this.props;
-        let title = _.get(post, 'title.rendered', '');
-        let content = _.get(post, 'content.rendered', '');
-        let date = _.get(post, 'date_gmt');
-        let name = _.get(author, 'name', '\u00a0');
-        if (date) {
-            date = Moment(date).format('LL');
-        }
-        return (
-            <div className="post">
-                <div className="meta">
-                    <div className="date">{date}</div>
-                    <div className="author">{name}</div>
-                </div>
-                <h1><HTML text={title} /></h1>
-                <div className="content" onClick={this.handleClick}>
-                    <HTML text={content} transform={transform} />
-                </div>
-                {this.renderImageDialog()}
-            </div>
-        );
-    }
-
-    renderImageDialog() {
-        let { imageURL } = this.state;
-        return <ImageDialog imageURL={imageURL} onClose={this.handleDialogClose} />;
-    }
-
-    handleClick = (evt) => {
-        let target = evt.target;
-        let container = evt.currentTarget;
+    const handleClick = (evt) => {
+        const target = evt.target;
+        const container = evt.currentTarget;
         if (target.tagName === 'IMG') {
             let link;
             for (let p = target; p && p !== container; p = p.parentNode) {
@@ -56,26 +21,33 @@ class PostView extends PureComponent {
                 }
             }
             if (link) {
-                let imageURL = link.href;
-                this.setState({ imageURL });
+                setImageURL(link.href);
                 evt.preventDefault();
             }
         }
-    }
-
-    handleDialogClose = (evt) => {
-        this.setState({ imageURL: null });
-    }
-}
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    PostView.propTypes = {
-        post: PropTypes.object,
-        author: PropTypes.object,
-        transform: PropTypes.func,
     };
+    const handleDialogClose = (evt) => {
+        setImageURL(null);
+    };
+
+    const title = _.get(post, 'title.rendered', '');
+    const content = _.get(post, 'content.rendered', '');
+    const name = _.get(author, 'name', '\u00a0');
+    const published = _.get(post, 'date_gmt');
+    const date = (published) ? Moment(published).format('LL') : '';
+    return (
+        <div className="post">
+            <div className="meta">
+                <div className="date">{date}</div>
+                <div className="author">{name}</div>
+            </div>
+            <h1><HTML text={title} /></h1>
+            <div className="content" onClick={handleClick}>
+                <HTML text={content} transform={transform} />
+            </div>
+            <ImageDialog imageURL={imageURL} onClose={handleDialogClose} />
+        </div>
+    );
 }
 
 export {
