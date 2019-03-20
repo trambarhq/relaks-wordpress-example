@@ -48,6 +48,7 @@ services:
       - db
     image: wordpress:latest
     volumes:
+      - wp_root:/var/www/html
       - ./server/wordpress/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
     networks:
       network:
@@ -58,6 +59,7 @@ services:
       WORDPRESS_DB_PASSWORD: wordpress
     restart: always
 volumes:
+  wp_root:
   db_data:
   web_cache:
 networks:
