@@ -83,6 +83,9 @@ services:
     depends_on:
       - db
     image: wordpress:latest
+    volumes:
+      - wp_root:/var/www/html
+      - ./server/wordpress/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
     networks:
       network:
         ipv4_address: 172.130.0.7
@@ -92,6 +95,7 @@ services:
       WORDPRESS_DB_PASSWORD: wordpress
     restart: always
 volumes:
+  wp_root:
   db_data:
   web_cache:
 networks:
