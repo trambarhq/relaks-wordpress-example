@@ -152,7 +152,7 @@ class Route {
 
         // see if it's pointing to a post
         let postSlug = _.last(slugs);
-        if (/^\d+\-/.test(postSlug)) {
+        if (/^\d+\-\D/.test(postSlug)) {
             // delete post ID in front of slug
             postSlug = postSlug.replace(/^\d+\-/, '');
         }

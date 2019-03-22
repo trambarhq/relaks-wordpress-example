@@ -11,7 +11,7 @@ class PostListView extends PureComponent {
 
     render() {
         let { route, post, media } = this.props;
-        let title = _.get(post, 'title.rendered', '');
+        let title = _.get(post, 'title.rendered') || 'Untitled';
         let excerpt = _.get(post, 'excerpt.rendered', '');
         excerpt = cleanExcerpt(excerpt);
         let url = route.prefetchObjectURL(post);
