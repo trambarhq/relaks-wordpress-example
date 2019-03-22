@@ -17,7 +17,7 @@ class PostView extends PureComponent {
 
     render() {
         let { post, author, transform } = this.props;
-        let title = _.get(post, 'title.rendered', '');
+        let title = _.get(post, 'title.rendered') || 'Untitled';
         let content = _.get(post, 'content.rendered', '');
         let date = _.get(post, 'date_gmt');
         let name = _.get(author, 'name', '\u00a0');

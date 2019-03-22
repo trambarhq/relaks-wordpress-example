@@ -9,7 +9,7 @@ class PageView extends PureComponent {
 
     render() {
         let { page, transform } = this.props;
-        let title = _.get(page, 'title.rendered', '');
+        let title = _.get(page, 'title.rendered') || 'Untitled';
         let content = _.get(page, 'content.rendered', '');
         let date = _.get(page, 'modified_gmt');
         if (date) {
