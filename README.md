@@ -22,19 +22,18 @@ This is a complex example with many moving parts. It's definitely not for beginn
 
 ## Live demo
 
-For the purpose of demonstrating what the example code can do, I've prepared three web sites:
+For the purpose of demonstrating what the example code can do, I've prepared two web sites:
 
 * [pfj.trambar.io](https://pfj.trambar.io)
 * [et.trambar.io](https://et.trambar.io)
-* [rwt.trambar.io](https://rwt.trambar.io)
 
-All three are hosted on the same AWS [A1 medium instance](https://aws.amazon.com/ec2/instance-types/a1/). It's powered by a single core of a [Graviton CPU](https://www.phoronix.com/scan.php?page=article&item=ec2-graviton-performance&num=1) and backed by 2G of RAM. In terms of computational resources, we have roughly one fourth that of a phone. Not much. For our system though, it's more than enough. Most requests will result in cache hits. Nginx will spend most of its time sending data already in memory. We'll be IO-bound long before we're CPU-bound.
+Both are hosted on the same AWS [A1 medium instance](https://aws.amazon.com/ec2/instance-types/a1/). It's powered by a single core of a [Graviton CPU](https://www.phoronix.com/scan.php?page=article&item=ec2-graviton-performance&num=1) and backed by 2G of RAM. In terms of computational resources, we have roughly one fourth that of a phone. Not much. For our system though, it's more than enough. Most requests will result in cache hits. Nginx will spend most of its time sending data already in memory. We'll be IO-bound long before we're CPU-bound.
 
 [pfj.trambar.io](https://pfj.trambar.io) obtains its data from a test WordPress instance running on the same server. It's populated with random lorem ipsum text. You can log into the [WordPress admin page](https://pfj.trambar.io/wp-admin/) and post a article using the account `bdickus` (password: `incontinentia`). Publication of a new article will trigger a cache purge. The article should appear in the front page automatically after 30 seconds or so (no need to hit refresh button).
 
 You can see a list of what's in the Nginx cache [here](https://pfj.trambar.io/.cache).
 
-[et.trambar.io](https://et.trambar.io) and [rwt.trambar.io](https://rwt.trambar.io) obtain their data from [ExtremeTech](https://www.extremetech.com/) and [Real World Tech](https://www.realworldtech.com/) respectively. They are meant to give you a better sense of how the example code fares with real-world contents. Both sites have close to two decades' worth of articles. Our server does not receive cache purge commands from these WordPress instances so the contents could be out of date. Cache misses will also lead to slightly longer pauses.
+[et.trambar.io](https://et.trambar.io) obtains its data from [ExtremeTech](https://www.extremetech.com/). It's meant to give you a better sense of how the example code fares with real-world contents. The site has close to two decades' worth of articles. Our server does not receive cache purge commands from this WordPress instance so the contents could be out of date. Cache misses will also lead to slightly longer pauses.
 
 ## Server-side rendering
 
