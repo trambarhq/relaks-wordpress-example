@@ -49,23 +49,6 @@ services:
       EXTERNAL_HOST: http://et.trambar.io
     command: [ node, /opt/example/server/index.js ]
     restart: always
-  node_rwt:
-    depends_on:
-      - nginx
-    image: node:8
-    volumes:
-      - .:/opt/example
-      - web_cache:/var/cache/nginx
-    networks:
-      network:
-        ipv4_address: 172.130.0.5
-    environment:
-      WORDPRESS_HOST: https://realworldtech.com
-      NGINX_HOST: http://nginx
-      NGINX_CACHE: /var/cache/nginx/data_rwt
-      EXTERNAL_HOST: http://rwt.trambar.io
-    command: [ node, /opt/example/server/index.js ]
-    restart: always
   db:
     image: mariadb:10
     volumes:
