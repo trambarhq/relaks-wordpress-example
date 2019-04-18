@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 
-import CommentListView from 'widgets/comment-list-view';
+import { CommentListView } from 'widgets/comment-list-view';
 
 function CommentList(props) {
     const { allComments, parentCommentID } = props;
@@ -19,6 +19,5 @@ function CommentList(props) {
 }
 
 export {
-    CommentList as default,
     CommentList,
 };

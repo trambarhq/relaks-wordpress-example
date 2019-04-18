@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 
-import HTML from 'widgets/html';
+import { HTML } from 'widgets/html';
 
 function PageView(props) {
     const { page, transform } = props;

@@ -1,7 +1,7 @@
 import React from 'react';
-import Relaks, { useProgress } from 'relaks/hooks';
+import Relaks, { useProgress } from 'relaks';
 
-import PostList from 'widgets/post-list';
+import { PostList } from 'widgets/post-list';
 
 async function WelcomePage(props) {
     const { wp, route } = props;
@@ -22,7 +22,7 @@ async function WelcomePage(props) {
     }
 }
 
-const component = Relaks(WelcomePage);
+const component = Relaks.memo(WelcomePage);
 
 export {
     component as default,

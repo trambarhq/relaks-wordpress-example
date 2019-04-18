@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 
-import CommentList from 'widgets/comment-list';
+import { CommentList } from 'widgets/comment-list';
 
 function CommentSection(props) {
     const { comments } = props;
@@ -17,6 +17,5 @@ function CommentSection(props) {
 }
 
 export {
-    CommentSection as default,
     CommentSection,
 };

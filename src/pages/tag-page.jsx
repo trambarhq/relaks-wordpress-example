@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks/hooks';
+import Relaks, { useProgress } from 'relaks';
 
-import Breadcrumb from 'widgets/breadcrumb';
-import PostList from 'widgets/post-list';
+import { Breadcrumb } from 'widgets/breadcrumb';
+import { PostList } from 'widgets/post-list';
 
 async function TagPage(props) {
     const { wp, route } = props;
@@ -28,7 +28,7 @@ async function TagPage(props) {
     }
 }
 
-const component = Relaks(TagPage);
+const component = Relaks.memo(TagPage);
 
 export {
     component as default,

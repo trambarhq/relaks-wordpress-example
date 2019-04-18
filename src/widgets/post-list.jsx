@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useEffect } from 'react';
 
-import PostListView from 'widgets/post-list-view';
+import { PostListView } from 'widgets/post-list-view';
 
 function PostList(props) {
     const { route, posts, medias, minimum, maximum } = props;
@@ -55,6 +55,5 @@ PostList.defaultProps = {
 };
 
 export {
-    PostList as default,
     PostList,
 };

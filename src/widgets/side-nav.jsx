@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState } from 'react';
-import Relaks, { useProgress } from 'relaks/hooks';
+import Relaks, { useProgress } from 'relaks';
 
 async function SideNav(props) {
     const { wp, route } = props;
@@ -37,10 +37,10 @@ async function SideNav(props) {
     const archives = [];
     if (range) {
         // loop through the years
-        let lastYear = range.latest.year();
-        let firstYear = range.earliest.year();
+        const lastYear = range.latest.year();
+        const firstYear = range.earliest.year();
         for (let y = lastYear; y >= firstYear; y--) {
-            let yearEntry = {
+            const yearEntry = {
                 year: y,
                 label: Moment(`${y}-01-01`).format('YYYY'),
                 months: []
@@ -48,12 +48,12 @@ async function SideNav(props) {
             archives.push(yearEntry);
 
             // loop through the months
-            let lastMonth = (y === lastYear) ? range.latest.month() : 11;
-            let firstMonth = (y === firstYear) ? range.earliest.month() : 0;
+            const lastMonth = (y === lastYear) ? range.latest.month() : 11;
+            const firstMonth = (y === firstYear) ? range.earliest.month() : 0;
             for (let m = lastMonth; m >= firstMonth; m--) {
-                let start = Moment(new Date(y, m, 1));
-                let end = start.clone().endOf('month');
-                let monthEntry = {
+                const start = Moment(new Date(y, m, 1));
+                const end = start.clone().endOf('month');
+                const monthEntry = {
                     year: y,
                     month: m + 1,
                     label: start.format('MMMM'),
@@ -129,17 +129,17 @@ async function SideNav(props) {
     }
 
     function renderCategory(category, i) {
-        let { categorySlug } = route.params;
-        let name = _.get(category, 'name', '');
-        let description = _.unescape(_.get(category, 'description', '').replace(/&#039;/g, "'"));
-        let url = route.prefetchObjectURL(category);
-        let className;
+        const { categorySlug } = route.params;
+        const name = _.get(category, 'name', '');
+        const description = _.unescape(_.get(category, 'description', '').replace(/&#039;/g, "'"));
+        const url = route.prefetchObjectURL(category);
+        const classNames = [];
         if (category.slug === categorySlug) {
-            className = 'selected';
+            classNames.push('selected');
         } else {
-            let postList = _.find(postLists, { category });
+            const postList = _.find(postLists, { category });
             if (hasRecentPost(postList, 1)) {
-                className = 'highlighted';
+                classNames.push('highlighted');
             }
         }
         return (
@@ -170,22 +170,22 @@ async function SideNav(props) {
     }
 
     function renderTag(tag, i) {
-        let { tagSlug } = route.params;
-        let name = _.get(tag, 'name', '');
-        let description = _.unescape(_.get(tag, 'description', '').replace(/&#039;/g, "'"));
-        let url = route.prefetchObjectURL(tag);
-        let className;
+        const { tagSlug } = route.params;
+        const name = _.get(tag, 'name', '');
+        const description = _.unescape(_.get(tag, 'description', '').replace(/&#039;/g, "'"));
+        const url = route.prefetchObjectURL(tag);
+        const classNames = [];
         if (tag.slug === tagSlug) {
-            className = 'selected';
+            classNames.push('selected');
         } else {
-            let postList = _.find(postLists, { tag });
+            const postList = _.find(postLists, { tag });
             if (hasRecentPost(postList, 1)) {
-                className = 'highlighted';
+                classNames.push('highlighted');
             }
         }
         return (
             <span key={i}>
-                <a className={className} href={url} title={description} key={i}>{name}</a>
+                <a className={classNames.join(' ')} href={url} title={description} key={i}>{name}</a>
                 {' '}
             </span>
         );
@@ -282,9 +282,8 @@ async function SideNav(props) {
     }
 }
 
-const component = Relaks(SideNav);
+const component = Relaks.memo(SideNav);
 
 export {
-    component as default,
     component as SideNav,
 };

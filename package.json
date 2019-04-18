@@ -22,7 +22,7 @@
   "license": "MIT",
   "homepage": "https://github.com/trambarhq/relaks-wordpress-example",
   "devDependencies": {
-    "@fortawesome/fontawesome-free": "^5.7.2",
+    "@fortawesome/fontawesome-free": "^5.8.1",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "babel-plugin-syntax-async-functions": "^6.13.0",
@@ -44,8 +44,10 @@
     "mini-css-extract-plugin": "^0.5.0",
     "node-sass": "^4.11.0",
     "prop-types": "^15.7.2",
+    "react": "^16.8.5",
+    "react-dom": "^16.8.5",
     "react-html-parser": "^2.0.2",
-    "regenerator-runtime": "^0.13.1",
+    "regenerator-runtime": "^0.13.2",
     "relaks": "^1.1.9",
     "relaks-harvest": "^0.0.3",
     "relaks-route-manager": "^0.0.21",
@@ -58,14 +60,12 @@
   },
   "dependencies": {
     "bluebird": "^3.5.3",
-    "compression": "^1.7.3",
-    "cross-fetch": "^3.0.1",
+    "compression": "^1.7.4",
+    "cross-fetch": "^3.0.2",
     "dnscache": "^1.0.1",
     "express": "^4.16.4",
     "express-cache-controller": "^1.1.0",
     "moment": "^2.24.0",
-    "react": "^16.8.4",
-    "react-dom": "^16.8.4",
     "schedule": "^0.5.0",
     "spider-detector": "^1.0.19"
   }

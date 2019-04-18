@@ -2,8 +2,8 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState } from 'react';
 
-import HTML from 'widgets/html';
-import ImageDialog from 'widgets/image-dialog';
+import { HTML } from 'widgets/html';
+import { ImageDialog } from 'widgets/image-dialog';
 
 function PostView(props) {
     const { post, author, transform } = props;
@@ -51,6 +51,5 @@ function PostView(props) {
 }
 
 export {
-    PostView as default,
     PostView,
 };

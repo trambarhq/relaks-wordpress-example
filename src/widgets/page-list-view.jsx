@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 
-import HTML from 'widgets/html';
+import { HTML } from 'widgets/html';
 
 function PageListView(props) {
     const { route, page } = props;
@@ -15,6 +15,5 @@ function PageListView(props) {
 }
 
 export {
-    PageListView as default,
     PageListView,
 };

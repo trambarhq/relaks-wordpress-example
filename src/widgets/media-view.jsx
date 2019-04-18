@@ -16,6 +16,5 @@ MediaView.defaultProps = {
 };
 
 export {
-    MediaView as default,
     MediaView,
 };

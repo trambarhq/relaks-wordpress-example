@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks/hooks';
+import Relaks, { useProgress } from 'relaks';
 
-import Breadcrumb from 'widgets/breadcrumb';
-import PostView from 'widgets/post-view';
-import TagList from 'widgets/tag-list';
-import CommentSection from 'widgets/comment-section';
+import { Breadcrumb } from 'widgets/breadcrumb';
+import { PostView } from 'widgets/post-view';
+import { TagList } from 'widgets/tag-list';
+import { CommentSection } from 'widgets/comment-section';
 
 async function PostPage(props) {
     const { wp, route } = props;
@@ -107,7 +107,7 @@ async function PostPage(props) {
     }
 }
 
-const component = Relaks(PostPage);
+const component = Relaks.memo(PostPage);
 
 export {
     component as default,

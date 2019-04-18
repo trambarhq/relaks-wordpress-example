@@ -25,6 +25,5 @@ function TagList(props) {
 }
 
 export {
-    TagList as default,
     TagList,
 };

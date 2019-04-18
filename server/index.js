@@ -26,6 +26,7 @@ const CACHE_CONTROL = 'public,max-age=0,s-maxage=604800';
 // start up Express
 let app = Express();
 let root = PageRenderer.basePath;
+console.log('root = ' + root)
 app.set('json spaces', 2);
 app.use(Compression())
 app.use(SpiderDetector.middleware());

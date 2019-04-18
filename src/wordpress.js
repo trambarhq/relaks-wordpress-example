@@ -71,9 +71,9 @@ class Wordpress {
      */
     async fetchPostsInMonth(date) {
         if (!date) return[];
-        let month = Moment(new Date(date.year, date.month - 1, 1));
-        let after = month.toISOString();
-        let before = month.clone().endOf('month').toISOString();
+        const month = Moment(new Date(date.year, date.month - 1, 1));
+        const after = month.toISOString();
+        const before = month.clone().endOf('month').toISOString();
         return this.fetchList(`/wp/v2/posts/?after=${after}&before=${before}`);
     }
 
@@ -85,7 +85,7 @@ class Wordpress {
      * @return {Promise<Array<Object>>}
      */
     async fetchMatchingPosts(search) {
-        let s = encodeURIComponent(_.trim(search));
+        const s = encodeURIComponent(_.trim(search));
         if (!s) return [];
         return this.fetchList(`/wp/v2/posts/?search=${s}`);
     }
@@ -96,13 +96,13 @@ class Wordpress {
      * @return {Promise<Object>}
      */
     async getPostDateRange() {
-        let latestPosts =  await this.fetchPosts();
-        let latestPost = _.first(latestPosts);
-        let earliestPosts = await this.fetchList(`/wp/v2/posts/?order=asc&per_page=1`)
-        let earliestPost = _.first(earliestPosts);
+        const latestPosts =  await this.fetchPosts();
+        const latestPost = _.first(latestPosts);
+        const earliestPosts = await this.fetchList(`/wp/v2/posts/?order=asc&per_page=1`)
+        const earliestPost = _.first(earliestPosts);
         if (latestPost && earliestPost) {
-            let latest = Moment(latestPost.date_gmt);
-            let earliest = Moment(earliestPost.date_gmt);
+            const latest = Moment(latestPost.date_gmt);
+            const earliest = Moment(earliestPost.date_gmt);
             return { latest, earliest };
         }
     }
@@ -136,10 +136,10 @@ class Wordpress {
      */
     async fetchParentPages(page) {
         if (!page) return [];
-        let parentPages = [];
+        const parentPages = [];
         let parentID = page.parent;
         while (parentID) {
-            let parentPage = await this.fetchPage(parentID);
+            const parentPage = await this.fetchPage(parentID);
             if (!parentPage) {
                 break;
             }
@@ -158,8 +158,8 @@ class Wordpress {
      */
     async fetchChildPages(page) {
         if (!page) return [];
-        let pages = await this.fetchPages();
-        let childPages = _.filter(pages, { parent: page.id });
+        const pages = await this.fetchPages();
+        const childPages = _.filter(pages, { parent: page.id });
         childPages.more = () => {};
         childPages.total = childPages.length;
         return childPages;
@@ -194,10 +194,10 @@ class Wordpress {
      */
     async fetchParentCategories(category) {
         if (!category) return [];
-        let parentCategories = [];
+        const parentCategories = [];
         let parentID = category.parent;
         while (parentID) {
-            let parentCategory = await this.fetchCategory(parentID);
+            const parentCategory = await this.fetchCategory(parentID);
             if (!parentCategory) {
                 break;
             }
@@ -272,7 +272,7 @@ class Wordpress {
      * @return {Promise<Array<Object>>}
      */
     async fetchFeaturedMedias(posts, count) {
-        let ids = [];
+        const ids = [];
         for (let post of posts) {
             if (post.featured_media) {
                 ids.push(post.featured_media);
@@ -327,6 +327,5 @@ class Wordpress {
 }
 
 export {
-    Wordpress as default,
     Wordpress,
 };

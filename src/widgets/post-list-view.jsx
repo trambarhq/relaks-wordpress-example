@@ -2,8 +2,8 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 
-import HTML from 'widgets/html';
-import MediaView from 'widgets/media-view';
+import { HTML } from 'widgets/html';
+import { MediaView } from 'widgets/media-view';
 
 function PostListView(props) {
     const { route, post, media } = props;
@@ -59,6 +59,5 @@ function PostListView(props) {
 }
 
 export {
-    PostListView as default,
     PostListView,
 };

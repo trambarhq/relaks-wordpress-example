@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var FS = require('fs');
 var Path = require('path');
 var Webpack = require('webpack');
@@ -35,7 +36,7 @@ var clientConfig = {
                 exclude: /node_modules/,
                 query: {
                     presets: [
-                        'env',
+                        [ 'env', { modules: false } ],
                         'react',
                         'stage-0',
                     ],
@@ -85,19 +86,22 @@ var clientConfig = {
             chunkFilename: "[id].css"
         }),
     ],
+    optimization: {
+        concatenateModules: false,
+    },    
     devtool: (EVENT === 'build') ? 'source-map' : 'inline-source-map',
 };
 
 var serverConfig = {
     mode: clientConfig.mode,
     context: clientConfig.context,
-    entry: clientConfig.entry,
+    entry: './ssr',
     target: 'node',
     output: {
         path: Path.resolve('./server/client'),
         publicPath: BASE_PATH,
         filename: 'front-end.js',
-        libraryTarget: 'commonjs2',
+        libraryTarget: 'commonjs',
     },
     resolve: clientConfig.resolve,
     module: clientConfig.module,

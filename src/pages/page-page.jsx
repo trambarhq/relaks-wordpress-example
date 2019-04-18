@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks/hooks';
+import Relaks, { useProgress } from 'relaks';
 
-import HTML from 'widgets/html';
-import Breadcrumb from 'widgets/breadcrumb';
-import PageView from 'widgets/page-view';
-import PageList from 'widgets/page-list';
+import { HTML } from 'widgets/html';
+import { Breadcrumb } from 'widgets/breadcrumb';
+import { PageView } from 'widgets/page-view';
+import { PageList } from 'widgets/page-list';
 
 async function PagePage(props) {
     const { wp, route } = props;
@@ -38,7 +38,7 @@ async function PagePage(props) {
     }
 }
 
-const component = Relaks(PagePage);
+const component = Relaks.memo(PagePage);
 
 export {
     component as default,

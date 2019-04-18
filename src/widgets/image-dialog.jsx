@@ -40,6 +40,5 @@ function ImageDialog(props) {
 }
 
 export {
-    ImageDialog as default,
     ImageDialog,
 };

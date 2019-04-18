@@ -1,6 +1,5 @@
 const Bluebird = require('bluebird');
 const FS = Bluebird.promisifyAll(require('fs'));
-const ReactDOMServer = require('react-dom/server');
 const HTTP = require('http');
 const CrossFetch = require('cross-fetch');
 const FrontEnd = require('./client/front-end');
@@ -26,8 +25,7 @@ async function generate(path, target) {
         return CrossFetch(url, options);
     };
     let options = { host, path, target, fetch };
-    let rootNode = await FrontEnd.render(options);
-    let appHTML = ReactDOMServer.renderToString(rootNode);
+    let appHTML = await FrontEnd.render(options);
     let htmlTemplate = await FS.readFileAsync(HTML_TEMPLATE, 'utf-8');
     let html = htmlTemplate.replace(`<!--REACT-->`, appHTML);
     if (target === 'hydrate') {
@@ -61,3 +59,4 @@ module.exports = {
     prefetch,
     basePath: FrontEnd.basePath
 };
+

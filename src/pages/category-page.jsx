@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks/hooks';
+import Relaks, { useProgress } from 'relaks';
 
-import Breadcrumb from 'widgets/breadcrumb';
-import PostList from 'widgets/post-list';
+import { Breadcrumb } from 'widgets/breadcrumb';
+import { PostList } from 'widgets/post-list';
 
 async function CategoryPage(props) {
     const { wp, route } = props;
@@ -37,7 +37,7 @@ async function CategoryPage(props) {
     }
 }
 
-const component = Relaks(CategoryPage);
+const component = Relaks.memo(CategoryPage);
 
 export {
     component as default,

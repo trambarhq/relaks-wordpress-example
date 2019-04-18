@@ -1,35 +1,36 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import Wordpress from 'wordpress';
+import { useEventTime } from 'relaks';
+import { Wordpress } from 'wordpress';
 import { Route } from 'routing';
 import 'style.scss';
 import '@fortawesome/fontawesome-free/scss/fontawesome.scss';
 import '@fortawesome/fontawesome-free/scss/regular.scss';
 import '@fortawesome/fontawesome-free/scss/solid.scss';
 
-import SideNav from 'widgets/side-nav';
-import TopNav from 'widgets/top-nav';
-import ErrorBoundary from 'widgets/error-boundary';
+import { SideNav } from 'widgets/side-nav';
+import { TopNav } from 'widgets/top-nav';
+import { ErrorBoundary } from 'widgets/error-boundary';
 
 function FrontEnd(props) {
     const { routeManager, dataSource, ssr } = props;
-    const [ routeChange, setRouteChange ] = useState();
-    const [ wpChange, setWPChange ] = useState();
+    const [ routeChanged, setRouteChanged ] = useEventTime();
+    const [ wpChanged, setWPChanged ] = useEventTime();
     const route = useMemo(() => {
         return new Route(routeManager, dataSource);
-    }, [ routeManager, dataSource, routeChange ]);
+    }, [ routeManager, dataSource, routeChanged ]);
     const wp = useMemo(() => {
         return new Wordpress(dataSource, ssr);
-    }, [ dataSource, ssr, wpChange ]);
+    }, [ dataSource, ssr, wpChanged ]);
     const [ sideNavCollapsed, collapseSideNav ] = useState(true);
     const [ topNavCollapsed, collapseTopNav ] = useState(false);
 
     useEffect(() => {
-        routeManager.addEventListener('change', setRouteChange);
-        dataSource.addEventListener('change', setWPChange);
+        routeManager.addEventListener('change', setRouteChanged);
+        dataSource.addEventListener('change', setWPChanged);
 
         return () => {
-            routeManager.addEventListener('change', setRouteChange);
-            dataSource.addEventListener('change', setWPChange);
+            routeManager.addEventListener('change', setRouteChanged);
+            dataSource.addEventListener('change', setWPChanged);
         };
     });
     useEffect(() => {
@@ -64,7 +65,7 @@ function FrontEnd(props) {
         return () => { 
             document.removeEventListener('scroll', handleScroll);
         };
-    });
+    }, []);
     useEffect(() => {
         if (typeof(window) === 'object') {
             const handleSwipeLeft = (evt) => {
@@ -84,10 +85,12 @@ function FrontEnd(props) {
             hammer.on('swiperight', handleSwipeRight);
 
             return () => {
-
+                hammer.off('swipeleft', handleSwipeLeft);
+                hammer.off('swiperight', handleSwipeRight);
+                hammer.stop();
             };
         }        
-    });
+    }, []);
 
     const PageComponent = route.params.module.default;
     const classNames = [];
@@ -129,7 +132,6 @@ function FrontEnd(props) {
 }
 
 export {
-    FrontEnd as default,
     FrontEnd
 };
 

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Wordpress from './wordpress';
+import { Wordpress } from './wordpress';
 import { RelaksRouteManagerError } from 'relaks-route-manager';
 
 class Route {

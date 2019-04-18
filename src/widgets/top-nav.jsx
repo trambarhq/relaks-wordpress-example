@@ -1,23 +1,24 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useSaveBuffer } from 'relaks/hooks';
+import Relaks, { useProgress, useSaveBuffer } from 'relaks';
 
 async function TopNav(props) {
     const { wp, route } = props;
     const [ show ] = useProgress();
-    const [ search, setSearch ] = useSaveBuffer(route.params.search, {
-        delay: 500,
-        save: (newSearch) => {
-            const url = route.getSearchURL(newSearch);
+    const search = useSaveBuffer({
+        original: route.params.search || '',
+        save: (before, after) => {
+            const url = route.getSearchURL(after);
             const options = {
                 replace: (route.params.pageType === 'search')
             };
             route.change(url);
         },
+        autosave: 500,
     });
 
     const handleSearchChange = (evt) => {
-        setSearch(evt.target.value);
+        search.set(evt.target.value);
     };
 
     render();
@@ -54,8 +55,8 @@ async function TopNav(props) {
     }
 
     function renderPageLinkBar() {
-        let filtered = _.filter(pages, { parent: 0 });
-        let ordered = _.sortBy(filtered, 'menu_order');
+        const filtered = _.filter(pages, { parent: 0 });
+        const ordered = _.sortBy(filtered, 'menu_order');
         return (
             <div className="page-bar">
                 {ordered.map(renderPageLinkButton)}
@@ -77,7 +78,7 @@ async function TopNav(props) {
         return (
             <div className="search-bar">
                 <span className="input-container">
-                    <input type="text" value={search || ''} onChange={handleSearchChange} />
+                    <input type="text" value={search.current} onChange={handleSearchChange} />
                     <i className="fa fa-search" />
                 </span>
             </div>
@@ -85,9 +86,8 @@ async function TopNav(props) {
     }
 }
 
-const component = Relaks(TopNav);
+const component = Relaks.memo(TopNav);
 
 export {
-    component as default,
     component as TopNav,
 };

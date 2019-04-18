@@ -10,6 +10,5 @@ function HTML(props) {
 }
 
 export {
-    HTML as default,
     HTML,
 };

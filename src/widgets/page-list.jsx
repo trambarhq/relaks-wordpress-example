@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useEffect } from 'react';
 import { Route } from 'routing';
 
-import PageListView from 'widgets/page-list-view';
+import { PageListView } from 'widgets/page-list-view';
 
 function PageList(props) {
     let { route, pages } = props;

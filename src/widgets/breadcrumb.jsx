@@ -13,6 +13,5 @@ function Breadcrumb(props) {
 }
 
 export {
-    Breadcrumb as default,
     Breadcrumb,
 };
