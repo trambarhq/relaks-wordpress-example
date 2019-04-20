@@ -32,5 +32,4 @@ const component = Relaks.memo(TagPage);
 
 export {
     component as default,
-    component as TagPage,
 };

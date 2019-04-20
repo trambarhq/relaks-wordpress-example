@@ -26,5 +26,4 @@ const component = Relaks.memo(WelcomePage);
 
 export {
     component as default,
-    component as WelcomePage,
 };

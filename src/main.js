@@ -8,6 +8,8 @@ import RouteManager from 'relaks-route-manager';
 import { harvest } from 'relaks-harvest';
 import { plant } from 'relaks';
 
+window.addEventListener('load', initialize);
+
 async function initialize(evt) {
     // create data source
     const host = process.env.DATA_HOST || `${location.protocol}//${location.host}`;
@@ -60,5 +62,3 @@ async function initialize(evt) {
         await delay(30 * 1000);
     }
 }
-
-window.addEventListener('load', initialize);

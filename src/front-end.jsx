@@ -14,25 +14,24 @@ import { ErrorBoundary } from 'widgets/error-boundary';
 function FrontEnd(props) {
     const { routeManager, dataSource, ssr } = props;
     const [ routeChanged, setRouteChanged ] = useEventTime();
-    const [ wpChanged, setWPChanged ] = useEventTime();
+    const [ dataChanged, setDataChanged ] = useEventTime();
     const route = useMemo(() => {
         return new Route(routeManager, dataSource);
     }, [ routeManager, dataSource, routeChanged ]);
     const wp = useMemo(() => {
         return new Wordpress(dataSource, ssr);
-    }, [ dataSource, ssr, wpChanged ]);
+    }, [ dataSource, ssr, dataChanged ]);
     const [ sideNavCollapsed, collapseSideNav ] = useState(true);
     const [ topNavCollapsed, collapseTopNav ] = useState(false);
 
     useEffect(() => {
         routeManager.addEventListener('change', setRouteChanged);
-        dataSource.addEventListener('change', setWPChanged);
-
+        dataSource.addEventListener('change', setDataChanged);
         return () => {
             routeManager.addEventListener('change', setRouteChanged);
-            dataSource.addEventListener('change', setWPChanged);
+            dataSource.addEventListener('change', setDataChanged);
         };
-    });
+    }, [ routeManager, dataSource ]);
     useEffect(() => {
         let previousPos = getScrollPos();
         const handleScroll = (evt) => {
@@ -61,11 +60,10 @@ function FrontEnd(props) {
             previousPos = currentPos;
         };
         document.addEventListener('scroll', handleScroll);
-
-        return () => { 
+        return () => {
             document.removeEventListener('scroll', handleScroll);
         };
-    }, []);
+    }, [ topNavCollapsed ]);
     useEffect(() => {
         if (typeof(window) === 'object') {
             const handleSwipeLeft = (evt) => {
@@ -83,14 +81,13 @@ function FrontEnd(props) {
             const hammer = new Hammer(document.body, { cssProps: { userSelect: 'auto' } });
             hammer.on('swipeleft', handleSwipeLeft);
             hammer.on('swiperight', handleSwipeRight);
-
             return () => {
                 hammer.off('swipeleft', handleSwipeLeft);
                 hammer.off('swiperight', handleSwipeRight);
                 hammer.stop();
             };
-        }        
-    }, []);
+        }
+    }, [ sideNavCollapsed ]);
 
     const PageComponent = route.params.module.default;
     const classNames = [];

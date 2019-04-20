@@ -31,5 +31,4 @@ const component = Relaks.memo(ArchivePage);
 
 export {
     component as default,
-    component as ArchivePage,
 };

@@ -3,13 +3,13 @@ import * as PropTypes from 'prop-types';
 import { Route } from 'routing';
 import { Wordpress } from 'wordpress';
 
-import { ArchivePage } from 'pages/archive-page';
-import { CategoryPage } from 'pages/category-page';
-import { PagePage } from 'pages/page-page';
-import { PostPage } from 'pages/post-page';
-import { SearchPage } from 'pages/search-page';
-import { TagPage } from 'pages/tag-page';
-import { WelcomePage } from 'pages/welcome-page';
+import ArchivePage from 'pages/archive-page';
+import CategoryPage from 'pages/category-page';
+import PagePage from 'pages/page-page';
+import PostPage from 'pages/post-page';
+import SearchPage from 'pages/search-page';
+import TagPage from 'pages/tag-page';
+import WelcomePage from 'pages/welcome-page';
 
 ArchivePage.propTypes = {
     wp: PropTypes.instanceOf(Wordpress).isRequired,

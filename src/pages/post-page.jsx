@@ -54,7 +54,7 @@ async function PostPage(props) {
         // add categories, including their parents as well
         const applicable = [];
         const include = (id) => {
-            let category = _.find(allCategories, { id })
+            const category = _.find(allCategories, { id })
             if (category) {
                 if (!_.includes(applicable, category)) {
                     applicable.push(category);
@@ -111,5 +111,4 @@ const component = Relaks.memo(PostPage);
 
 export {
     component as default,
-    component as PostPage,
 };

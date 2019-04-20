@@ -30,6 +30,5 @@ function PageList(props) {
 }
 
 export {
-    PageList as default,
     PageList,
 };

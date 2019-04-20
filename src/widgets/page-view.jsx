@@ -25,6 +25,5 @@ function PageView(props) {
 }
 
 export {
-    PageView as default,
     PageView,
 };

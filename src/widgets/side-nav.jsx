@@ -144,7 +144,7 @@ async function SideNav(props) {
         }
         return (
             <li key={i}>
-                <a className={className} href={url} title={description}>{name}</a>
+                <a className={classNames.join(' ')} href={url} title={description}>{name}</a>
                 {renderSubcategories(category)}
             </li>
         );

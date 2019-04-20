@@ -42,5 +42,4 @@ const component = Relaks.memo(PagePage);
 
 export {
     component as default,
-    component as PagePage,
 };

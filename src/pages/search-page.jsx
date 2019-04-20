@@ -38,5 +38,4 @@ const component = Relaks.memo(SearchPage);
 
 export {
     component as default,
-    component as SearchPage,
 };

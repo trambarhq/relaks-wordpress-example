@@ -12,7 +12,7 @@ async function CategoryPage(props) {
 
     render();
     const category = await wp.fetchCategory(categorySlug);
-    const parentCategories = await wp.fetchParentCategories(category);    
+    const parentCategories = await wp.fetchParentCategories(category);
     render();
     const posts = await wp.fetchPostsInCategory(category);
     render();
@@ -41,5 +41,4 @@ const component = Relaks.memo(CategoryPage);
 
 export {
     component as default,
-    component as CategoryPage,
 };
