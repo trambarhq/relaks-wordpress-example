@@ -13,7 +13,7 @@ const JSONRetriever = require('./json-retriever');
 const NginxCache = require('./nginx-cache');
 
 // enable DNS caching
-let dnsCache = Bluebird.promisifyAll(DNSCache({
+const dnsCache = Bluebird.promisifyAll(DNSCache({
     enable: true,
     ttl: 300,
     cachesize: 100
@@ -24,17 +24,16 @@ const WORDPRESS_HOST = process.env.WORDPRESS_HOST;
 const CACHE_CONTROL = 'public,max-age=0,s-maxage=604800';
 
 // start up Express
-let app = Express();
-let root = PageRenderer.basePath;
-console.log('root = ' + root)
+const app = Express();
+const basePath = PageRenderer.basePath;
 app.set('json spaces', 2);
 app.use(Compression())
 app.use(SpiderDetector.middleware());
-app.use(root, Express.static(`${__dirname}/www`, { maxAge: 3600000 }));
-app.get(root + '.mtime', handleTimestampRequest);
-app.get(root + '.cache', handleCacheStatusRequest);
-app.get(root + 'json/*', handleJSONRequest);
-app.get(root + '*', handlePageRequest);
+app.use(basePath, Express.static(`${__dirname}/www`, { maxAge: 3600000 }));
+app.get(basePath + '.mtime', handleTimestampRequest);
+app.get(basePath + '.cache', handleCacheStatusRequest);
+app.get(basePath + 'json/*', handleJSONRequest);
+app.get(basePath + '*', handlePageRequest);
 app.purge('*', handlePurgeRequest);
 app.use(handleError);
 app.listen(SERVER_PORT);
@@ -44,8 +43,8 @@ scheduleCachePurge();
 
 async function handleTimestampRequest(req, res, next) {
     try {
-        let now = new Date;
-        let ts = now.toISOString();
+        const now = new Date;
+        const ts = now.toISOString();
         res.set({ 'Cache-Control': CACHE_CONTROL });
         res.type('text').send(ts);
     } catch (err) {
@@ -61,16 +60,15 @@ async function handleCacheStatusRequest(req, res, next) {
         res.write(`<table border="1" cellpadding="2">`);
         res.write(`<thead><th>URL</th><th>MD5</th><th>Modified time</th><th>Size</th></thead>`);
         res.write(`<tbody>`);
-        let entries = await NginxCache.read();
-        let total = 0;
-        for (let entry of _.orderBy(entries, 'mtime', 'desc')) {
-            let { url, md5, mtime, size } = entry;
-            let date = Moment(mtime).format('LLL');
-            let sizeKB = _.round(size / 1024, 2);
+        const entries = await NginxCache.read();
+        const total = 0;
+        for (let { url, md5, mtime, size } of _.orderBy(entries, 'mtime', 'desc')) {
+            const date = Moment(mtime).format('LLL');
+            const sizeKB = _.round(size / 1024, 2);
             res.write(`<tr><td>${url}</td><td>${md5}</td><td>${date}</td><td>${sizeKB}KB</td></tr>`)
             total += size;
         }
-        let totalMB = _.round(total / 1024 / 1024, 2);
+        const totalMB = _.round(total / 1024 / 1024, 2);
         res.write(`<tr><td colspan="3">Total</td><td>${totalMB}MB</td></tr>`)
         res.write(`</tbody>`);
         res.write(`</table>`);
@@ -84,9 +82,9 @@ async function handleCacheStatusRequest(req, res, next) {
 async function handleJSONRequest(req, res, next) {
     try {
         // exclude asterisk
-        let root = req.route.path.substr(0, req.route.path.length - 1);
-        let path = `/wp-json/${req.url.substr(root.length)}`;
-        let json = await JSONRetriever.fetch(path);
+        const root = req.route.path.substr(0, req.route.path.length - 1);
+        const path = `/wp-json/${req.url.substr(root.length)}`;
+        const json = await JSONRetriever.fetch(path);
         if (json.total) {
             res.set({ 'X-WP-Total': json.total });
         }
@@ -97,14 +95,14 @@ async function handleJSONRequest(req, res, next) {
     }
 }
 
-let pageDependencies = {};
+const pageDependencies = {};
 
 async function handlePageRequest(req, res, next) {
     try {
-        let path = req.url;
-        let noJS = (req.query.js === '0');
-        let target = (req.isSpider() || noJS) ? 'seo' : 'hydrate';
-        let page = await PageRenderer.generate(path, target);
+        const path = req.url;
+        const noJS = (req.query.js === '0');
+        const target = (req.isSpider() || noJS) ? 'seo' : 'hydrate';
+        const page = await PageRenderer.generate(path, target);
         if (target === 'seo') {
             // not caching content generated for SEO
             res.set({ 'X-Accel-Expires': 0 });
@@ -122,29 +120,29 @@ async function handlePageRequest(req, res, next) {
 
 async function handlePurgeRequest(req, res) {
     // verify that require is coming from WordPress
-    let remoteIP = req.connection.remoteAddress;
+    const remoteIP = req.connection.remoteAddress;
     res.end();
-    let wordpressIP = await dnsCache.lookupAsync(WORDPRESS_HOST.replace(/^https?:\/\//, ''));
+    const wordpressIP = await dnsCache.lookupAsync(WORDPRESS_HOST.replace(/^https?:\/\//, ''));
     if (remoteIP !== `::ffff:${wordpressIP}`) {
         return;
     }
 
-    let url = req.url;
-    let method = req.headers['x-purge-method'];
+    const url = req.url;
+    const method = req.headers['x-purge-method'];
     if (method === 'regex' && url === '/.*') {
         pageDependencies = {};
         await NginxCache.purge(/.*/);
         await PageRenderer.prefetch('/');
     } else if (method === 'default') {
         // look for URLs that looks like /wp-json/wp/v2/pages/4/
-        let m = /^\/wp\-json\/(\w+\/\w+\/\w+)\/(\d+)\/$/.exec(url);
+        const m = /^\/wp\-json\/(\w+\/\w+\/\w+)\/(\d+)\/$/.exec(url);
         if (!m) {
             return;
         }
 
         // purge matching JSON files
-        let folderPath = m[1];
-        let pattern = new RegExp(`^/json/${folderPath}.*`);
+        const folderPath = m[1];
+        const pattern = new RegExp(`^/json/${folderPath}.*`);
         await NginxCache.purge(pattern);
 
         // purge the timestamp so CSR code knows something has changed
@@ -152,7 +150,7 @@ async function handlePurgeRequest(req, res) {
 
         // look for pages that made use of the purged JSONs
         for (let [ path, sourceURLs ] of Object.entries(pageDependencies)) {
-            let affected = sourceURLs.some((sourceURL) => {
+            const affected = sourceURLs.some((sourceURL) => {
                 return pattern.test(sourceURL);
             });
             if (affected) {
@@ -170,7 +168,7 @@ async function handlePurgeRequest(req, res) {
 
 function handleError(err, req, res, next) {
     if (!res.headersSent) {
-        let status = err.status || 400;
+        const status = err.status || 400;
         res.type('text').status(status).send(err.message);
     }
     console.error(err);
@@ -184,7 +182,7 @@ async function scheduleCachePurge() {
             await PageRenderer.prefetch('/');
 
             // purge the cache again the next day at 4 AM
-            let tomorrow = Moment().add(1, 'day').startOf('day').add(4, 'hour');
+            const tomorrow = Moment().add(1, 'day').startOf('day').add(4, 'hour');
             await Bluebird.delay(tomorrow - Moment());
         } catch (err) {
             await Bluebird.delay(60000);

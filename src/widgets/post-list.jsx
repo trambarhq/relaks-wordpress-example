@@ -16,7 +16,7 @@ function PostList(props) {
         return () => {
             document.removeEventListener('scroll', handleScroll);
         };
-    });
+    }, []);
     useEffect(() => {
         if (posts && posts.more && posts.length < minimum) {
             posts.more();
@@ -45,7 +45,7 @@ function PostList(props) {
             if (posts && posts.more && posts.length < maximum) {
                 posts.more();
             }
-        }        
+        }
     }
 }
 

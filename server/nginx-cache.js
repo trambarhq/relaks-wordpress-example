@@ -6,19 +6,19 @@ const NGINX_CACHE = process.env.NGINX_CACHE;
 
 async function purge(pattern) {
     console.log(`Purging: ${pattern}`);
-    let purged = [];
+    const purged = [];
     if (typeof(pattern) === 'string') {
-        let url = pattern;
-        let md5 = Crypto.createHash('md5').update(url).digest('hex');
-        let success = await removeCacheEntry({ url, md5 });
+        const url = pattern;
+        const md5 = Crypto.createHash('md5').update(url).digest('hex');
+        const success = await removeCacheEntry({ url, md5 });
         if (success) {
             purged.push(url);
         }
     } else if (pattern instanceof RegExp) {
-        let cacheEntries = await loadCacheEntries();
+        const cacheEntries = await loadCacheEntries();
         for (let cacheEntry of cacheEntries) {
             if (pattern.test(cacheEntry.url)) {
-                let success = await removeCacheEntry(cacheEntry);
+                const success = await removeCacheEntry(cacheEntry);
                 if (success) {
                     purged.push(cacheEntry.url);
                 }
@@ -34,17 +34,17 @@ async function loadCacheEntries() {
     if (!cacheEntriesPromise) {
         cacheEntriesPromise = loadCacheEntriesUncached();
     }
-    let entries = await cacheEntriesPromise;
+    const entries = await cacheEntriesPromise;
     cacheEntriesPromise = null;
     return entries;
 }
 
 async function loadCacheEntriesUncached() {
-    let files = await FS.readdirAsync(NGINX_CACHE);
-    let entries = [];
+    const files = await FS.readdirAsync(NGINX_CACHE);
+    const entries = [];
     for (let file of files) {
         if (/^[0-9a-f]{32}$/.test(file)) {
-            let entry = await loadCacheEntry(file);
+            const entry = await loadCacheEntry(file);
             if (entry) {
                 entries.push(entry);
             }
@@ -53,15 +53,15 @@ async function loadCacheEntriesUncached() {
     return entries;
 }
 
-let cacheEntryCache = {};
+const cacheEntryCache = {};
 
 async function loadCacheEntry(md5) {
     try {
-        let path = `${NGINX_CACHE}/${md5}`;
-        let { mtime, size } = await FS.statAsync(path);
-        let entry = cacheEntryCache[md5];
+        const path = `${NGINX_CACHE}/${md5}`;
+        const { mtime, size } = await FS.statAsync(path);
+        const entry = cacheEntryCache[md5];
         if (!entry || entry.mtime !== mtime) {
-            let url = await loadCacheEntryKey(path);
+            const url = await loadCacheEntryKey(path);
             entry = cacheEntryCache[md5] = { url, md5, mtime, size };
         }
         return entry;
@@ -72,17 +72,17 @@ async function loadCacheEntry(md5) {
 }
 
 async function loadCacheEntryKey(path) {
-    let buf = Buffer.alloc(1024);
-    let fd = await FS.openAsync(path, 'r');
+    const buf = Buffer.alloc(1024);
+    const fd = await FS.openAsync(path, 'r');
     try {
         await FS.readAsync(fd, buf, 0, 1024, 0);
     } finally {
         FS.closeAsync(fd);
     }
-    let si = buf.indexOf('KEY:');
-    let ei = buf.indexOf('\n', si);
+    const si = buf.indexOf('KEY:');
+    const ei = buf.indexOf('\n', si);
     if (si !== -1 && ei !== -1) {
-        let s = buf.toString('utf-8', si + 4, ei).trim();;
+        const s = buf.toString('utf-8', si + 4, ei).trim();;
         return s;
     } else {
         throw new Error('Unable to find key');

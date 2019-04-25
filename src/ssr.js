@@ -28,8 +28,8 @@ async function render(options) {
 
     const ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: options.target });
     const rootNode = await harvest(ssrElement);
-    const appHTML = renderToString(rootNode);
-    return appHTML;
+    const html = renderToString(rootNode);
+    return html;
 }
 
 export {
