@@ -25,42 +25,42 @@ class Route {
     }
 
     getArchiveURL(date) {
-        let { year, month } = date;
+        const { year, month } = date;
         return this.composeURL({ path: `/date/${year}/${_.padStart(month, 2, '0')}/` });
     }
 
     getObjectURL(object) {
-        let { siteURL } = this.params;
-        let link = object.link;
+        const { siteURL } = this.params;
+        const link = object.link;
         if (!_.startsWith(link, siteURL)) {
             throw new Error(`Object URL does not match site URL`);
         }
-        let path = link.substr(siteURL.length);
+        const path = link.substr(siteURL.length);
         return this.composeURL({ path });
     }
 
     prefetchArchiveURL(date) {
-        let url = this.getArchiveURL(date);
+        const url = this.getArchiveURL(date);
         setTimeout(() => { this.loadPageData(url) }, 50);
         return url;
     }
 
     prefetchObjectURL(object) {
-        let url = this.getObjectURL(object);
+        const url = this.getObjectURL(object);
         setTimeout(() => { this.loadPageData(url) }, 50);
         return url;
     }
 
     composeURL(urlParts) {
-        let context = this.routeManager.context;
+        const context = this.routeManager.context;
         this.routeManager.rewrite('to', urlParts, context);
-        let url = this.routeManager.compose(urlParts);
+        const url = this.routeManager.compose(urlParts);
         url = this.routeManager.applyFallback(url);
         return url;
     }
 
     async setParameters(evt, fallbackToRoot) {
-        let params = await this.getParameters(evt.path, evt.query);
+        const params = await this.getParameters(evt.path, evt.query);
         if (params) {
             params.module = require(`pages/${params.pageType}-page`);
             _.assign(evt.params, params);
@@ -77,17 +77,17 @@ class Route {
     async getParameters(path, query, fallbackToRoot) {
         // get the site URL and see what the page's URL would be if it
         // were on WordPress itself
-        let wp = new Wordpress(this.dataSource);
-        let site = await wp.fetchSite();
-        let siteURL = _.trimEnd(site.url, '/');
-        let link = _.trimEnd(siteURL + path, '/');
-        let matchLink = (obj) => {
+        const wp = new Wordpress(this.dataSource);
+        const site = await wp.fetchSite();
+        const siteURL = _.trimEnd(site.url, '/');
+        const link = _.trimEnd(siteURL + path, '/');
+        const matchLink = (obj) => {
             return _.trimEnd(obj.link, '/') === link;
         };
-        let slugs = _.filter(_.split(path, '/'));
+        const slugs = _.filter(_.split(path, '/'));
 
         // see if it's a search
-        let search = query.s;
+        const search = query.s;
         if (search) {
             return { pageType: 'search', search, siteURL };
         }
@@ -99,13 +99,13 @@ class Route {
 
         // see if it's pointing to an archive
         if (slugs[0] === 'date' && /^\d+$/.test(slugs[1]) && /^\d+$/.test(slugs[2]) && slugs.length == 3) {
-            let date = {
+            const date = {
                 year: parseInt(slugs[1]),
                 month: parseInt(slugs[2]),
             };
             return { pageType: 'archive', date, siteURL };
         } else if (/^\d+$/.test(slugs[0]) && /^\d+$/.test(slugs[1]) && slugs.length == 2) {
-            let date = {
+            const date = {
                 year: parseInt(slugs[0]),
                 month: parseInt(slugs[1]),
             };
@@ -114,56 +114,56 @@ class Route {
 
         // see if it's pointing to a post by ID
         if (slugs[0] === 'archives' && /^\d+$/.test(slugs[1])) {
-            let postID = parseInt(slugs[1]);
-            let post = await wp.fetchPost(postID);
+            const postID = parseInt(slugs[1]);
+            const post = await wp.fetchPost(postID);
             if (post) {
                 return { pageType: 'post', postSlug: post.slug, siteURL };
             }
         }
 
         // see if it's pointing to a page
-        let allPages = await wp.fetchPages();
-        let page = _.find(allPages, matchLink);
+        const allPages = await wp.fetchPages();
+        const page = _.find(allPages, matchLink);
         if (page) {
             return { pageType: 'page', pageSlug: page.slug, siteURL };
         }
 
         // see if it's pointing to a category
-        let allCategories = await wp.fetchCategories();
-        let category = _.find(allCategories, matchLink);
+        const allCategories = await wp.fetchCategories();
+        const category = _.find(allCategories, matchLink);
         if (category) {
             return { pageType: 'category', categorySlug: category.slug, siteURL };
         }
 
         // see if it's pointing to a popular tag
-        let topTags = await wp.fetchTopTags();
-        let topTag = _.find(topTags, matchLink);
+        const topTags = await wp.fetchTopTags();
+        const topTag = _.find(topTags, matchLink);
         if (topTag) {
             return { pageType: 'tag', tagSlug: topTag.slug, siteURL };
         }
 
         // see if it's pointing to a not-so popular tag
         if (slugs[0] === 'tag' && slugs.length === 2) {
-            let tag = await wp.fetchTag(slugs[1]);
+            const tag = await wp.fetchTag(slugs[1]);
             if (tag) {
                 return { pageType: 'tag', tagSlug: tag.slug, siteURL };
             }
         }
 
         // see if it's pointing to a post
-        let postSlug = _.last(slugs);
+        const postSlug = _.last(slugs);
         if (/^\d+\-/.test(postSlug)) {
             // delete post ID in front of slug
             postSlug = postSlug.replace(/^\d+\-/, '');
         }
-        let post = await wp.fetchPost(postSlug);
+        const post = await wp.fetchPost(postSlug);
         if (post) {
             return { pageType: 'post', postSlug, siteURL };
         }
 
         // see if it's pointing to a tag when no prefix is used
-        let tagSlug = _.last(slugs);
-        let tag = await wp.fetchTag(tagSlug);
+        const tagSlug = _.last(slugs);
+        const tag = await wp.fetchTag(tagSlug);
         if (tag) {
             return { pageType: 'tag', tagSlug: tag.slug, siteURL };
         }
@@ -171,21 +171,21 @@ class Route {
 
     async loadPageData(url) {
         try {
-            let urlParts = this.routeManager.parse(url);
-            let context = {};
+            const urlParts = this.routeManager.parse(url);
+            const context = {};
             this.routeManager.rewrite('from', urlParts, context);
-            let params = await this.getParameters(urlParts.path, urlParts.query);
+            const params = await this.getParameters(urlParts.path, urlParts.query);
             if (params) {
-                let wp = new Wordpress(this.dataSource);
+                const wp = new Wordpress(this.dataSource);
                 if (params.postSlug) {
                     await wp.fetchPost(params.postSlug);
                 } else if (params.pageSlug) {
                     await wp.fetchPage(params.pageSlug);
                 } else if (params.tagSlug) {
-                    let tag = await wp.fetchTag(params.tagSlug);
+                    const tag = await wp.fetchTag(params.tagSlug);
                     await wp.fetchPostsWithTag(tag);
                 } else if (params.categorySlug) {
-                    let category = await wp.fetchCategory(params.categorySlug);
+                    const category = await wp.fetchCategory(params.categorySlug);
                     await wp.fetchPostsInCategory(category);
                 } else if (params.date) {
                     await wp.fetchPostsInMonth(params.date);
@@ -198,11 +198,11 @@ class Route {
 
     transformNode = (node) => {
         if (node.type === 'tag') {
-            let { siteURL } = this.params;
-            let siteURLInsecure = 'http:' + siteURL.substr(6);
+            const { siteURL } = this.params;
+            const siteURLInsecure = 'http:' + siteURL.substr(6);
             if (node.name === 'a') {
-                let url = _.trim(node.attribs.href);
-                let target;
+                const url = _.trim(node.attribs.href);
+                const target;
                 if (url) {
                     if (!_.startsWith(url, '/')) {
                         if (_.startsWith(url, siteURL)) {
@@ -227,7 +227,7 @@ class Route {
                 }
             } else if (node.name === 'img') {
                 // prepend image URL with site URL
-                let url = _.trim(node.attribs.src);
+                const url = _.trim(node.attribs.src);
                 if (url && !/^https?:/.test(url)) {
                     url = siteURL + url;
                     node.attribs.src = url;
@@ -240,7 +240,7 @@ class Route {
     }
 }
 
-let routes = {
+const routes = {
     'page': { path: '*' },
 };
 

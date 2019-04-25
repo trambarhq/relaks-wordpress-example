@@ -147,10 +147,10 @@ The handler detects whether the remote agent is a search-engine spider and handl
 ```javascript
 async function handlePageRequest(req, res, next) {
     try {
-        let path = req.url;
-        let noJS = (req.query.js === '0');
-        let target = (req.isSpider() || noJS) ? 'seo' : 'hydrate';
-        let page = await PageRenderer.generate(path, target);
+        const path = req.url;
+        const noJS = (req.query.js === '0');
+        const target = (req.isSpider() || noJS) ? 'seo' : 'hydrate';
+        const page = await PageRenderer.generate(path, target);
         if (target === 'seo') {
             // not caching content generated for SEO
             res.set({ 'X-Accel-Expires': 0 });
@@ -173,11 +173,11 @@ async function handlePageRequest(req, res, next) {
 async function generate(path, target) {
     console.log(`Regenerating page: ${path}`);
     // retrieve cached JSON through Nginx
-    let host = NGINX_HOST;
+    const host = NGINX_HOST;
     // create a fetch() that remembers the URLs used
-    let sourceURLs = [];
-    let agent = new HTTP.Agent({ keepAlive: true });
-    let fetch = (url, options) => {
+    const sourceURLs = [];
+    const agent = new HTTP.Agent({ keepAlive: true });
+    const fetch = (url, options) => {
         if (url.startsWith(host)) {
             sourceURLs.push(url.substr(host.length));
             options = addHostHeader(options);
@@ -185,20 +185,18 @@ async function generate(path, target) {
         }
         return CrossFetch(url, options);
     };
-    let options = { host, path, target, fetch };
-    let appHTML = await FrontEnd.render(options);
-    let htmlTemplate = await FS.readFileAsync(HTML_TEMPLATE, 'utf-8');
-    let html = htmlTemplate.replace(`<!--REACT-->`, appHTML);
+    const options = { host, path, target, fetch };
+    const frontEndHTML = await FrontEnd.render(options);
+    const htmlTemplate = await FS.readFileAsync(HTML_TEMPLATE, 'utf-8');
+    let html = htmlTemplate.replace(`<!--REACT-->`, frontEndHTML);
     if (target === 'hydrate') {
         // add <noscript> tag to redirect to SEO version
-        let meta = `<meta http-equiv=refresh content="0; url=?js=0">`;
+        const meta = `<meta http-equiv=refresh content="0; url=?js=0">`;
         html += `<noscript>${meta}</noscript>`;
     }
     return { path, target, sourceURLs, html };
 }
 ```
-
-`FrontEnd.render()` returns a ReactElement containing plain HTML child elements. We use [React DOM Server](https://reactjs.org/docs/react-dom-server.html#rendertostring) to convert that to actual HTML text. Then we stick it into our [HTML template](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/index.html), where a HTML comment sits inside the element that would host the root React component.
 
 `FrontEnd.render()` is a function exported by our front-end code(https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/ssr.js#L67):
 
@@ -223,14 +221,16 @@ async function render(options) {
 
     const ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: options.target });
     const rootNode = await harvest(ssrElement);
-    const appHTML = renderToString(rootNode);
-    return appHTML;
+    const html = renderToString(rootNode);
+    return html;
 }
 ```
 
 The code initiates the data source and the route manager. Using these as props, it creates the root React element `<FrontEnd />`. The function `harvest()` (from [relaks-harvest](https://github.com/trambarhq/relaks-harvest)) then recursively renders the component tree until all we have are plain HTML elements:
 
 ![Component tree conversion](docs/img/harvest.png)
+
+The tree is then converted to a text string using React DOM Server's [renderToString()](https://reactjs.org/docs/react-dom-server.html#rendertostring).
 
 Our front-end is built with the help of [Relaks](https://github.com/trambarhq/relaks), a library that let us make asynchronous calls within a React component's render method. Data retrievals are done as part of the rendering cycle. This model makes SSR very straight forward. To render a page, we just call the render methods of all its components and wait for them to finish.
 
@@ -242,9 +242,9 @@ The following handler is invoked when Nginx requests a JSON file (i.e. when a ca
 async function handleJSONRequest(req, res, next) {
     try {
         // exclude asterisk
-        let root = req.route.path.substr(0, req.route.path.length - 1);
-        let path = `/wp-json/${req.url.substr(root.length)}`;
-        let json = await JSONRetriever.fetch(path);
+        const root = req.route.path.substr(0, req.route.path.length - 1);
+        const path = `/wp-json/${req.url.substr(root.length)}`;
+        const json = await JSONRetriever.fetch(path);
         if (json.total) {
             res.set({ 'X-WP-Total': json.total });
         }
@@ -261,9 +261,9 @@ async function handleJSONRequest(req, res, next) {
 ```javascript
 async function fetch(path) {
     console.log(`Retrieving data: ${path}`);
-    let url = `${WORDPRESS_HOST}${path}`;
-    let res = await CrossFetch(url);
-    let resText = await res.text();
+    const url = `${WORDPRESS_HOST}${path}`;
+    const res = await CrossFetch(url, { agent });
+    const resText = await res.text();
     let object;
     try {
         object = JSON.parse(resText);
@@ -275,14 +275,14 @@ async function fetch(path) {
         }
     }
     if (res.status >= 400) {
-        let msg = (object && object.message) ? object.message : resText;
-        let err = new Error(msg);
+        const msg = (object && object.message) ? object.message : resText;
+        const err = new Error(msg);
         err.status = res.status;
         throw err;
     }
-    let total = parseInt(res.headers.get('X-WP-Total'));
+    const total = parseInt(res.headers.get('X-WP-Total'));
     removeSuperfluousProps(path, object);
-    let text = JSON.stringify(object);
+    const text = JSON.stringify(object);
     return { path, text, total };
 }
 ```
@@ -296,29 +296,29 @@ The [Proxy Cache Purge](https://wordpress.org/plugins/varnish-http-purge/) sends
 ```javascript
 async function handlePurgeRequest(req, res) {
     // verify that require is coming from WordPress
-    let remoteIP = req.connection.remoteAddress;
+    const remoteIP = req.connection.remoteAddress;
     res.end();
-    let wordpressIP = await dnsCache.lookupAsync(WORDPRESS_HOST.replace(/^https?:\/\//, ''));
+    const wordpressIP = await dnsCache.lookupAsync(WORDPRESS_HOST.replace(/^https?:\/\//, ''));
     if (remoteIP !== `::ffff:${wordpressIP}`) {
         return;
     }
 
-    let url = req.url;
-    let method = req.headers['x-purge-method'];
+    const url = req.url;
+    const method = req.headers['x-purge-method'];
     if (method === 'regex' && url === '/.*') {
         pageDependencies = {};
         await NginxCache.purge(/.*/);
         await PageRenderer.prefetch('/');
     } else if (method === 'default') {
         // look for URLs that looks like /wp-json/wp/v2/pages/4/
-        let m = /^\/wp\-json\/(\w+\/\w+\/\w+)\/(\d+)\/$/.exec(url);
+        const m = /^\/wp\-json\/(\w+\/\w+\/\w+)\/(\d+)\/$/.exec(url);
         if (!m) {
             return;
         }
 
         // purge matching JSON files
-        let folderPath = m[1];
-        let pattern = new RegExp(`^/json/${folderPath}.*`);
+        const folderPath = m[1];
+        const pattern = new RegExp(`^/json/${folderPath}.*`);
         await NginxCache.purge(pattern);
 
         // purge the timestamp so CSR code knows something has changed
@@ -326,7 +326,7 @@ async function handlePurgeRequest(req, res) {
 
         // look for pages that made use of the purged JSONs
         for (let [ path, sourceURLs ] of Object.entries(pageDependencies)) {
-            let affected = sourceURLs.some((sourceURL) => {
+            const affected = sourceURLs.some((sourceURL) => {
                 return pattern.test(sourceURL);
             });
             if (affected) {
@@ -358,8 +358,8 @@ The handle for timestamp requests is extremely simple:
 ```javascript
 async function handleTimestampRequest(req, res, next) {
     try {
-        let now = new Date;
-        let ts = now.toISOString();
+        const now = new Date;
+        const ts = now.toISOString();
         res.set({ 'Cache-Control': CACHE_CONTROL });
         res.type('text').send(ts);
     } catch (err) {
@@ -440,16 +440,16 @@ We want our front-end to handle WordPress permalinks correctly. This makes page 
 [`relaks-route-manager`](https://github.com/trambarhq/relaks-route-manager) was not designed with this usage scenario in mind. It does provide a mean, however, to perform asynchronous operations prior to a route change. When it emits a `beforechange` event, we can call `evt.postponeDefault()` to defer the default action (permitting the change) until a promise fulfills:
 
 ```javascript
-routeManager.addEventListener('beforechange', (evt) => {
-    let route = new Route(routeManager, dataSource);
-    evt.postponeDefault(route.setParameters(evt, true));
-});
+    routeManager.addEventListener('beforechange', (evt) => {
+        const route = new Route(routeManager, dataSource);
+        evt.postponeDefault(route.setParameters(evt, true));
+    });
 ```
 
 `route.setParameters()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L62)) basically displaces the default parameter extraction mechanism. Our routing table is reduced to the following:
 
 ```javascript
-let routes = {
+const routes = {
     'page': { path: '*' },
 };
 ```
@@ -459,20 +459,20 @@ Which simply matches any URL.
 `route.setParameters()` itself calls `route.getParameters()` to obtain the parameters:
 
 ```javascript
-async setParameters(evt, fallbackToRoot) {
-    let params = await this.getParameters(evt.path, evt.query);
-    if (params) {
-        params.module = require(`pages/${params.pageType}-page`);
-        _.assign(evt.params, params);
-    } else {
-        if (fallbackToRoot) {
-            await this.routeManager.change('/');
-            return false;
+    async setParameters(evt, fallbackToRoot) {
+        const params = await this.getParameters(evt.path, evt.query);
+        if (params) {
+            params.module = require(`pages/${params.pageType}-page`);
+            _.assign(evt.params, params);
         } else {
-            throw new RelaksRouteManagerError(404, 'Route not found');
+            if (fallbackToRoot) {
+                await this.routeManager.change('/');
+                return false;
+            } else {
+                throw new RelaksRouteManagerError(404, 'Route not found');
+            }
         }
     }
-}
 ```
 
 The key parameter is `pageType`, which is used to load one of the [page components](https://github.com/trambarhq/relaks-wordpress-example/tree/master/src/pages).
@@ -480,21 +480,21 @@ The key parameter is `pageType`, which is used to load one of the [page componen
 At a glance `route.getParameters()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L77)) might seem incredibly inefficient. To see if a URL points to a page, it fetches all pages and see if one of them has that URL:
 
 ```javascript
-let allPages = await wp.fetchPages();
-let page = _.find(allPages, matchLink);
-if (page) {
-   return { pageType: 'page', pageSlug: page.slug, siteURL };
-}
+    const allPages = await wp.fetchPages();
+    const page = _.find(allPages, matchLink);
+    if (page) {
+        return { pageType: 'page', pageSlug: page.slug, siteURL };
+    }
 ```
 
 It does the same check on categories:
 
 ```javascript
-let allCategories = await wp.fetchCategories();
-let category = _.find(allCategories, matchLink);
-if (category) {
-    return { pageType: 'category', categorySlug: category.slug, siteURL };
-}
+    const allCategories = await wp.fetchCategories();
+    const category = _.find(allCategories, matchLink);
+    if (category) {
+        return { pageType: 'category', categorySlug: category.slug, siteURL };
+    }
 ```
 
 Most of the time, the data in question would be cached already. The top nav loads the pages, while the side nav loads the categories (and also top tags). Resolving the route wouldn't require actual data transfer. On cold start the process would be somewhat slow. Our SSR mechanism would mask this delay, however. A visitor wouldn't find it too noticeable. Of course, since we have all pages at hand, a page will pop up instantly when the visitor clicks on the nav bar.
@@ -502,15 +502,15 @@ Most of the time, the data in question would be cached already. The top nav load
 `route.getObjectURL()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L32)) is used to obtain the URL to an object (post, page, category, etc.). The method just remove the site URL from the object's WP permalink:
 
 ```javascript
-getObjectURL(object) {
-    let { siteURL } = this.params;
-    let link = object.link;
-    if (!_.startsWith(link, siteURL)) {
-        throw new Error(`Object URL does not match site URL`);
+    getObjectURL(object) {
+        const { siteURL } = this.params;
+        const link = object.link;
+        if (!_.startsWith(link, siteURL)) {
+            throw new Error(`Object URL does not match site URL`);
+        }
+        const path = link.substr(siteURL.length);
+        return this.composeURL({ path });
     }
-    let path = link.substr(siteURL.length);
-    return this.composeURL({ path });
-}
 ```
 
 In order to link to a post, we must download the post beforehand. Clicking on an article will nearly always bring it up instantly.
@@ -518,11 +518,11 @@ In order to link to a post, we must download the post beforehand. Clicking on an
 For links to categories and tags, we perform explicit prefetching:
 
 ```javascript
-prefetchObjectURL(object) {
-    let url = this.getObjectURL(object);
-    setTimeout(() => { this.loadPageData(url) }, 50);
-    return url;
-}
+    prefetchObjectURL(object) {
+        const url = this.getObjectURL(object);
+        setTimeout(() => { this.loadPageData(url) }, 50);
+        return url;
+    }
 ```
 
 The first ten posts are always fetched so the visitor sees something immediately after clicking.
@@ -561,12 +561,6 @@ const component = Relaks.memo(WelcomePage);
 export {
     component as default,
 };
-```
-
-`WelcomePageSync`, meanwhile, delegate the task of rendering the list of posts to `PostList`:
-
-```javascript
-/* ... */
 ```
 
 ### PostList
@@ -635,10 +629,193 @@ export {
 };
 ```
 
-The only thing noteworthy about the component is that it perform data load on scroll:
+The only thing noteworthy about the component is that it perform data load on scroll.
+
+## PostListView
 
 ```javascript
-/* ... */
+import _ from 'lodash';
+import Moment from 'moment';
+import React from 'react';
+
+import { HTML } from 'widgets/html';
+import { MediaView } from 'widgets/media-view';
+
+function PostListView(props) {
+    const { route, post, media } = props;
+    const title = _.get(post, 'title.rendered', '');
+    const excerptRendered = _.get(post, 'excerpt.rendered', '');
+    const excerpt = cleanExcerpt(excerptRendered);
+    const url = route.prefetchObjectURL(post);
+    const published = _.get(post, 'date_gmt');
+    const date = (published) ? Moment(published).format('L') : '';
+
+    if (media) {
+        return (
+            <div className="post-list-view with-media">
+                <div className="media">
+                    <MediaView media={media} />
+                </div>
+                <div className="text">
+                    <div className="headline">
+                        <h3 className="title">
+                            <a href={url}><HTML text={title} /></a>
+                        </h3>
+                        <div className="date">{date}</div>
+                    </div>
+                    <div className="excerpt">
+                        <HTML text={excerpt} />
+                    </div>
+                </div>
+            </div>
+        );
+    } else {
+        return (
+            <div className="post-list-view">
+                <div className="headline">
+                    <h3 className="title">
+                        <a href={url}><HTML text={title} /></a>
+                    </h3>
+                    <div className="date">{date}</div>
+                </div>
+                <div className="excerpt">
+                    <HTML text={excerpt} />
+                </div>
+            </div>
+        );
+    }
+
+    function cleanExcerpt(excerpt) {
+        const index = excerpt.indexOf('<p class="link-more">');
+        if (index !== -1) {
+            excerpt = excerpt.substr(0, index);
+        }
+        return excerpt;
+    }
+}
+
+export {
+    PostListView,
+};
+```
+
+## PostPage
+
+```javascript
+import _ from 'lodash';
+import Moment from 'moment';
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
+
+import { Breadcrumb } from 'widgets/breadcrumb';
+import { PostView } from 'widgets/post-view';
+import { TagList } from 'widgets/tag-list';
+import { CommentSection } from 'widgets/comment-section';
+
+async function PostPage(props) {
+    const { wp, route } = props;
+    const { postSlug } = route.params;
+    const [ show ] = useProgress();
+
+    render();
+    const post = await wp.fetchPost(postSlug);
+    render();
+    const categories = await findCategoryChain(post);
+    render();
+    const author = await wp.fetchAuthor(post);
+    render();
+    const tags = await wp.fetchTagsOfPost(post);
+    render()
+    let comments;
+    if (!wp.ssr) {
+        comments = await wp.fetchComments(post);
+        render();
+    }
+
+    function render() {
+        const trail = [ { label: 'Categories' } ];
+        if (categories) {
+            for (let category of categories) {
+                const label = _.get(category, 'name', '');
+                const url = route.prefetchObjectURL(category);
+                trail.push({ label, url });
+            }
+        }
+        show(
+            <div className="page">
+                <Breadcrumb trail={trail} />
+                <PostView post={post} author={author} transform={route.transformNode} />
+                <TagList route={route} tags={tags} />
+                <CommentSection comments={comments} />
+            </div>
+        );
+    }
+
+    async function findCategoryChain(post) {
+        if (!post) return [];
+        const allCategories = await wp.fetchCategories();
+
+        // add categories, including their parents as well
+        const applicable = [];
+        const include = (id) => {
+            const category = _.find(allCategories, { id })
+            if (category) {
+                if (!_.includes(applicable, category)) {
+                    applicable.push(category);
+                }
+                // add parent category as well
+                include(category.parent);
+            }
+        };
+        for (let id of post.categories) {
+            include(id);
+        }
+
+        // see how recently a category was visited
+        const historyIndex = (category) => {
+            const predicate = { params: { categorySlug: category.slug }};
+            return _.findLastIndex(route.history, predicate);
+        };
+        // see how deep a category is
+        const depth = (category) => {
+            if (category.parent) {
+                const predicate = { id: category.parent };
+                const parent = _.find(allCategories, predicate);
+                if (parent) {
+                    return depth(parent) + 1;
+                }
+            }
+            return 0;
+        };
+
+        // order applicable categories based on how recently it was visited,
+        // how deep it is, and alphabetically; the first criteria makes our
+        // breadcrumb works more sensibly
+        const ordered = _.orderBy(applicable, [ historyIndex, depth, 'name' ], [ 'desc', 'desc', 'asc' ]);
+        const anchorCategory = _.first(ordered);
+
+        const trail = [];
+        if (anchorCategory) {
+            // add category and its ancestors
+            for (let c = anchorCategory; c; c = _.find(applicable, { id: c.parent })) {
+                trail.unshift(c);
+            }
+            // add applicable child categories
+            for (let c = anchorCategory; c; c = _.find(applicable, { parent: c.id })) {
+                if (c !== anchorCategory) {
+                    trail.push(c);
+                }
+            }
+        }
+        return trail;
+    }
+}
+
+const component = Relaks.memo(PostPage);
+
+export {
+    component as default,
+};
 ```
 
 ## Cordova deployment
