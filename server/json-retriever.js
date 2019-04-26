@@ -9,7 +9,7 @@ async function fetch(path) {
     console.log(`Retrieving data: ${path}`);
     const url = `${WORDPRESS_HOST}${path}`;
     const res = await CrossFetch(url, { agent });
-    const resText = await res.text();
+    let resText = await res.text();
     let object;
     try {
         object = JSON.parse(resText);

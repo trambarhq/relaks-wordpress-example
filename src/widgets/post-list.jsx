@@ -8,20 +8,25 @@ function PostList(props) {
     const { route, posts, medias, minimum, maximum } = props;
 
     useEffect(() => {
-        const handleScroll = (evt) => {
-            loadMore(0.5);
-        };
-        document.addEventListener('scroll', handleScroll);
-
-        return () => {
-            document.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
-    useEffect(() => {
-        if (posts && posts.more && posts.length < minimum) {
-            posts.more();
-        } else {
+        if (posts && posts.more) {
+            const loadMore = (fraction) => {
+                if (posts.length < minimum) {
+                    posts.more();
+                } else if (posts.length < maximum) {
+                    const { scrollTop, scrollHeight } = document.body.parentNode;
+                    if (scrollTop > scrollHeight * fraction) {
+                        posts.more();
+                    }
+                }
+            };
+            const handleScroll = (evt) => {
+                loadMore(0.5);
+            };
             loadMore(0.75);
+            document.addEventListener('scroll', handleScroll);
+            return () => {
+                document.removeEventListener('scroll', handleScroll);
+            };
         }
     }, [ posts ]);
 
@@ -37,15 +42,6 @@ function PostList(props) {
     function renderPost(post, i) {
         let media = _.find(medias, { id: post.featured_media });
         return <PostListView route={route} post={post} media={media} key={post.id} />
-    }
-
-    function loadMore(fraction) {
-        const { scrollTop, scrollHeight } = document.body.parentNode;
-        if (scrollTop > scrollHeight * fraction) {
-            if (posts && posts.more && posts.length < maximum) {
-                posts.more();
-            }
-        }
     }
 }
 

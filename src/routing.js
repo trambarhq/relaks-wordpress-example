@@ -54,7 +54,7 @@ class Route {
     composeURL(urlParts) {
         const context = this.routeManager.context;
         this.routeManager.rewrite('to', urlParts, context);
-        const url = this.routeManager.compose(urlParts);
+        let url = this.routeManager.compose(urlParts);
         url = this.routeManager.applyFallback(url);
         return url;
     }
@@ -151,7 +151,7 @@ class Route {
         }
 
         // see if it's pointing to a post
-        const postSlug = _.last(slugs);
+        let postSlug = _.last(slugs);
         if (/^\d+\-/.test(postSlug)) {
             // delete post ID in front of slug
             postSlug = postSlug.replace(/^\d+\-/, '');
@@ -201,8 +201,8 @@ class Route {
             const { siteURL } = this.params;
             const siteURLInsecure = 'http:' + siteURL.substr(6);
             if (node.name === 'a') {
-                const url = _.trim(node.attribs.href);
-                const target;
+                let url = _.trim(node.attribs.href);
+                let target;
                 if (url) {
                     if (!_.startsWith(url, '/')) {
                         if (_.startsWith(url, siteURL)) {
@@ -227,7 +227,7 @@ class Route {
                 }
             } else if (node.name === 'img') {
                 // prepend image URL with site URL
-                const url = _.trim(node.attribs.src);
+                let url = _.trim(node.attribs.src);
                 if (url && !/^https?:/.test(url)) {
                     url = siteURL + url;
                     node.attribs.src = url;
