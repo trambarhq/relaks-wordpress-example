@@ -1,6 +1,6 @@
 {
   "name": "relaks-wordpress-example",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "An example of using Relaks to build an isomorphic WordPress frontend",
   "scripts": {
     "watch": "webpack --watch",
@@ -48,8 +48,8 @@
     "react-dom": "^16.8.6",
     "react-html-parser": "^2.0.2",
     "regenerator-runtime": "^0.13.2",
-    "relaks": "^1.1.9",
-    "relaks-harvest": "^0.0.3",
+    "relaks": "^2.0.0",
+    "relaks-harvest": "^2.0.0",
     "relaks-route-manager": "^0.0.21",
     "relaks-wordpress-data-source": "^0.0.5",
     "sass-loader": "^7.1.0",
