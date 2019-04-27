@@ -13,7 +13,7 @@ For the purpose of demonstrating what the example code can do, I've prepared two
 * [pfj.trambar.io](https://pfj.trambar.io)
 * [et.trambar.io](https://et.trambar.io)
 
-Both are hosted on the same AWS [A1 medium instance](https://aws.amazon.com/ec2/instance-types/a1/), powered by a single core of a [Graviton CPU](https://www.phoronix.com/scan.php?page=article&item=ec2-graviton-performance&num=1) and backed by 2G of RAM. In terms of computational capability, we have roughly one fourth that of a phone. Not much. For our system though, it's more than enough. Most requests will result in cache hits. Nginx will spend most of its time sending data already in memory. We'll be IO-bound long before we're CPU-bound.
+Both are hosted on the same AWS [A1 medium instance](https://aws.amazon.com/ec2/instance-types/a1/), powered by a single core of a [Graviton CPU](https://www.phoronix.com/scan.php?page=article&item=ec2-graviton-performance&num=1) and backed by 2G of RAM. In terms of computational capability, we have roughly one fourth that of a phone. Not much. For our system though it's more than enough. Most requests will result in cache hits. Nginx will spend most of its time sending data already in memory. We'll be IO-bound long before we're CPU-bound.
 
 [pfj.trambar.io](https://pfj.trambar.io) obtains its data from a test WordPress instance running on the same server. It's populated with random lorem ipsum text. You can log into the [WordPress admin page](https://pfj.trambar.io/wp-admin/) and post a article using the account `bdickus` (password: `incontinentia`). Publication of a new article will trigger a cache purge. The article should appear in the front page automatically after 30 seconds or so (no need to hit refresh button).
 
@@ -232,7 +232,7 @@ The function initiates the data source and the route manager. Using these as pro
 
 The tree is then converted to a text string using React DOM Server's [renderToString()](https://reactjs.org/docs/react-dom-server.html#rendertostring).
 
-Our front-end is built with the help of [Relaks](https://github.com/trambarhq/relaks), a library that let us make asynchronous calls within a React component's render method. Data retrievals are done as part of the rendering cycle. This model makes SSR very straight forward. To render a page, we just call the render methods of all its components and wait for them to finish.
+Our front-end is built with the help of [Relaks](https://github.com/trambarhq/relaks), a library that let us make asynchronous calls within a React component's render function. Data retrievals are done as part of the rendering cycle. This model makes SSR very straight forward. To render a page, we just call the render functions of all its components and wait for them to finish.
 
 ### JSON data retrieval
 
@@ -527,7 +527,7 @@ For links to categories and tags, we perform explicit prefetching:
     }
 ```
 
-The first ten posts are always fetched so the visitor sees something immediately after clicking.
+The first ten posts are always fetched so the visitor will see something immediately upon clicking.
 
 ## WelcomePage
 
@@ -629,7 +629,7 @@ export {
 };
 ```
 
-The component is responsible for loading more posts when the user scrolls down (pass the half-way point). It'll also do so when the number of posts does not meet the minimum specified.
+The component is responsible for loading more posts when the user scrolls down (past the half-way point). It'll also do so when the number of posts does not meet the minimum specified.
 
 ## PostListView
 
