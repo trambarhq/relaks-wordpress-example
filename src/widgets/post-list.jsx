@@ -1,62 +1,47 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
-import { Route } from 'routing';
+import React, { useEffect } from 'react';
 
-import PostListView from 'widgets/post-list-view';
+import { PostListView } from 'widgets/post-list-view';
 
-class PostList extends PureComponent {
-    static displayName = 'PostList'
+function PostList(props) {
+    const { route, posts, medias, minimum, maximum } = props;
 
-    render() {
-        let { route, posts, medias } = this.props;
-        if (!posts) {
-            return null;
-        }
-        return (
-            <div className="posts">
-            {
-                posts.map((post) => {
-                    let media = _.find(medias, { id: post.featured_media });
-                    return <PostListView route={route} post={post} media={media} key={post.id} />
-                })
-            }
-            </div>
-        );
-    }
-
-    componentDidMount() {
-        document.addEventListener('scroll', this.handleScroll);
-        this.componentDidUpdate();
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        let { posts, minimum, maximum } = this.props;
-        if (posts && posts.length < minimum) {
-            posts.more();
-        } else {
-            // load more records if we're still near the bottom
-            let { scrollTop, scrollHeight } = document.body.parentNode;
-            if (scrollTop > scrollHeight * 0.75) {
-                if (posts && posts.length < maximum) {
+    useEffect(() => {
+        if (posts && posts.more) {
+            const loadMore = (fraction) => {
+                if (posts.length < minimum) {
                     posts.more();
+                } else if (posts.length < maximum) {
+                    const { scrollTop, scrollHeight } = document.body.parentNode;
+                    if (scrollTop > scrollHeight * fraction) {
+                        posts.more();
+                    }
                 }
-            }
+            };
+            const handleScroll = (evt) => {
+                loadMore(0.5);
+            };
+            loadMore(0.75);
+            document.addEventListener('scroll', handleScroll);
+            return () => {
+                document.removeEventListener('scroll', handleScroll);
+            };
         }
-    }
+    }, [ posts ]);
 
-    componentWillUnmount() {
-        document.removeEventListener('scroll', this.handleScroll);
+    if (!posts) {
+        return null;
     }
+    return (
+        <div className="posts">
+            {posts.map(renderPost)}
+        </div>
+    );
 
-    handleScroll = (evt) => {
-        let { posts, maximum } = this.props;
-        let { scrollTop, scrollHeight } = document.body.parentNode;
-        if (scrollTop > scrollHeight * 0.5) {
-            if (posts && posts.length < maximum) {
-                posts.more();
-            }
-        }
+    function renderPost(post, i) {
+        let media = _.find(medias, { id: post.featured_media });
+        return <PostListView route={route} post={post} media={media} key={post.id} />
     }
 }
 
@@ -65,19 +50,6 @@ PostList.defaultProps = {
     maximum: 500,
 };
 
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    PostList.propTypes = {
-        posts: PropTypes.arrayOf(PropTypes.object),
-        medias: PropTypes.arrayOf(PropTypes.object),
-        route: PropTypes.instanceOf(Route),
-        minimum: PropTypes.number,
-        maximum: PropTypes.number,
-    };
-}
-
 export {
-    PostList as default,
     PostList,
 };

@@ -14,7 +14,8 @@ module.exports = function(config) {
                 })
             }
         }
-    })
+    });
+    config.resolve.modules.splice(1, 0, Path.resolve('./node_modules'));    
 };
 
 function resolve(type, module) {

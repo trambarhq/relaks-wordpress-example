@@ -1,168 +1,137 @@
-import React, { PureComponent } from 'react';
-import Wordpress from 'wordpress';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useEventTime } from 'relaks';
+import { Wordpress } from 'wordpress';
 import { Route } from 'routing';
 import 'style.scss';
 import '@fortawesome/fontawesome-free/scss/fontawesome.scss';
 import '@fortawesome/fontawesome-free/scss/regular.scss';
 import '@fortawesome/fontawesome-free/scss/solid.scss';
 
-import SideNav from 'widgets/side-nav';
-import TopNav from 'widgets/top-nav';
-import ErrorBoundary from 'widgets/error-boundary';
+import { SideNav } from 'widgets/side-nav';
+import { TopNav } from 'widgets/top-nav';
+import { ErrorBoundary } from 'widgets/error-boundary';
 
-class FrontEnd extends PureComponent {
-    static displayName = 'FrontEnd';
+function FrontEnd(props) {
+    const { routeManager, dataSource, ssr } = props;
+    const [ routeChanged, setRouteChanged ] = useEventTime();
+    const [ dataChanged, setDataChanged ] = useEventTime();
+    const route = useMemo(() => {
+        return new Route(routeManager, dataSource);
+    }, [ routeManager, dataSource, routeChanged ]);
+    const wp = useMemo(() => {
+        return new Wordpress(dataSource, ssr);
+    }, [ dataSource, ssr, dataChanged ]);
+    const [ sideNavCollapsed, collapseSideNav ] = useState(true);
+    const [ topNavCollapsed, collapseTopNav ] = useState(false);
 
-    constructor(props) {
-        super(props);
-        let { routeManager, dataSource } = this.props;
-        this.state = {
-            route: new Route(routeManager, dataSource),
-            wp: new Wordpress(dataSource, props.ssr),
-            sideNavCollapsed: true,
-            topNavCollapsed: false,
+    useEffect(() => {
+        routeManager.addEventListener('change', setRouteChanged);
+        dataSource.addEventListener('change', setDataChanged);
+        return () => {
+            routeManager.addEventListener('change', setRouteChanged);
+            dataSource.addEventListener('change', setDataChanged);
         };
-    }
-
-    /**
-     * Render the application
-     *
-     * @return {VNode}
-     */
-    render() {
-        let { route, wp } = this.state;
-        let { topNavCollapsed } = this.state;
-        let { sideNavCollapsed } = this.state;
-        let PageComponent = route.params.module.default;
-        let classNames = [];
-        if (topNavCollapsed) {
-            classNames.push('top-collapsed');
-        }
-        if (sideNavCollapsed) {
-            classNames.push('side-collapsed');
-        }
-        let key = route.url;
-        return (
-            <div className={classNames.join(' ')}>
-                <ErrorBoundary>
-                    <SideNav route={route} wp={wp} />
-                    <TopNav route={route} wp={wp} />
-                    <div className="page-container">
-                        <PageComponent route={route} wp={wp} key={key} />
-                    </div>
-                </ErrorBoundary>
-                <div id="overlay" />
-            </div>
-        );
-    }
-
-    /**
-     * Added change handlers when component mounts
-     */
-    componentDidMount() {
-        let { routeManager, dataSource } = this.props;
-        routeManager.addEventListener('change', this.handleRouteChange);
-        dataSource.addEventListener('change', this.handleDataSourceChange);
-        document.addEventListener('scroll', this.handleScroll);
-
-        if (typeof(window) === 'object') {
-            let Hammer = require('hammerjs');
-            let hammer = new Hammer(document.body, { cssProps: { userSelect: 'auto' } });
-            hammer.on('swipeleft', this.handleSwipeLeft);
-            hammer.on('swiperight', this.handleSwipeRight);
-        }
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        let { dataSource, ssr } = this.props;
-        let { route } = this.state;
-        if (prevProps.ssr !== ssr) {
-            this.setState({ wp: new Wordpress(dataSource, ssr) });
-        }
-        if (prevState.route !== route) {
-            if (!(prevState.route.history.length < route.history.length)) {
-                // not going backward
-                if (document.body.parentElement.scrollTop > 0) {
-                    document.body.parentElement.scrollTop = 0;
-                } else if (document.body.scrollTop > 0) {
-                    document.body.scrollTop = 0;
-                }
-            }
-        }
-    }
-
-    /**
-     * Called when the data source changes
-     *
-     * @param  {RelaksWordpressDataSourceEvent} evt
-     */
-    handleDataSourceChange = (evt) => {
-        this.setState({ wp: new Wordpress(evt.target) });
-    }
-
-    /**
-     * Called when the route changes
-     *
-     * @param  {RelaksRouteManagerEvent} evt
-     */
-    handleRouteChange = (evt) => {
-        let { dataSource } = this.props;
-        this.setState({ route: new Route(evt.target, dataSource) });
-    }
-
-    /**
-     * Called when the user scrolls the page contents
-     *
-     * @param  {Event} evt
-     */
-    handleScroll = (evt) => {
-        let { topNavCollapsed } = this.state;
-        let container = document.body;
-        let previousPos = this.previousScrollPosition || 0;
-        let currentPos = container.scrollTop;
-        if (currentPos === 0 && container.parentNode.scrollTop > 0) {
-            currentPos = container.parentNode.scrollTop;
-        }
-        let delta = currentPos - previousPos;
-        if (delta > 0) {
-            if (!topNavCollapsed) {
-                // check to see if we have scroll down efficiently, so that
-                // hidden the top nav won't reveal white space
-                let pageContainer = document.getElementsByClassName('page-container')[0];
-                let page = (pageContainer) ? pageContainer.firstChild : null;
-                if (page) {
-                    let pageRect = page.getBoundingClientRect();
-                    if (pageRect.top <= 40) {
-                        this.setState({ topNavCollapsed: true });
+    }, [ routeManager, dataSource ]);
+    useEffect(() => {
+        let previousPos = getScrollPos();
+        const handleScroll = (evt) => {
+            const currentPos = getScrollPos();
+            const delta = currentPos - previousPos;
+            if (delta > 0) {
+                if (!topNavCollapsed) {
+                    // check to see if we have scroll down efficiently, so that
+                    // hidden the top nav won't reveal white space
+                    const pageContainer = document.getElementsByClassName('page-container')[0];
+                    const page = (pageContainer) ? pageContainer.firstChild : null;
+                    if (page) {
+                        const pageRect = page.getBoundingClientRect();
+                        if (pageRect.top <= 40) {
+                            collapseTopNav(true);
+                        }
+                    } else {
+                        collapseTopNav(true);
                     }
-                } else {
-                    this.setState({ topNavCollapsed: true });
+                }
+            } else if (delta < -10) {
+                if (topNavCollapsed) {
+                    collapseTopNav(false);
                 }
             }
-        } else {
-            if (topNavCollapsed) {
-                this.setState({ topNavCollapsed: false });
-            }
+            previousPos = currentPos;
+        };
+        document.addEventListener('scroll', handleScroll);
+        return () => {
+            document.removeEventListener('scroll', handleScroll);
+        };
+    }, [ topNavCollapsed ]);
+    useEffect(() => {
+        if (typeof(window) === 'object') {
+            const handleSwipeLeft = (evt) => {
+                if (!sideNavCollapsed) {
+                    collapseSideNav(true);
+                }
+            };
+            const handleSwipeRight = (evt) => {
+                if (sideNavCollapsed) {
+                    collapseSideNav(false);
+                }
+            };
+
+            const Hammer = require('hammerjs');
+            const hammer = new Hammer(document.body, { cssProps: { userSelect: 'auto' } });
+            hammer.on('swipeleft', handleSwipeLeft);
+            hammer.on('swiperight', handleSwipeRight);
+            return () => {
+                hammer.off('swipeleft', handleSwipeLeft);
+                hammer.off('swiperight', handleSwipeRight);
+                hammer.stop();
+            };
         }
-        this.previousScrollPosition = currentPos;
+    }, [ sideNavCollapsed ]);
+
+    const PageComponent = route.params.module.default;
+    const classNames = [];
+    if (topNavCollapsed) {
+        classNames.push('top-collapsed');
+    }
+    if (sideNavCollapsed) {
+        classNames.push('side-collapsed');
+    }
+    const key = route.url;
+    return (
+        <div className={classNames.join(' ')}>
+            <ErrorBoundary>
+                <SideNav route={route} wp={wp} />
+                <TopNav route={route} wp={wp} />
+                <div className="page-container">
+                    <PageComponent route={route} wp={wp} key={key} />
+                </div>
+            </ErrorBoundary>
+            <div id="overlay" />
+        </div>
+    );
+
+    function getScrollPos() {
+        let pos = document.body.scrollTop;
+        if (pos === 0 && document.body.parentNode.scrollTop > 0) {
+            pos = document.body.parentNode.scrollTop;
+        }
+        return pos;
     }
 
-    handleSwipeLeft = (evt) => {
-        let { sideNavCollapsed } = this.state;
-        if (!sideNavCollapsed) {
-            this.setState({ sideNavCollapsed: true });
-        }
-    }
-
-    handleSwipeRight = (evt) => {
-        let { sideNavCollapsed } = this.state;
-        if (sideNavCollapsed) {
-            this.setState({ sideNavCollapsed: false });
+    function resetScrollPos() {
+        if (document.body.parentElement.scrollTop > 0) {
+            document.body.parentElement.scrollTop = 0;
+        } else if (document.body.scrollTop > 0) {
+            document.body.scrollTop = 0;
         }
     }
 }
 
 export {
-    FrontEnd as default,
     FrontEnd
 };
+
+if (process.env.NODE_ENV !== 'production') {
+    require('./props');
+}

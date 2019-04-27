@@ -1,27 +1,34 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 
-class ImageDialog extends PureComponent {
-
-    render() {
-        let { imageURL } = this.props;
-        if (!imageURL) {
-            return null;
-        }
-        let container = document.getElementById('overlay');
-        let dialog = this.renderDialog();
-        return ReactDOM.createPortal(dialog, container);
+function ImageDialog(props) {
+    const { imageURL, onClose } = props;
+    const target = { func: ImageDialog, props };
+    if (!imageURL) {
+        return null;
     }
 
-    renderDialog() {
-        let { imageURL } = this.props;
+    const handleCloseClick = (evt) => {
+        if (onClose) {
+            onClose({
+                type: 'close',
+                target,
+            });
+        }
+    };
+
+    const container = document.getElementById('overlay');
+    const dialog = renderDialog();
+    return ReactDOM.createPortal(dialog, container);
+
+    function renderDialog() {
         return (
             <div className="image-dialog">
-                <div className="background" onClick={this.handleCloseClick}/>
+                <div className="background" onClick={handleCloseClick}/>
                 <div className="foreground">
                     <div className="box">
-                        <div className="close-button" onClick={this.handleCloseClick}>
+                        <div className="close-button" onClick={handleCloseClick}>
                             <i className="fa fa-times" />
                         </div>
                         <img className="image" src={imageURL} />
@@ -30,28 +37,8 @@ class ImageDialog extends PureComponent {
             </div>
         );
     }
-
-    handleCloseClick = (evt) => {
-        let { onClose } = this.props;
-        if (onClose) {
-            onClose({
-                type: 'close',
-                target: this,
-            });
-        }
-    }
-}
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ImageDialog.propTypes = {
-        imageURL: PropTypes.string,
-        onClose: PropTypes.func,
-    };
 }
 
 export {
-    ImageDialog as default,
     ImageDialog,
 };
