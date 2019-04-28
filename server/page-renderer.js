@@ -1,6 +1,5 @@
 const Bluebird = require('bluebird');
 const FS = Bluebird.promisifyAll(require('fs'));
-const ReactDOMServer = require('react-dom/server');
 const HTTP = require('http');
 const CrossFetch = require('cross-fetch');
 const FrontEnd = require('./client/front-end');
@@ -13,11 +12,11 @@ const HTML_TEMPLATE = `${__dirname}/client/index.html`;
 async function generate(path, target) {
     console.log(`Regenerating page: ${path}`);
     // retrieve cached JSON through Nginx
-    let host = NGINX_HOST;
+    const host = NGINX_HOST;
     // create a fetch() that remembers the URLs used
-    let sourceURLs = [];
-    let agent = new HTTP.Agent({ keepAlive: true });
-    let fetch = (url, options) => {
+    const sourceURLs = [];
+    const agent = new HTTP.Agent({ keepAlive: true });
+    const fetch = (url, options) => {
         if (url.startsWith(host)) {
             sourceURLs.push(url.substr(host.length));
             options = addHostHeader(options);
@@ -25,14 +24,13 @@ async function generate(path, target) {
         }
         return CrossFetch(url, options);
     };
-    let options = { host, path, target, fetch };
-    let rootNode = await FrontEnd.render(options);
-    let appHTML = ReactDOMServer.renderToString(rootNode);
-    let htmlTemplate = await FS.readFileAsync(HTML_TEMPLATE, 'utf-8');
-    let html = htmlTemplate.replace(`<!--REACT-->`, appHTML);
+    const options = { host, path, target, fetch };
+    const frontEndHTML = await FrontEnd.render(options);
+    const htmlTemplate = await FS.readFileAsync(HTML_TEMPLATE, 'utf-8');
+    let html = htmlTemplate.replace(`<!--REACT-->`, frontEndHTML);
     if (target === 'hydrate') {
         // add <noscript> tag to redirect to SEO version
-        let meta = `<meta http-equiv=refresh content="0; url=?js=0">`;
+        const meta = `<meta http-equiv=refresh content="0; url=?js=0">`;
         html += `<noscript>${meta}</noscript>`;
     }
     return { path, target, sourceURLs, html };
@@ -40,16 +38,16 @@ async function generate(path, target) {
 
 async function prefetch(path) {
     console.log(`Regenerating page: ${path}`);
-    let url = NGINX_HOST + path;
-    let options = addHostHeader({});
+    const url = NGINX_HOST + path;
+    const options = addHostHeader({});
     return CrossFetch(url, options);
 }
 
 function addHostHeader(options) {
     if (EXTERNAL_HOST) {
-        let [ protocol, domain ] = EXTERNAL_HOST.split('://');
-        let port = (protocol === 'https') ? 443 : 80;
-        let host = domain + ':' + port;
+        const [ protocol, domain ] = EXTERNAL_HOST.split('://');
+        const port = (protocol === 'https') ? 443 : 80;
+        const host = domain + ':' + port;
         options = Object.assign({}, options);
         options.headers = Object.assign({ Host: host }, options.headers);
     }

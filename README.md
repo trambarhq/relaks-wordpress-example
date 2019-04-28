@@ -6,39 +6,24 @@ Combined with aggressive back-end caching, we'll end up with a web site that fee
 
 This is a complex example with many moving parts. It's definitely not for beginners. You should already be familiar with technologies involved: [React](https://reactjs.org/), [Nginx caching](https://www.nginx.com/blog/nginx-caching-guide/), and of course [WordPress](https://wordpress.org/) itself.
 
-* [Live demo](#live-demo)
-* [Server-side rendering](#server-side-rendering)
-* [Back-end services](#back-end-services)
-* [Uncached page access](#uncached-page-access)
-* [Cached page access](#cached-page-access)
-* [Cache purging](#cache-purging)
-* [Getting started](#getting-started)
-* [Docker Compose configuration](#docker-compose-configuration)
-* [Nginx configuration](#nginx-configuration)
-* [Back-end JavaScript](#back-end-javaScript)
-* [Front-end JavaScript](#front-end-javaScript)
-* [Cordova deployment](#cordova-deployment)
-* [Final words](#final-words)
-
 ## Live demo
 
-For the purpose of demonstrating what the example code can do, I've prepared three web sites:
+For the purpose of demonstrating what the example code can do, I've prepared two web sites:
 
 * [pfj.trambar.io](https://pfj.trambar.io)
 * [et.trambar.io](https://et.trambar.io)
-* [rwt.trambar.io](https://rwt.trambar.io)
 
-All three are hosted on the same AWS [A1 medium instance](https://aws.amazon.com/ec2/instance-types/a1/). It's powered by a single core of a [Graviton CPU](https://www.phoronix.com/scan.php?page=article&item=ec2-graviton-performance&num=1) and backed by 2G of RAM. In terms of computational resources, we have roughly one fourth that of a phone. Not much. For our system though, it's more than enough. Most requests will result in cache hits. Nginx will spend most of its time sending data already in memory. We'll be IO-bound long before we're CPU-bound.
+Both are hosted on the same AWS [A1 medium instance](https://aws.amazon.com/ec2/instance-types/a1/), powered by a single core of a [Graviton CPU](https://www.phoronix.com/scan.php?page=article&item=ec2-graviton-performance&num=1) and backed by 2G of RAM. In terms of computational capability, we have roughly one fourth that of a phone. Not much. For our system though it's more than enough. Most requests will result in cache hits. Nginx will spend most of its time sending data already in memory. We'll be IO-bound long before we're CPU-bound.
 
 [pfj.trambar.io](https://pfj.trambar.io) obtains its data from a test WordPress instance running on the same server. It's populated with random lorem ipsum text. You can log into the [WordPress admin page](https://pfj.trambar.io/wp-admin/) and post a article using the account `bdickus` (password: `incontinentia`). Publication of a new article will trigger a cache purge. The article should appear in the front page automatically after 30 seconds or so (no need to hit refresh button).
 
 You can see a list of what's in the Nginx cache [here](https://pfj.trambar.io/.cache).
 
-[et.trambar.io](https://et.trambar.io) and [rwt.trambar.io](https://rwt.trambar.io) obtain their data from [ExtremeTech](https://www.extremetech.com/) and [Real World Tech](https://www.realworldtech.com/) respectively. They are meant to give you a better sense of how the example code fares with real-world contents. Both sites have close to two decades' worth of articles. Our server does not receive cache purge commands from these WordPress instances so the contents could be out of date. Cache misses will also lead to slightly longer pauses.
+[et.trambar.io](https://et.trambar.io) obtains its data from [ExtremeTech](https://www.extremetech.com/). It's meant to give you a better sense of how the example code fares with real-world contents. The site has close to two decades' worth of articles. Our server does not receive cache purge commands from this WordPress instance so the contents could be out of date. Cache misses will also lead to slightly longer pauses.
 
 ## Server-side rendering
 
-Isomorphic React components are capable of rendering on a web server as well as in a web browser. One primary purpose of server-side rendering (SSR) is search engine optimization. Another is to mask JavaScript loading time. Rather than displaying a spinner or progress bar, we render the front-end on the server and send the HTML to the browser. Effectively, we're using the front-end's own appearance as its loading screen.
+Isomorphic React components are capable of rendering on a web server and in a web browser. One primary purpose of server-side rendering (SSR) is search engine optimization. Another is to mask JavaScript loading time. Rather than displaying a spinner or progress bar, we render the front-end on the server and send the HTML to the browser. Effectively, we're using the front-end's own appearance as its loading screen.
 
 The following animation depicts how an SSR-augmented single-page web-site works. Click on it if you wish to view it as separate images.
 
@@ -109,7 +94,7 @@ proxy_cache_path /var/cache/nginx/data keys_zone=data:10m max_size=1g inactive=7
 proxy_temp_path /var/cache/nginx/tmp;
 ```
 
-[`proxy_cache_path`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_path) is specified without `levels` so that files are stored in a flat directory structure. This makes it easier to scan the cache. [`proxy_temp_path`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_temp_path) is set to a location on the same volume as the cache so Nginx can move files into it with a rename operation.
+[`proxy_cache_path`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_path) is specified without `levels` so that files are stored in a flat directory structure. This makes it easier to scan the cache. [`proxy_temp_path`](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_temp_path) points to a location on the same volume as the cache so Nginx can move files into it with a rename operation.
 
 The following section configures reverse-proxying for the WordPress admin page:
 
@@ -153,14 +138,7 @@ The first two headers added using [add_header](http://nginx.org/en/docs/http/ngx
 
 ![Chrome Dev Tools](docs/img/dev-tool-x-cache.png)
 
-## Back-end JavaScript
-
-* [HTML page generation](#html-page-generation)
-* [JSON data retrieval](#json-data-retrieval)
-* [Purge request handling](#purge-request-handling)
-* [Timestamp handling](#timestamp-handling)
-
-### HTML page generation
+## HTML page generation
 
 The following Express handler ([index.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/index.js#L101)) is invoked when Nginx asks for an HTML page. This should happen infrequently as page navigation is handled client-side. Most visitors will enter the site through the root page and that's inevitably cached.
 
@@ -169,10 +147,10 @@ The handler detects whether the remote agent is a search-engine spider and handl
 ```javascript
 async function handlePageRequest(req, res, next) {
     try {
-        let path = req.url;
-        let noJS = (req.query.js === '0');
-        let target = (req.isSpider() || noJS) ? 'seo' : 'hydrate';
-        let page = await PageRenderer.generate(path, target);
+        const path = req.url;
+        const noJS = (req.query.js === '0');
+        const target = (req.isSpider() || noJS) ? 'seo' : 'hydrate';
+        const page = await PageRenderer.generate(path, target);
         if (target === 'seo') {
             // not caching content generated for SEO
             res.set({ 'X-Accel-Expires': 0 });
@@ -195,66 +173,66 @@ async function handlePageRequest(req, res, next) {
 async function generate(path, target) {
     console.log(`Regenerating page: ${path}`);
     // retrieve cached JSON through Nginx
-    let host = NGINX_HOST;
+    const host = NGINX_HOST;
     // create a fetch() that remembers the URLs used
-    let sourceURLs = [];
-    let fetch = (url, options) => {
+    const sourceURLs = [];
+    const agent = new HTTP.Agent({ keepAlive: true });
+    const fetch = (url, options) => {
         if (url.startsWith(host)) {
             sourceURLs.push(url.substr(host.length));
             options = addHostHeader(options);
+            options.agent = agent;
         }
         return CrossFetch(url, options);
     };
-    let options = { host, path, target, fetch };
-    let rootNode = await FrontEnd.render(options);
-    let appHTML = ReactDOMServer.renderToString(rootNode);
-    let htmlTemplate = await FS.readFileAsync(HTML_TEMPLATE, 'utf-8');
-    let html = htmlTemplate.replace(`<!--REACT-->`, appHTML);
+    const options = { host, path, target, fetch };
+    const frontEndHTML = await FrontEnd.render(options);
+    const htmlTemplate = await FS.readFileAsync(HTML_TEMPLATE, 'utf-8');
+    let html = htmlTemplate.replace(`<!--REACT-->`, frontEndHTML);
     if (target === 'hydrate') {
         // add <noscript> tag to redirect to SEO version
-        let meta = `<meta http-equiv=refresh content="0; url=?js=0">`;
+        const meta = `<meta http-equiv=refresh content="0; url=?js=0">`;
         html += `<noscript>${meta}</noscript>`;
     }
     return { path, target, sourceURLs, html };
 }
 ```
 
-`FrontEnd.render()` returns a ReactElement containing plain HTML child elements. We use [React DOM Server](https://reactjs.org/docs/react-dom-server.html#rendertostring) to convert that to actual HTML text. Then we stick it into our [HTML template](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/index.html), where a HTML comment sits inside the element that would host the root React component.
-
-`FrontEnd.render()` is a function exported by our front-end's [bootstrap code](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/main.js#L67):
+`FrontEnd.render()` is a function exported by our front-end code ([ssr.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/ssr.js#L67)):
 
 ```javascript
-async function serverSideRender(options) {
-    let basePath = process.env.BASE_PATH;
-    let dataSource = new WordpressDataSource({
+async function render(options) {
+    const dataSource = new WordpressDataSource({
         baseURL: options.host + basePath + 'json',
         fetchFunc: options.fetch,
     });
     dataSource.activate();
 
-    let routeManager = new RouteManager({
+    const routeManager = new RouteManager({
         routes,
         basePath,
     });
     routeManager.addEventListener('beforechange', (evt) => {
-        let route = new Route(routeManager, dataSource);
+        const route = new Route(routeManager, dataSource);
         evt.postponeDefault(route.setParameters(evt, false));
     });
     routeManager.activate();
     await routeManager.start(options.path);
 
-    let ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: options.target });
-    return harvest(ssrElement);
+    const ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: options.target });
+    const rootNode = await harvest(ssrElement);
+    const html = renderToString(rootNode);
+    return html;
 }
-
-exports.render = serverSideRender;
 ```
 
-The code initiates the data source and the route manager. Using these as props, it creates the root React element `<FrontEnd />`. The function `harvest()` (from [relaks-harvest](https://github.com/trambarhq/relaks-harvest)) then recursively renders the component tree until all we have are plain HTML elements:
+The function initiates the data source and the route manager. Using these as props, it creates the root React element `<FrontEnd />`. The function `harvest()` (from [relaks-harvest](https://github.com/trambarhq/relaks-harvest)) then recursively renders the component tree until all we have are plain HTML elements:
 
 ![Component tree conversion](docs/img/harvest.png)
 
-Our front-end is built with the help of [Relaks](https://github.com/trambarhq/relaks), a library that let us make asynchronous calls within a React component's render method. Data retrievals are done as part of the rendering cycle. This model makes SSR very straight forward. To render a page, we just call the render methods of all its components and wait for them to finish.
+The tree is then converted to a text string using React DOM Server's [renderToString()](https://reactjs.org/docs/react-dom-server.html#rendertostring).
+
+Our front-end is built with the help of [Relaks](https://github.com/trambarhq/relaks), a library that let us make asynchronous calls within a React component's render function. Data retrievals are done as part of the rendering cycle. This model makes SSR very straight forward. To render a page, we just call the render functions of all its components and wait for them to finish.
 
 ### JSON data retrieval
 
@@ -264,9 +242,9 @@ The following handler is invoked when Nginx requests a JSON file (i.e. when a ca
 async function handleJSONRequest(req, res, next) {
     try {
         // exclude asterisk
-        let root = req.route.path.substr(0, req.route.path.length - 1);
-        let path = `/wp-json/${req.url.substr(root.length)}`;
-        let json = await JSONRetriever.fetch(path);
+        const root = req.route.path.substr(0, req.route.path.length - 1);
+        const path = `/wp-json/${req.url.substr(root.length)}`;
+        const json = await JSONRetriever.fetch(path);
         if (json.total) {
             res.set({ 'X-WP-Total': json.total });
         }
@@ -278,13 +256,13 @@ async function handleJSONRequest(req, res, next) {
 }
 ```
 
-`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/json-retriever.js#L5)) downloads JSON data from WordPress and performs error correction to deal with rogue plugins:
+`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/json-retriever.js#L5)) downloads JSON data from WordPress:
 
 ```javascript
 async function fetch(path) {
     console.log(`Retrieving data: ${path}`);
-    let url = `${WORDPRESS_HOST}${path}`;
-    let res = await CrossFetch(url);
+    const url = `${WORDPRESS_HOST}${path}`;
+    const res = await CrossFetch(url, { agent });
     let resText = await res.text();
     let object;
     try {
@@ -297,50 +275,52 @@ async function fetch(path) {
         }
     }
     if (res.status >= 400) {
-        let msg = (object && object.message) ? object.message : resText;
-        let err = new Error(msg);
+        const msg = (object && object.message) ? object.message : resText;
+        const err = new Error(msg);
         err.status = res.status;
         throw err;
     }
-    let total = parseInt(res.headers.get('X-WP-Total'));
+    const total = parseInt(res.headers.get('X-WP-Total'));
     removeSuperfluousProps(path, object);
-    let text = JSON.stringify(object);
+    const text = JSON.stringify(object);
     return { path, text, total };
 }
 ```
 
 Fields that aren't needed are stripped out before the JSON object is stringified again.
 
-### Purge request Handling
+Certain rogue WP plugins dump HTML comments into the output stream even when the output is JSON. We need to filter them out whenever `JSON.parse()` throws an error.
+
+## Purge request Handling
 
 The [Proxy Cache Purge](https://wordpress.org/plugins/varnish-http-purge/) sends out `PURGE` requests whenever a new article is published on WordPress. We configured our system so that Node would receive these requests. Before we carry out the purge, we check if the request really is from WordPress. It may give us either an URL or a wildcard expression. We watch for two specific scenarios: when the plugin wants to purge the whole cache and when it wants to purge a single JSON object. In the latter case, we proceed to purge all queries that might be affected.
 
 ```javascript
 async function handlePurgeRequest(req, res) {
     // verify that require is coming from WordPress
-    let remoteIP = req.connection.remoteAddress;
+    const remoteIP = req.connection.remoteAddress;
     res.end();
-    let wordpressIP = await dnsCache.lookupAsync(WORDPRESS_HOST.replace(/^https?:\/\//, ''));
+    const wordpressIP = await dnsCache.lookupAsync(WORDPRESS_HOST.replace(/^https?:\/\//, ''));
     if (remoteIP !== `::ffff:${wordpressIP}`) {
         return;
     }
 
-    let url = req.url;
-    let method = req.headers['x-purge-method'];
+    const url = req.url;
+    const method = req.headers['x-purge-method'];
     if (method === 'regex' && url === '/.*') {
         pageDependencies = {};
         await NginxCache.purge(/.*/);
         await PageRenderer.prefetch('/');
     } else if (method === 'default') {
         // look for URLs that looks like /wp-json/wp/v2/pages/4/
-        let m = /^\/wp\-json\/(\w+\/\w+\/\w+)\/(\d+)\/$/.exec(url);
+        const m = /^\/wp\-json\/(\w+\/\w+\/\w+)\/(\d+)\/$/.exec(url);
         if (!m) {
             return;
         }
 
         // purge matching JSON files
-        let folderPath = m[1];
-        let pattern = new RegExp(`^/json/${folderPath}.*`);
+        const folderPath = m[1];
+        const pattern = new RegExp(`^/json/${folderPath}.*`);
         await NginxCache.purge(pattern);
 
         // purge the timestamp so CSR code knows something has changed
@@ -348,7 +328,7 @@ async function handlePurgeRequest(req, res) {
 
         // look for pages that made use of the purged JSONs
         for (let [ path, sourceURLs ] of Object.entries(pageDependencies)) {
-            let affected = sourceURLs.some((sourceURL) => {
+            const affected = sourceURLs.some((sourceURL) => {
                 return pattern.test(sourceURL);
             });
             if (affected) {
@@ -373,15 +353,15 @@ Then we purge HTML files generated earlier that made use of the purged data. Rec
 
 Only Nginx Plus (i.e. paid version of Nginx) supports cache purging. `NginxCache.purge()` ([nginx-cache.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/nginx-cache.js#L7)) is basically a workaround for that fact. The code is not terribly efficient but does the job. Hopefully cache purging will be available in the free version of Nginx in the future.
 
-### Timestamp handling
+## Timestamp handling
 
 The handle for timestamp requests is extremely simple:
 
 ```javascript
 async function handleTimestampRequest(req, res, next) {
     try {
-        let now = new Date;
-        let ts = now.toISOString();
+        const now = new Date;
+        const ts = now.toISOString();
         res.set({ 'Cache-Control': CACHE_CONTROL });
         res.type('text').send(ts);
     } catch (err) {
@@ -390,59 +370,52 @@ async function handleTimestampRequest(req, res, next) {
 }
 ```
 
-## Front-end JavaScript
-
-* [DOM hydration](#dom-hydration)
-* [Routing](#routing)
-* [WelcomePage](#welcomepage)
-* [PostList](#postlist)
-
-### DOM hydration
+## DOM hydration
 
 The following function ([main.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/main.js#L12)) is responsible for bootstrapping the front-end:
 
 ```javascript
 async function initialize(evt) {
     // create data source
-    let host = process.env.DATA_HOST || `${location.protocol}//${location.host}`;
-    let basePath = process.env.BASE_PATH;
-    let dataSource = new WordpressDataSource({
+    const host = process.env.DATA_HOST || `${location.protocol}//${location.host}`;
+    const basePath = process.env.BASE_PATH;
+    const dataSource = new WordpressDataSource({
         baseURL: host + basePath + 'json',
     });
     dataSource.activate();
 
     // create route manager
-    let routeManager = new RouteManager({
+    const routeManager = new RouteManager({
         routes,
         basePath,
         useHashFallback: (location.protocol !== 'http:' && location.protocol !== 'https:'),
     });
     routeManager.addEventListener('beforechange', (evt) => {
-        let route = new Route(routeManager, dataSource);
+        const route = new Route(routeManager, dataSource);
         evt.postponeDefault(route.setParameters(evt, true));
     });
     routeManager.activate();
     await routeManager.start();
 
-    let container = document.getElementById('react-container');
+    const container = document.getElementById('react-container');
     if (!process.env.DATA_HOST) {
         // there is SSR support when we're fetching data from the same host
         // as the HTML page
-        let ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: 'hydrate' });
-        let seeds = await harvest(ssrElement, { seeds: true });
+        const ssrElement = createElement(FrontEnd, { dataSource, routeManager, ssr: 'hydrate' });
+        const seeds = await harvest(ssrElement, { seeds: true });
         plant(seeds);
         hydrate(ssrElement, container);
     }
-    let csrElement = createElement(FrontEnd, { dataSource, routeManager });
+    const csrElement = createElement(FrontEnd, { dataSource, routeManager });
     render(csrElement, container);
 
     // check for changes periodically
-    let mtimeURL = host + basePath + '.mtime';
+    const mtimeURL = host + basePath + '.mtime';
     let mtimeLast;
     for (;;) {
         try {
-            let res = await fetch(mtimeURL);
-            let mtime = await res.text();
+            const res = await fetch(mtimeURL);
+            const mtime = await res.text();
             if (mtime !== mtimeLast) {
                 if (mtimeLast) {
                     dataSource.invalidate();
@@ -456,29 +429,29 @@ async function initialize(evt) {
 }
 ```
 
-The code creates the data source and the route manager. When SSR is employed, we ["hydrate"](https://reactjs.org/docs/react-dom.html#hydrate) DOM elements that are already in the page. We first perform the same sequence of actions that was done on the server. Doing so pulls in data that will be needed for CSR later (while the visitor is still looking at the SSR HTML). Passing `{ seeds: true }` to `harvest()` tells it to return the contents of asynchronous Relaks components in a list. These "seeds" are then planted into Relaks, so that asynchronous components can return their initial appearances synchronously. Without this step, the small delays required by asynchronous rendering would lead to mismatches during the hydration process.
+When SSR is employed, we ["hydrate"](https://reactjs.org/docs/react-dom.html#hydrate) DOM elements that are already in the page. We first perform the same sequence of actions that was done on the server. Doing so pulls in data that will be needed for CSR later (while the visitor is still looking at the SSR HTML). Passing `{ seeds: true }` to `harvest()` tells it to return the contents of asynchronous Relaks components in a list. These "seeds" are then planted into Relaks, so that asynchronous components can return their initial appearances synchronously. Without this step, the small delays required by asynchronous rendering would lead to mismatches during the hydration process.
 
 Once the DOM is hydrated, we complete the transition to CSR by rendering a second `<FrontEnd />` element, this time without the prop `ssr`.
 
-Then we enter an endless loop that polls the server for content update every 30 seconds.
+Then we enter an endless loop that polls the server for content update every 30 seconds. Most of the time, the request will end in 304 Not Modified. The timestamp will change when we purge it from the Nginx cache.
 
-### Routing
+## Routing
 
 We want our front-end to handle WordPress permalinks correctly. This makes page routing somewhat tricky since we cannot rely on simple pattern matching. The URL `/hello-world/` could potentially point to either a page, a post, or a list of posts with a given tag. It all depends on slug assignment. We always need information from the server in order to find the right route.
 
 [`relaks-route-manager`](https://github.com/trambarhq/relaks-route-manager) was not designed with this usage scenario in mind. It does provide a mean, however, to perform asynchronous operations prior to a route change. When it emits a `beforechange` event, we can call `evt.postponeDefault()` to defer the default action (permitting the change) until a promise fulfills:
 
 ```javascript
-routeManager.addEventListener('beforechange', (evt) => {
-    let route = new Route(routeManager, dataSource);
-    evt.postponeDefault(route.setParameters(evt, true));
-});
+    routeManager.addEventListener('beforechange', (evt) => {
+        const route = new Route(routeManager, dataSource);
+        evt.postponeDefault(route.setParameters(evt, true));
+    });
 ```
 
 `route.setParameters()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L62)) basically displaces the default parameter extraction mechanism. Our routing table is reduced to the following:
 
 ```javascript
-let routes = {
+const routes = {
     'page': { path: '*' },
 };
 ```
@@ -488,58 +461,58 @@ Which simply matches any URL.
 `route.setParameters()` itself calls `route.getParameters()` to obtain the parameters:
 
 ```javascript
-async setParameters(evt, fallbackToRoot) {
-    let params = await this.getParameters(evt.path, evt.query);
-    if (params) {
-        params.module = require(`pages/${params.pageType}-page`);
-        _.assign(evt.params, params);
-    } else {
-        if (fallbackToRoot) {
-            await this.routeManager.change('/');
-            return false;
+    async setParameters(evt, fallbackToRoot) {
+        const params = await this.getParameters(evt.path, evt.query);
+        if (params) {
+            params.module = require(`pages/${params.pageType}-page`);
+            _.assign(evt.params, params);
         } else {
-            throw new RelaksRouteManagerError(404, 'Route not found');
+            if (fallbackToRoot) {
+                await this.routeManager.change('/');
+                return false;
+            } else {
+                throw new RelaksRouteManagerError(404, 'Route not found');
+            }
         }
     }
-}
 ```
 
 The key parameter is `pageType`, which is used to load one of the [page components](https://github.com/trambarhq/relaks-wordpress-example/tree/master/src/pages).
 
-As a glance `route.getParameters()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L77)) might seem  incredibly inefficient. To see if a URL points to a page, it fetches all pages and see if one of them has that URL:
+At a glance `route.getParameters()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L77)) might seem incredibly inefficient. To see if a URL points to a page, it fetches all pages and see if one of them has that URL:
 
 ```javascript
-let allPages = await wp.fetchPages();
-let page = _.find(allPages, matchLink);
-if (page) {
-   return { pageType: 'page', pageSlug: page.slug, siteURL };
-}
+    const allPages = await wp.fetchPages();
+    const page = _.find(allPages, matchLink);
+    if (page) {
+        return { pageType: 'page', pageSlug: page.slug, siteURL };
+    }
 ```
 
 It does the same check on categories:
 
 ```javascript
-let allCategories = await wp.fetchCategories();
-let category = _.find(allCategories, matchLink);
-if (category) {
-    return { pageType: 'category', categorySlug: category.slug, siteURL };
-}
+    const allCategories = await wp.fetchCategories();
+    const category = _.find(allCategories, matchLink);
+    if (category) {
+        return { pageType: 'category', categorySlug: category.slug, siteURL };
+    }
 ```
 
-Most of the time, the data in question would be cached already. The top nav loads the pages, while the side nav loads the categories (and also top tags). Resolving the route wouldn't require actual data transfer. On cold start the process would be somewhat slow. Our SSR mechanism would mask this delay, however. A visitor wouldn't find it too noticeable. Of course, since we have all pages at hand, a page will pop up instantly when the visitor clicks on the nav bar.
+Most of the time, the data in question would be cached already. The top nav loads the pages, while the side nav loads the categories (and also top tags). Resolving the route wouldn't require actual data transfer. On cold start the process would be somewhat slow. Our SSR mechanism would mask this delay, however. A visitor wouldn't notice it. Of course, since we have all pages at hand, a page will pop up instantly when the visitor clicks on the nav bar.
 
 `route.getObjectURL()` ([routing.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/routing.js#L32)) is used to obtain the URL to an object (post, page, category, etc.). The method just remove the site URL from the object's WP permalink:
 
 ```javascript
-getObjectURL(object) {
-    let { siteURL } = this.params;
-    let link = object.link;
-    if (!_.startsWith(link, siteURL)) {
-        throw new Error(`Object URL does not match site URL`);
+    getObjectURL(object) {
+        const { siteURL } = this.params;
+        const link = object.link;
+        if (!_.startsWith(link, siteURL)) {
+            throw new Error(`Object URL does not match site URL`);
+        }
+        const path = link.substr(siteURL.length);
+        return this.composeURL({ path });
     }
-    let path = link.substr(siteURL.length);
-    return this.composeURL({ path });
-}
 ```
 
 In order to link to a post, we must download the post beforehand. Clicking on an article will nearly always bring it up instantly.
@@ -547,80 +520,315 @@ In order to link to a post, we must download the post beforehand. Clicking on an
 For links to categories and tags, we perform explicit prefetching:
 
 ```javascript
-prefetchObjectURL(object) {
-    let url = this.getObjectURL(object);
-    setTimeout(() => { this.loadPageData(url) }, 50);
-    return url;
-}
+    prefetchObjectURL(object) {
+        const url = this.getObjectURL(object);
+        setTimeout(() => { this.loadPageData(url) }, 50);
+        return url;
+    }
 ```
 
-The first ten posts are always fetched so the visitor sees something immediately after clicking.
+The first ten posts are always fetched so the visitor will see something immediately upon clicking.
 
-### WelcomePage
+## WelcomePage
 
-`WelcomePage` [welcome-page.jsx](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/pages/welcome-page.jsx) is an asynchronous component. Its `renderAsync()` method fetches a list of posts and passes them to `WelcomePageSync` for actual rendering of the user interface:
+`WelcomePage` ([welcome-page.jsx](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/pages/welcome-page.jsx)) is an asynchronous component. The function is declared async and it uses the `useProgress` hook from Relaks.
 
 ```javascript
-async renderAsync(meanwhile) {
-    let { wp, route } = this.props;
-    let props = { route };
-    meanwhile.show(<WelcomePageSync {...props} />)
-    props.posts = await wp.fetchPosts();
-    meanwhile.show(<WelcomePageSync {...props} />)
-    props.medias = await wp.fetchFeaturedMedias(props.posts, 10);
-    return <WelcomePageSync {...props} />;
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
+
+import { PostList } from 'widgets/post-list';
+
+async function WelcomePage(props) {
+    const { wp, route } = props;
+    const [ show ] = useProgress();
+
+    render();
+    const posts = await wp.fetchPosts();
+    render();
+    const medias = await wp.fetchFeaturedMedias(posts, 10);
+    render();
+
+    function render() {
+        show(
+            <div className="page">
+                <PostList route={route} posts={posts} medias={medias} minimum={40} />
+            </div>
+        );
+    }
 }
+
+const component = Relaks.memo(WelcomePage);
+
+export {
+    component as default,
+};
 ```
 
-`WelcomePageSync`, meanwhile, delegate the task of rendering the list of posts to `PostList`:
+The logic is fairly simple. We first render without data. Then we request a list of posts from the server. When it arrives, we render again. We ask for images associated with the first 10 posts and render once more once we have them.
+
+## PostList
+
+`PostList` ([post-list.jsx](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/widgets/post-list.jsx)) is a regular React functional component. It renders a list of posts:
 
 ```javascript
-render() {
-    let { route, posts, medias } = this.props;
-    return (
-        <div className="page">
-            <PostList route={route} posts={posts} medias={medias} minimum={40} />
-        </div>
-    );
-}
-```
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { useEffect } from 'react';
 
-### PostList
+import { PostListView } from 'widgets/post-list-view';
 
-The render method of `PostList` [post-list.jsx](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/widgets/post-list.jsx) doesn't do anything special:
+function PostList(props) {
+    const { route, posts, medias, minimum, maximum } = props;
 
-```javascript
-render() {
-    let { route, posts, medias } = this.props;
+    useEffect(() => {
+        if (posts && posts.more) {
+            const loadMore = (fraction) => {
+                if (posts.length < minimum) {
+                    posts.more();
+                } else if (posts.length < maximum) {
+                    const { scrollTop, scrollHeight } = document.body.parentNode;
+                    if (scrollTop > scrollHeight * fraction) {
+                        posts.more();
+                    }
+                }
+            };
+            const handleScroll = (evt) => {
+                loadMore(0.5);
+            };
+            loadMore(0.75);
+            document.addEventListener('scroll', handleScroll);
+            return () => {
+                document.removeEventListener('scroll', handleScroll);
+            };
+        }
+    }, [ posts ]);
+
     if (!posts) {
         return null;
     }
     return (
         <div className="posts">
-        {
-            posts.map((post) => {
-                let media = _.find(medias, { id: post.featured_media });
-                return <PostListView route={route} post={post} media={media} key={post.id} />
-            })
-        }
+            {posts.map(renderPost)}
         </div>
     );
-}
-```
 
-The only thing noteworthy about the component is that it perform data load on scroll:
-
-```javascript
-handleScroll = (evt) => {
-    let { posts, maximum } = this.props;
-    let { scrollTop, scrollHeight } = document.body.parentNode;
-    if (scrollTop > scrollHeight * 0.5) {
-        if (posts && posts.length < maximum) {
-            posts.more();
-        }
+    function renderPost(post, i) {
+        let media = _.find(medias, { id: post.featured_media });
+        return <PostListView route={route} post={post} media={media} key={post.id} />
     }
 }
+
+PostList.defaultProps = {
+    minimum: 20,
+    maximum: 500,
+};
+
+export {
+    PostList,
+};
 ```
+
+The component is responsible for loading more posts when the user scrolls down (past the half-way point). It'll also do so when the number of posts does not meet the minimum specified.
+
+## PostListView
+
+`PostListView` ([post-list-view.jsx](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/widgets/post-list-view.jsx)) is a simple component that renders a link to a post along with a short excerpt:
+
+```javascript
+import _ from 'lodash';
+import Moment from 'moment';
+import React from 'react';
+
+import { HTML } from 'widgets/html';
+import { MediaView } from 'widgets/media-view';
+
+function PostListView(props) {
+    const { route, post, media } = props;
+    const title = _.get(post, 'title.rendered', '');
+    const excerptRendered = _.get(post, 'excerpt.rendered', '');
+    const excerpt = cleanExcerpt(excerptRendered);
+    const url = route.prefetchObjectURL(post);
+    const published = _.get(post, 'date_gmt');
+    const date = (published) ? Moment(published).format('L') : '';
+
+    if (media) {
+        return (
+            <div className="post-list-view with-media">
+                <div className="media">
+                    <MediaView media={media} />
+                </div>
+                <div className="text">
+                    <div className="headline">
+                        <h3 className="title">
+                            <a href={url}><HTML text={title} /></a>
+                        </h3>
+                        <div className="date">{date}</div>
+                    </div>
+                    <div className="excerpt">
+                        <HTML text={excerpt} />
+                    </div>
+                </div>
+            </div>
+        );
+    } else {
+        return (
+            <div className="post-list-view">
+                <div className="headline">
+                    <h3 className="title">
+                        <a href={url}><HTML text={title} /></a>
+                    </h3>
+                    <div className="date">{date}</div>
+                </div>
+                <div className="excerpt">
+                    <HTML text={excerpt} />
+                </div>
+            </div>
+        );
+    }
+
+    function cleanExcerpt(excerpt) {
+        const index = excerpt.indexOf('<p class="link-more">');
+        if (index !== -1) {
+            excerpt = excerpt.substr(0, index);
+        }
+        return excerpt;
+    }
+}
+
+export {
+    PostListView,
+};
+```
+
+## PostPage
+
+`PostPage` ([post-post.jsx](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/widgets/post-page.jsx)) is an asynchronous component responsible for rendering a WP post:
+
+```javascript
+import _ from 'lodash';
+import Moment from 'moment';
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
+
+import { Breadcrumb } from 'widgets/breadcrumb';
+import { PostView } from 'widgets/post-view';
+import { TagList } from 'widgets/tag-list';
+import { CommentSection } from 'widgets/comment-section';
+
+async function PostPage(props) {
+    const { wp, route } = props;
+    const { postSlug } = route.params;
+    const [ show ] = useProgress();
+
+    render();
+    const post = await wp.fetchPost(postSlug);
+    render();
+    const categories = await findCategoryChain(post);
+    render();
+    const author = await wp.fetchAuthor(post);
+    render();
+    const tags = await wp.fetchTagsOfPost(post);
+    render()
+    let comments;
+    if (!wp.ssr) {
+        comments = await wp.fetchComments(post);
+        render();
+    }
+
+    function render() {
+        const trail = [ { label: 'Categories' } ];
+        if (categories) {
+            for (let category of categories) {
+                const label = _.get(category, 'name', '');
+                const url = route.prefetchObjectURL(category);
+                trail.push({ label, url });
+            }
+        }
+        show(
+            <div className="page">
+                <Breadcrumb trail={trail} />
+                <PostView post={post} author={author} transform={route.transformNode} />
+                <TagList route={route} tags={tags} />
+                <CommentSection comments={comments} />
+            </div>
+        );
+    }
+
+    async function findCategoryChain(post) {
+        if (!post) return [];
+        const allCategories = await wp.fetchCategories();
+
+        // add categories, including their parents as well
+        const applicable = [];
+        const include = (id) => {
+            const category = _.find(allCategories, { id })
+            if (category) {
+                if (!_.includes(applicable, category)) {
+                    applicable.push(category);
+                }
+                // add parent category as well
+                include(category.parent);
+            }
+        };
+        for (let id of post.categories) {
+            include(id);
+        }
+
+        // see how recently a category was visited
+        const historyIndex = (category) => {
+            const predicate = { params: { categorySlug: category.slug }};
+            return _.findLastIndex(route.history, predicate);
+        };
+        // see how deep a category is
+        const depth = (category) => {
+            if (category.parent) {
+                const predicate = { id: category.parent };
+                const parent = _.find(allCategories, predicate);
+                if (parent) {
+                    return depth(parent) + 1;
+                }
+            }
+            return 0;
+        };
+
+        // order applicable categories based on how recently it was visited,
+        // how deep it is, and alphabetically; the first criteria makes our
+        // breadcrumb works more sensibly
+        const ordered = _.orderBy(applicable, [ historyIndex, depth, 'name' ], [ 'desc', 'desc', 'asc' ]);
+        const anchorCategory = _.first(ordered);
+
+        const trail = [];
+        if (anchorCategory) {
+            // add category and its ancestors
+            for (let c = anchorCategory; c; c = _.find(applicable, { id: c.parent })) {
+                trail.unshift(c);
+            }
+            // add applicable child categories
+            for (let c = anchorCategory; c; c = _.find(applicable, { parent: c.id })) {
+                if (c !== anchorCategory) {
+                    trail.push(c);
+                }
+            }
+        }
+        return trail;
+    }
+}
+
+const component = Relaks.memo(PostPage);
+
+export {
+    component as default,
+};
+```
+
+Basically, we fetch the post, categories, author, tags, and comments, rerendering each time we got something. Comments are omitted when we're rendering server-side to reduce the frequency of cache purges. There's no real need for them to appear immediately.
+
+The code for obtaining the category list is somewhat complicated because posts can fall into multiple categories. To meet user expectation we want our breadcrumb to display the category that's most recently visited. That's determined looking at the route history.
+
+## Other pages
+
+The [other pages](https://github.com/trambarhq/relaks-wordpress-example/tree/master/src/pages) all follow the same basic pattern: render, fetch data, render.
 
 ## Cordova deployment
 
@@ -632,4 +840,4 @@ The Cordova code in the repo retrieves data from `https://et.trambar.io`. To cha
 
 I hope this example lend you some new inspirations. While WordPress is old software, with a bit of clever coding we can greatly enhance the end-user experience. Our demo system feels fast on initial load. It feels fast during subsequent navigation. More importantly perhaps, the system is cheap to operate.
 
-The concepts demonstrated here aren't specific to WordPress. Server-side rendering (SSR) in particular is a very useful technique for any single-page web app. It lets us festoon our project with JavaScript libraries without having to worry too much about the negative impact on load time. For instance, no effort was made to optimize the example code. And as you can see in the [WebPart build report](http://pfj.trambar.io/report.html), our front-end takes up a whopping 850KB (242KB gzipped). Yet thanks to SSR, the garbage has no discernible impact.
+The concept demonstrated here aren't specific to WordPress. Server-side rendering (SSR) is a very useful technique for any single-page web app. It lets us festoon our project with JavaScript libraries without having to worry too much about the negative impact on load time. Our example front-end takes up a whopping 766KB (222KB gzipped). Yet thanks to SSR, the file size has no discernible impact.

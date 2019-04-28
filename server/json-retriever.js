@@ -3,12 +3,12 @@ const CrossFetch = require('cross-fetch');
 const WORDPRESS_HOST = process.env.WORDPRESS_HOST;
 const WORDPRESS_PROTOCOL = 'http' + (/^https:/.test(WORDPRESS_HOST) ? 's' : '');
 
-let agent = new require(WORDPRESS_PROTOCOL).Agent({ keepAlive: true });
+const agent = new require(WORDPRESS_PROTOCOL).Agent({ keepAlive: true });
 
 async function fetch(path) {
     console.log(`Retrieving data: ${path}`);
-    let url = `${WORDPRESS_HOST}${path}`;
-    let res = await CrossFetch(url, { agent });
+    const url = `${WORDPRESS_HOST}${path}`;
+    const res = await CrossFetch(url, { agent });
     let resText = await res.text();
     let object;
     try {
@@ -21,20 +21,20 @@ async function fetch(path) {
         }
     }
     if (res.status >= 400) {
-        let msg = (object && object.message) ? object.message : resText;
-        let err = new Error(msg);
+        const msg = (object && object.message) ? object.message : resText;
+        const err = new Error(msg);
         err.status = res.status;
         throw err;
     }
-    let total = parseInt(res.headers.get('X-WP-Total'));
+    const total = parseInt(res.headers.get('X-WP-Total'));
     removeSuperfluousProps(path, object);
-    let text = JSON.stringify(object);
+    const text = JSON.stringify(object);
     return { path, text, total };
 }
 
 function removeSuperfluousProps(path, object) {
     if (object instanceof Array) {
-        let objects = object;
+        const objects = object;
         for (let object of objects) {
             removeSuperfluousProps(path, object);
         }

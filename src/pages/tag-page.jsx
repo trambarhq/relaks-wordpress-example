@@ -1,35 +1,25 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import { Route } from 'routing';
-import WordPress from 'wordpress';
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
 
-import Breadcrumb from 'widgets/breadcrumb';
-import PostList from 'widgets/post-list';
+import { Breadcrumb } from 'widgets/breadcrumb';
+import { PostList } from 'widgets/post-list';
 
-class TagPage extends AsyncComponent {
-    static displayName = 'TagPage';
+async function TagPage(props) {
+    const { wp, route } = props;
+    const { tagSlug } = route.params;
+    const [ show ] = useProgress();
 
-    async renderAsync(meanwhile) {
-        let { wp, route } = this.props;
-        let { tagSlug } = route.params;
-        let props = { route };
-        meanwhile.show(<TagPageSync {...props} />);
-        props.tag = await wp.fetchTag(tagSlug);
-        meanwhile.show(<TagPageSync {...props} />);
-        props.posts = await wp.fetchPostsWithTag(props.tag);
-        return <TagPageSync {...props} />;
-    }
-}
+    render();
+    const tag = await wp.fetchTag(tagSlug);
+    render();
+    const posts = await wp.fetchPostsWithTag(tag);
+    render();
 
-class TagPageSync extends PureComponent {
-    static displayName = 'TagPageSync';
-
-    render() {
-        let { route, posts, tag } = this.props;
-        let tagLabel = _.get(tag, 'name', '');
-        let trail = [ { label: 'Tags' }, { label: tagLabel } ];
-        return (
+    function render() {
+        const tagLabel = _.get(tag, 'name', '');
+        const trail = [ { label: 'Tags' }, { label: tagLabel } ];
+        show(
             <div className="page">
                 <Breadcrumb trail={trail} />
                 <PostList route={route} posts={posts} minimum={40} />
@@ -38,22 +28,8 @@ class TagPageSync extends PureComponent {
     }
 }
 
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    TagPage.propTypes = {
-        wp: PropTypes.instanceOf(WordPress),
-        route: PropTypes.instanceOf(Route),
-    };
-    TagPageSync.propTypes = {
-        tag: PropTypes.object,
-        posts: PropTypes.arrayOf(PropTypes.object),
-        route: PropTypes.instanceOf(Route),
-    };
-}
+const component = Relaks.memo(TagPage);
 
 export {
-    TagPage as default,
-    TagPage,
-    TagPageSync,
+    component as default,
 };
