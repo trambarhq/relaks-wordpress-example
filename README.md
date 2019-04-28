@@ -140,7 +140,7 @@ The first two headers added using [add_header](http://nginx.org/en/docs/http/ngx
 
 ## HTML page generation
 
-The following Express handler ([index.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/index.js#L101)) is invoked when Nginx asks for an HTML page. This should happen infrequently as page navigation is handled client-side. Most visitors will enter the site through the root page and that's inevitably cached.
+The following Express handler ([index.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/index.js#L100)) is invoked when Nginx asks for an HTML page. This should happen infrequently as page navigation is handled client-side. Most visitors will enter the site through the root page and that's inevitably cached.
 
 The handler detects whether the remote agent is a search-engine spider and handle the request accordingly.
 
@@ -167,7 +167,7 @@ async function handlePageRequest(req, res, next) {
 }
 ```
 
-`PageRenderer.generate()` ([page-renderer.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/page-renderer.js#L12)) uses our isomorphic React code to generate the page. Since the fetch API doesn't exist on Node.js, we need to supply a compatible function to the data source. We use this opportunity to capture the list of URLs that the front-end accesses. Later, we'll use this list to determine whether a cached page has become out-of-date.
+`PageRenderer.generate()` ([page-renderer.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/page-renderer.js#L13)) uses our isomorphic React code to generate the page. Since the fetch API doesn't exist on Node.js, we need to supply a compatible function to the data source. We use this opportunity to capture the list of URLs that the front-end accesses. Later, we'll use this list to determine whether a cached page has become out-of-date.
 
 ```javascript
 async function generate(path, target) {
@@ -198,7 +198,7 @@ async function generate(path, target) {
 }
 ```
 
-`FrontEnd.render()` is a function exported by our front-end code ([ssr.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/ssr.js#L67)):
+`FrontEnd.render()` is a function exported by our front-end code ([ssr.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/ssr.js#L11)):
 
 ```javascript
 async function render(options) {
@@ -256,7 +256,7 @@ async function handleJSONRequest(req, res, next) {
 }
 ```
 
-`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/json-retriever.js#L5)) downloads JSON data from WordPress:
+`JSONRetriever.fetch()` ([json-retriever.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/server/json-retriever.js#L8)) downloads JSON data from WordPress:
 
 ```javascript
 async function fetch(path) {
@@ -372,7 +372,7 @@ async function handleTimestampRequest(req, res, next) {
 
 ## DOM hydration
 
-The following function ([main.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/main.js#L12)) is responsible for bootstrapping the front-end:
+The following function ([main.js](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/main.js#L13)) is responsible for bootstrapping the front-end:
 
 ```javascript
 async function initialize(evt) {
@@ -703,7 +703,7 @@ export {
 
 ## PostPage
 
-`PostPage` ([post-post.jsx](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/widgets/post-page.jsx)) is an asynchronous component responsible for rendering a WP post:
+`PostPage` ([post-post.jsx](https://github.com/trambarhq/relaks-wordpress-example/blob/master/src/pages/post-page.jsx)) is an asynchronous component responsible for rendering a WP post:
 
 ```javascript
 import _ from 'lodash';
