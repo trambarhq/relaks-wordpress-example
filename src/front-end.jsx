@@ -88,6 +88,20 @@ function FrontEnd(props) {
             };
         }
     }, [ sideNavCollapsed ]);
+    const historyDepthBefore = route.history.length;
+    useEffect(() => {
+        return () => {
+            const historyDepthAfter = route.history.length;
+            if (historyDepthBefore < historyDepthAfter) {
+                // not going backward
+                if (document.body.parentElement.scrollTop > 0) {
+                    document.body.parentElement.scrollTop = 0;
+                } else if (document.body.scrollTop > 0) {
+                    document.body.scrollTop = 0;
+                }
+            }
+        };
+    }, [ route ]);
 
     const PageComponent = route.params.module.default;
     const classNames = [];
