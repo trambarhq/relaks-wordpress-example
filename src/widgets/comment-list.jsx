@@ -1,23 +1,23 @@
 import _ from 'lodash';
 import React from 'react';
 
-import { CommentListView } from 'widgets/comment-list-view';
+import { CommentListView } from './comment-list-view.jsx';
 
 function CommentList(props) {
-    const { allComments, parentCommentID } = props;
-    const comments = _.filter(allComments, { parent: parentCommentID });
+  const { allComments, parentCommentID } = props;
+  const comments = _.filter(allComments, { parent: parentCommentID });
 
-    return (
-        <div className="comments">
-            {comments.map(renderComment)}
-        </div>
-    );
+  return (
+    <div className="comments">
+      {comments.map(renderComment)}
+    </div>
+  );
 
-    function renderComment(comment, i) {
-        return <CommentListView comment={comment} allComments={allComments} key={comment.id} />;
-    }
+  function renderComment(comment, i) {
+    return <CommentListView comment={comment} allComments={allComments} key={comment.id} />;
+  }
 }
 
 export {
-    CommentList,
+  CommentList,
 };
