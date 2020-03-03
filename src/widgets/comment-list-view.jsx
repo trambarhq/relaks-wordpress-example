@@ -4,7 +4,7 @@ import React from 'react';
 import { HTML } from './html.jsx';
 import { CommentList } from './comment-list.jsx';
 
-function CommentListView(props) {
+export function CommentListView(props) {
   const { comment, allComments } = props;
   const content = _.get(comment, 'content.rendered', '');
   const avatarURL = _.get(comment, 'author_avatar_urls.24');
@@ -32,7 +32,3 @@ function CommentListView(props) {
     );
   }
 }
-
-export {
-  CommentListView,
-};

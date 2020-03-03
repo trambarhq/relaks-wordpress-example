@@ -1,11 +1,11 @@
 import Moment from 'moment';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 
 import { Breadcrumb } from '../widgets/breadcrumb.jsx';
 import { PostList } from '../widgets/post-list.jsx';
 
-async function ArchivePage(props) {
+export default async function ArchivePage(props) {
   const { wp, route } = props;
   const { date } = route.params;
   const [ show ] = useProgress();
@@ -26,9 +26,3 @@ async function ArchivePage(props) {
     );
   }
 }
-
-const component = Relaks.memo(ArchivePage);
-
-export {
-  component as default,
-};

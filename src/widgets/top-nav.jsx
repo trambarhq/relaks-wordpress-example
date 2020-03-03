@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useSaveBuffer } from 'relaks';
+import { useProgress, useSaveBuffer } from 'relaks';
 
-async function TopNav(props) {
+export async function TopNav(props) {
   const { wp, route } = props;
   const [ show ] = useProgress();
   const search = useSaveBuffer({
@@ -85,9 +85,3 @@ async function TopNav(props) {
     );
   }
 }
-
-const component = Relaks.memo(TopNav);
-
-export {
-  component as TopNav,
-};

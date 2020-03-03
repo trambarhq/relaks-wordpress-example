@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 
-async function SideNav(props) {
+export async function SideNav(props) {
   const { wp, route } = props;
   const { date } = route.params;
   const [ selectedYear, setSelectedYear ] = useState(() => {
@@ -281,9 +281,3 @@ async function SideNav(props) {
     return limit < publicationDate;
   }
 }
-
-const component = Relaks.memo(SideNav);
-
-export {
-  component as SideNav,
-};

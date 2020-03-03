@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Breadcrumb(props) {
+export function Breadcrumb(props) {
   const { trail } = props;
   const children = []
   let key = 0;
@@ -11,7 +11,3 @@ function Breadcrumb(props) {
   children.pop();
   return <h4 className="breadcrumb">{children}</h4>;
 }
-
-export {
-  Breadcrumb,
-};

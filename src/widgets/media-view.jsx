@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
 
-function MediaView(props) {
+export function MediaView(props) {
   const { media, size } = props;
   let info = _.get(media, [ 'media_details', 'sizes', size ]);
   if (!info) {
@@ -13,8 +13,4 @@ function MediaView(props) {
 
 MediaView.defaultProps = {
   size: 'thumbnail',
-};
-
-export {
-  MediaView,
 };

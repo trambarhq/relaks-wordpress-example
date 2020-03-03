@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { HTML } from './html.jsx';
 import { ImageDialog } from './image-dialog.jsx';
 
-function PostView(props) {
+export function PostView(props) {
   const { post, author, transform } = props;
   const [ imageURL, setImageURL ] = useState(null);
 
@@ -49,7 +49,3 @@ function PostView(props) {
     </div>
   );
 }
-
-export {
-  PostView,
-};

@@ -1,14 +1,14 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 
 import { Breadcrumb } from '../widgets/breadcrumb.jsx';
 import { PostView } from '../widgets/post-view.jsx';
 import { TagList } from '../widgets/tag-list.jsx';
 import { CommentSection } from '../widgets/comment-section.jsx';
 
-async function PostPage(props) {
+export default async function PostPage(props) {
   const { wp, route } = props;
   const { postSlug } = route.params;
   const [ show ] = useProgress();
@@ -106,9 +106,3 @@ async function PostPage(props) {
     return trail;
   }
 }
-
-const component = Relaks.memo(PostPage);
-
-export {
-  component as default,
-};

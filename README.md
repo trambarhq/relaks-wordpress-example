@@ -535,11 +535,11 @@ The first ten posts are always fetched so the visitor will see something immedia
 
 ```javascript
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 
 import { PostList } from 'widgets/post-list';
 
-async function WelcomePage(props) {
+export default async function WelcomePage(props) {
     const { wp, route } = props;
     const [ show ] = useProgress();
 
@@ -557,12 +557,6 @@ async function WelcomePage(props) {
         );
     }
 }
-
-const component = Relaks.memo(WelcomePage);
-
-export {
-    component as default,
-};
 ```
 
 The logic is fairly simple. We first render without data. Then we request a list of posts from the server. When it arrives, we render again. We ask for images associated with the first 10 posts and render once more once we have them.
@@ -578,7 +572,7 @@ import React, { useEffect } from 'react';
 
 import { PostListView } from 'widgets/post-list-view';
 
-function PostList(props) {
+export function PostList(props) {
     const { route, posts, medias, minimum, maximum } = props;
 
     useEffect(() => {
@@ -623,10 +617,6 @@ PostList.defaultProps = {
     minimum: 20,
     maximum: 500,
 };
-
-export {
-    PostList,
-};
 ```
 
 The component is responsible for loading more posts when the user scrolls down (past the half-way point). It'll also do so when the number of posts does not meet the minimum specified.
@@ -643,7 +633,7 @@ import React from 'react';
 import { HTML } from 'widgets/html';
 import { MediaView } from 'widgets/media-view';
 
-function PostListView(props) {
+export function PostListView(props) {
     const { route, post, media } = props;
     const title = _.get(post, 'title.rendered', '');
     const excerptRendered = _.get(post, 'excerpt.rendered', '');
@@ -695,10 +685,6 @@ function PostListView(props) {
         return excerpt;
     }
 }
-
-export {
-    PostListView,
-};
 ```
 
 ## PostPage
@@ -709,14 +695,14 @@ export {
 import _ from 'lodash';
 import Moment from 'moment';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 
 import { Breadcrumb } from 'widgets/breadcrumb';
 import { PostView } from 'widgets/post-view';
 import { TagList } from 'widgets/tag-list';
 import { CommentSection } from 'widgets/comment-section';
 
-async function PostPage(props) {
+export async function PostPage(props) {
     const { wp, route } = props;
     const { postSlug } = route.params;
     const [ show ] = useProgress();
@@ -814,12 +800,6 @@ async function PostPage(props) {
         return trail;
     }
 }
-
-const component = Relaks.memo(PostPage);
-
-export {
-    component as default,
-};
 ```
 
 Basically, we fetch the post, categories, author, tags, and comments, rerendering each time we got something. Comments are omitted when we're rendering server-side to reduce the frequency of cache purges. There's no real need for them to appear immediately.

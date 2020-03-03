@@ -1,10 +1,10 @@
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 
 import { Breadcrumb } from '../widgets/breadcrumb.jsx';
 import { PostList } from '../widgets/post-list.jsx';
 
-async function SearchPage(props) {
+export default async function SearchPage(props) {
   const { wp, route } = props;
   const { search } = route.params;
   const [ show ] = useProgress();
@@ -33,9 +33,3 @@ async function SearchPage(props) {
     );
   }
 }
-
-const component = Relaks.memo(SearchPage);
-
-export {
-  component as default,
-};

@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 
 import { PostListView } from './post-list-view.jsx';
 
-function PostList(props) {
+export function PostList(props) {
   const { route, posts, medias, minimum, maximum } = props;
 
   useEffect(() => {
@@ -48,8 +48,4 @@ function PostList(props) {
 PostList.defaultProps = {
   minimum: 20,
   maximum: 500,
-};
-
-export {
-  PostList,
 };

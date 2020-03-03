@@ -3,7 +3,7 @@ import React from 'react';
 
 import { CommentListView } from './comment-list-view.jsx';
 
-function CommentList(props) {
+export function CommentList(props) {
   const { allComments, parentCommentID } = props;
   const comments = _.filter(allComments, { parent: parentCommentID });
 
@@ -17,7 +17,3 @@ function CommentList(props) {
     return <CommentListView comment={comment} allComments={allComments} key={comment.id} />;
   }
 }
-
-export {
-  CommentList,
-};

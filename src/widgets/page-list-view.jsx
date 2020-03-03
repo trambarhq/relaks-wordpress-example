@@ -3,7 +3,7 @@ import React from 'react';
 
 import { HTML } from './html.jsx';
 
-function PageListView(props) {
+export function PageListView(props) {
   const { route, page } = props;
   const title = _.get(page, 'title.rendered', '');
   const url = route.prefetchObjectURL(page);
@@ -13,7 +13,3 @@ function PageListView(props) {
     </div>
   );
 }
-
-export {
-  PageListView,
-};

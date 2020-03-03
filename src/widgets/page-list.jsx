@@ -4,7 +4,7 @@ import { Route } from '../routing.js';
 
 import { PageListView } from './page-list-view.jsx';
 
-function PageList(props) {
+export function PageList(props) {
   const { route, pages } = props;
   if (!pages) {
     return null;
@@ -28,7 +28,3 @@ function PageList(props) {
     );
   }
 }
-
-export {
-  PageList,
-};

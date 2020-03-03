@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress } from 'relaks';
+import { useProgress } from 'relaks';
 
 import { HTML } from '../widgets/html.jsx';
 import { Breadcrumb } from '../widgets/breadcrumb.jsx';
 import { PageView } from '../widgets/page-view.jsx';
 import { PageList } from '../widgets/page-list.jsx';
 
-async function PagePage(props) {
+export default async function PagePage(props) {
   const { wp, route } = props;
   const { pageSlug } = route.params;
   const [ show ] = useProgress();
@@ -37,9 +37,3 @@ async function PagePage(props) {
     );
   }
 }
-
-const component = Relaks.memo(PagePage);
-
-export {
-  component as default,
-};

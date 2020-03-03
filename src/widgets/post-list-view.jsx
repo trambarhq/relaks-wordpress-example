@@ -5,7 +5,7 @@ import React from 'react';
 import { HTML } from './html.jsx';
 import { MediaView } from './media-view.jsx';
 
-function PostListView(props) {
+export function PostListView(props) {
   const { route, post, media } = props;
   const title = _.get(post, 'title.rendered', '');
   const excerptRendered = _.get(post, 'excerpt.rendered', '');
@@ -57,7 +57,3 @@ function PostListView(props) {
     return excerpt;
   }
 }
-
-export {
-  PostListView,
-};

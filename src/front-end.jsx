@@ -12,7 +12,7 @@ import '@fortawesome/fontawesome-free/scss/fontawesome.scss';
 import '@fortawesome/fontawesome-free/scss/regular.scss';
 import '@fortawesome/fontawesome-free/scss/solid.scss';
 
-function FrontEnd(props) {
+export function FrontEnd(props) {
   const { routeManager, dataSource, ssr } = props;
   const [ routeChanged, setRouteChanged ] = useEventTime();
   const [ dataChanged, setDataChanged ] = useEventTime();
@@ -142,10 +142,6 @@ function FrontEnd(props) {
     }
   }
 }
-
-export {
-  FrontEnd
-};
 
 if (process.env.NODE_ENV !== 'production') {
   require('./props');

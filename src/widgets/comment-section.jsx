@@ -3,7 +3,7 @@ import React from 'react';
 
 import { CommentList } from './comment-list.jsx';
 
-function CommentSection(props) {
+export function CommentSection(props) {
   const { comments } = props;
   if (_.isEmpty(comments)) {
     return null;
@@ -15,7 +15,3 @@ function CommentSection(props) {
     </div>
   );
 }
-
-export {
-  CommentSection,
-};

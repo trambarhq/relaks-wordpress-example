@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 
-function TagList(props) {
+export function TagList(props) {
   const { route, tags } = props;
   if (_.isEmpty(tags)) {
     return null;
@@ -23,7 +23,3 @@ function TagList(props) {
     );
   }
 }
-
-export {
-  TagList,
-};

@@ -4,7 +4,7 @@ import React from 'react';
 
 import { HTML } from './html.jsx';
 
-function PageView(props) {
+export function PageView(props) {
   const { page, transform } = props;
   const title = _.get(page, 'title.rendered', '');
   const content = _.get(page, 'content.rendered', '');
@@ -23,7 +23,3 @@ function PageView(props) {
     </div>
   );
 }
-
-export {
-  PageView,
-};

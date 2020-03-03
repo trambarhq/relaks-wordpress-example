@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-function ImageDialog(props) {
+export function ImageDialog(props) {
   const { imageURL, onClose } = props;
   const target = { func: ImageDialog, props };
   if (!imageURL) {
@@ -38,7 +38,3 @@ function ImageDialog(props) {
     );
   }
 }
-
-export {
-  ImageDialog,
-};
