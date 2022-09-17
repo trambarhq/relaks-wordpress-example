@@ -17,6 +17,7 @@ services:
       - nginx
     image: node:8
     volumes:
+      - .:/opt/example
       - web_cache:/var/cache/nginx
     networks:
       network:
