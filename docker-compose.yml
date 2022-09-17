@@ -4,8 +4,6 @@ services:
     image: nginx:latest
     volumes:
       - ./server/nginx:/etc/nginx/conf.d
-      - /var/www/certbot:/var/www/certbot
-      - /etc/letsencrypt:/etc/letsencrypt
       - web_cache:/var/cache/nginx
     networks:
       network:
@@ -14,30 +12,11 @@ services:
       - 80:80
       - 443:443
     restart: always
-  node_pfj:
-    depends_on:
-      - wordpress
-      - nginx
-    image: node:8
-    volumes:
-      - .:/opt/example
-      - web_cache:/var/cache/nginx
-    networks:
-      network:
-        ipv4_address: 172.130.0.3
-    environment:
-      WORDPRESS_HOST: http://wordpress
-      NGINX_HOST: http://nginx
-      NGINX_CACHE: /var/cache/nginx/data_pfj
-      EXTERNAL_HOST: http://pfj.trambar.io
-    command: [ node, /opt/example/server/index.js ]
-    restart: always
   node_et:
     depends_on:
       - nginx
     image: node:8
     volumes:
-      - .:/opt/example
       - web_cache:/var/cache/nginx
     networks:
       network:
@@ -46,40 +25,9 @@ services:
       WORDPRESS_HOST: https://www.extremetech.com
       NGINX_HOST: http://nginx
       NGINX_CACHE: /var/cache/nginx/data_et
-      EXTERNAL_HOST: http://et.trambar.io
     command: [ node, /opt/example/server/index.js ]
     restart: always
-  db:
-    image: mariadb:10
-    volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      network:
-        ipv4_address: 172.130.0.6
-    environment:
-      MYSQL_ROOT_PASSWORD: somewordpress
-      MYSQL_DATABASE: wordpress
-      MYSQL_USER: wordpress
-      MYSQL_PASSWORD: wordpress
-    restart: always
-  wordpress:
-    depends_on:
-      - db
-    image: wordpress:latest
-    volumes:
-      - wp_root:/var/www/html
-      - ./server/wordpress/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
-    networks:
-      network:
-        ipv4_address: 172.130.0.7
-    environment:
-      WORDPRESS_DB_HOST: db:3306
-      WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: wordpress
-    restart: always
 volumes:
-  wp_root:
-  db_data:
   web_cache:
 networks:
   network:
