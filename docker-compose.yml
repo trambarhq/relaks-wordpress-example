@@ -23,7 +23,7 @@ services:
       network:
         ipv4_address: 172.130.0.4
     environment:
-      WORDPRESS_HOST: https://www.extremetech.com
+      WORDPRESS_HOST: https://techcrunch.com
       NGINX_HOST: http://nginx
       NGINX_CACHE: /var/cache/nginx/data_et
     command: [ node, /opt/example/server/index.js ]

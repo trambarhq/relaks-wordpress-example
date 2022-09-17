@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useState } from 'react';
 import Relaks, { useProgress } from 'relaks';
+import { HTML } from './html.jsx';
 
 async function SideNav(props) {
   const { wp, route } = props;
@@ -144,7 +145,7 @@ async function SideNav(props) {
     }
     return (
       <li key={i}>
-        <a className={classNames.join(' ')} href={url} title={description}>{name}</a>
+        <a className={classNames.join(' ')} href={url} title={description}><HTML text={name} /></a>
         {renderSubcategories(category)}
       </li>
     );
@@ -185,7 +186,7 @@ async function SideNav(props) {
     }
     return (
       <span key={i}>
-        <a className={classNames.join(' ')} href={url} title={description} key={i}>{name}</a>
+        <a className={classNames.join(' ')} href={url} title={description} key={i}><HTML text={name} /></a>
         {' '}
       </span>
     );

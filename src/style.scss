@@ -199,6 +199,10 @@ A {
       padding-left: 0.5em;
       padding-right: 0.5em;
       border-right: 1px solid transparentize(#cccccc, 0.75);
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
 
       &:last-of-type {
         border-right: 0;

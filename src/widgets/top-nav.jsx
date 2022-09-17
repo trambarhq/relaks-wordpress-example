@@ -69,7 +69,7 @@ async function TopNav(props) {
     const url = route.prefetchObjectURL(page);
     return (
       <div className="button" key={i}>
-        <a href={url}>{title}</a>
+        <a href={url} title={title}>{title}</a>
       </div>
     );
   }
