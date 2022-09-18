@@ -116,6 +116,7 @@ const serverConfig = {
       template: Path.resolve(`./src/index.html`),
       filename: 'index.html',
       scriptLoading: 'defer',
+      minify: false,
     }),
     new MiniCSSExtractPlugin({
       filename: "[name].css",
