@@ -10,13 +10,13 @@
  * Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com
  * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
  * Copyright 2022 Fonticons, Inc.
- */:root,:host{--fa-style-family-classic: 'Font Awesome 6 Free';--fa-font-regular: normal 400 1em/1 'Font Awesome 6 Free'}@font-face{font-family:'Font Awesome 6 Free';font-style:normal;font-weight:400;font-display:block;src:url(/e31785bb9a2bbbd4593f.woff2) format("woff2"),url(/d9a68dad397726200cf5.ttf) format("truetype")}.far,.fa-regular{font-weight:400}
+ */:root,:host{--fa-style-family-classic: 'Font Awesome 6 Free';--fa-font-regular: normal 400 1em/1 'Font Awesome 6 Free'}@font-face{font-family:'Font Awesome 6 Free';font-style:normal;font-weight:400;font-display:block;src:url(/639d2000c1ece92eaec8.woff2) format("woff2"),url(/abf801b7acb6705a15ad.ttf) format("truetype")}.far,.fa-regular{font-weight:400}
 
 /*!
  * Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com
  * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
  * Copyright 2022 Fonticons, Inc.
- */:root,:host{--fa-style-family-classic: 'Font Awesome 6 Free';--fa-font-solid: normal 900 1em/1 'Font Awesome 6 Free'}@font-face{font-family:'Font Awesome 6 Free';font-style:normal;font-weight:900;font-display:block;src:url(/303a659033cdc89818cc.woff2) format("woff2"),url(/15f07436dd64b8466e3d.ttf) format("truetype")}.fas,.fa-solid{font-weight:900}
+ */:root,:host{--fa-style-family-classic: 'Font Awesome 6 Free';--fa-font-solid: normal 900 1em/1 'Font Awesome 6 Free'}@font-face{font-family:'Font Awesome 6 Free';font-style:normal;font-weight:900;font-display:block;src:url(/66104b766c3d0462b3c5.woff2) format("woff2"),url(/b48ad290d0335879a92b.ttf) format("truetype")}.fas,.fa-solid{font-weight:900}
 
 
 /*# sourceMappingURL=main.css.map*/

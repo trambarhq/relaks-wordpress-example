@@ -51,14 +51,10 @@ const clientConfig = {
         ],
       },
       {
-        test: /fonts.*\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-        loader: 'file-loader',
-      },
-      {
-        test: /fonts.*\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-        loader: 'file-loader',
-        options: {
-          emitFile: false,
+        test: /fonts.*\.(woff2?|ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+        type: 'asset/resource',
+        generator: {
+          filename: '[hash][ext][query]',
         }
       },
     ]
