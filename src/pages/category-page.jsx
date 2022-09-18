@@ -16,6 +16,8 @@ async function CategoryPage(props) {
   render();
   const posts = await wp.fetchPostsInCategory(category);
   render();
+  const medias = await wp.fetchFeaturedMedias(posts, 10);
+  render();
 
   function render() {
     const trail = [ { label: 'Categories' } ];
@@ -31,7 +33,7 @@ async function CategoryPage(props) {
     show(
       <div className="page">
         <Breadcrumb trail={trail} />
-        <PostList route={route} posts={posts} minimum={40} />
+        <PostList route={route} posts={posts} medias={medias} minimum={40} />
       </div>
     );
   }

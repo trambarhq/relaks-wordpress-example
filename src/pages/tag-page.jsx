@@ -15,6 +15,8 @@ async function TagPage(props) {
   render();
   const posts = await wp.fetchPostsWithTag(tag);
   render();
+  const medias = await wp.fetchFeaturedMedias(posts, 10);
+  render();
 
   function render() {
     const tagLabel = _.get(tag, 'name', '');
@@ -22,7 +24,7 @@ async function TagPage(props) {
     show(
       <div className="page">
         <Breadcrumb trail={trail} />
-        <PostList route={route} posts={posts} minimum={40} />
+        <PostList route={route} posts={posts} medias={medias} minimum={40} />
       </div>
     );
   }

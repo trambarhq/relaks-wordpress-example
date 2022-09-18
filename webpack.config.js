@@ -3,7 +3,7 @@ const Path = require('path');
 const Webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const DefinePlugin = Webpack.DefinePlugin;
-const NamedChunksPlugin = Webpack.NamedChunksPlugin;
+const ProvidePlugin = Webpack.ProvidePlugin;
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const MiniCSSExtractPlugin = require("mini-css-extract-plugin");
 
@@ -11,7 +11,6 @@ const EVENT = process.env.npm_lifecycle_event;
 const BUILD = (EVENT === 'build') ? 'production' : 'development';
 const IS_DEV_SERVER = !!process.argv.find(arg => arg.includes('webpack-dev-server'));
 const DEV_DATA_HOST = (IS_DEV_SERVER) ? 'http://localhost:8000' : undefined;
-const CORDOVA_DATA_HOST = process.env.CORDOVA_DATA_HOST;
 const BASE_PATH = '/';
 
 const clientConfig = {
@@ -23,13 +22,17 @@ const clientConfig = {
     publicPath: BASE_PATH,
     filename: 'front-end.js',
   },
+  optimization: {
+    chunkIds: 'named',
+    concatenateModules: false,
+  },
   module: {
     rules: [
       {
         test: /\.jsx?$/,
         loader: 'babel-loader',
         exclude: /node_modules/,
-        query: {
+        options: {
           presets: [
             '@babel/env',
             '@babel/react',
@@ -54,11 +57,16 @@ const clientConfig = {
       {
         test: /fonts.*\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         loader: 'file-loader',
-        query: {
+        options: {
           emitFile: false,
         }
       },
     ]
+  },
+  resolve: {
+    fallback: {
+      buffer: require.resolve('buffer/'),
+    },
   },
   plugins: [
     new DefinePlugin({
@@ -67,7 +75,6 @@ const clientConfig = {
       'process.env.DATA_HOST': JSON.stringify(DEV_DATA_HOST),
       'process.env.BASE_PATH': JSON.stringify(BASE_PATH),
     }),
-    new NamedChunksPlugin,
     new BundleAnalyzerPlugin({
       analyzerMode: (EVENT === 'build') ? 'static' : 'disabled',
       reportFilename: `report.html`,
@@ -76,10 +83,10 @@ const clientConfig = {
       filename: "[name].css",
       chunkFilename: "[id].css"
     }),
+    new ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+    }),
   ],
-  optimization: {
-    concatenateModules: false,
-  },
   devtool: (EVENT === 'build') ? 'source-map' : 'inline-source-map',
 };
 
@@ -94,6 +101,9 @@ const serverConfig = {
     filename: 'front-end.js',
     libraryTarget: 'commonjs',
   },
+  optimization: {
+    chunkIds: 'named',
+  },
   module: clientConfig.module,
   plugins: [
     new DefinePlugin({
@@ -102,10 +112,10 @@ const serverConfig = {
       'process.env.DATA_HOST': JSON.stringify(undefined),
       'process.env.BASE_PATH': JSON.stringify(BASE_PATH),
     }),
-    new NamedChunksPlugin,
     new HtmlWebpackPlugin({
       template: Path.resolve(`./src/index.html`),
       filename: 'index.html',
+      scriptLoading: 'defer',
     }),
     new MiniCSSExtractPlugin({
       filename: "[name].css",
@@ -113,36 +123,6 @@ const serverConfig = {
     }),
   ],
   devtool: clientConfig.devtool,
-};
-
-const cordovaConfig = {
-  context: clientConfig.context,
-  entry: clientConfig.entry,
-  output: {
-    path: Path.resolve('./cordova/sample-app/www'),
-    publicPath: '',
-    filename: 'front-end.js',
-  },
-  module: clientConfig.module,
-  plugins: [
-    new DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(BUILD),
-      'process.env.TARGET': JSON.stringify('browser'),
-      'process.env.DATA_HOST': JSON.stringify(CORDOVA_DATA_HOST),
-      'process.env.BASE_PATH': JSON.stringify(BASE_PATH),
-    }),
-    new NamedChunksPlugin,
-    new HtmlWebpackPlugin({
-      template: Path.resolve(`./src/index.html`),
-      filename: 'index.html',
-      cordova: true,
-      host: CORDOVA_DATA_HOST
-    }),
-    new MiniCSSExtractPlugin({
-      filename: "[name].css",
-      chunkFilename: "[id].css"
-    }),
-  ],
 };
 
 const configs = module.exports = [];
@@ -161,8 +141,4 @@ if (IS_DEV_SERVER) {
   configs.push(clientConfig);
 } else {
   configs.push(clientConfig, serverConfig)
-  if (CORDOVA_DATA_HOST) {
-    configs.push(cordovaConfig);
-    console.log('Building for Cordova: ' + CORDOVA_DATA_HOST);
-  }
 }
