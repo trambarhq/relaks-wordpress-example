@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import Relaks, { useProgress, useSaveBuffer } from 'relaks';
+import Relaks, { useProgress, useSaveBuffer, useAutoSave } from 'relaks';
 
 async function TopNav(props) {
   const { wp, route } = props;
@@ -8,13 +8,15 @@ async function TopNav(props) {
   const search = useSaveBuffer({
     original: route.params.search || '',
     save: (before, after) => {
-      const url = route.getSearchURL(after);
-      const options = {
-        replace: (route.params.pageType === 'search')
-      };
-      route.change(url);
     },
     autosave: 500,
+  });
+  useAutoSave(search, 500, () => {
+    const url = route.getSearchURL(search.current);
+    const options = {
+      replace: (route.params.pageType === 'search')
+    };
+    route.change(url);
   });
 
   const handleSearchChange = (evt) => {

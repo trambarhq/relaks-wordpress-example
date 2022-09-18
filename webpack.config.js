@@ -132,7 +132,6 @@ if (IS_DEV_SERVER) {
   }));
   // config dev-server to support client-side routing
   clientConfig.devServer = {
-    inline: true,
     historyApiFallback: true,
   };
   configs.push(clientConfig);
